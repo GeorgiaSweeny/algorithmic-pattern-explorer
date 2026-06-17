@@ -1,4 +1,4 @@
-# PattKnitter
+# PatterKnitter
 
 # Knitting Chart Generator - Domain Definitions
 
