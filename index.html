@@ -5,8 +5,6 @@
    <meta charset="utf-8" />
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>PattKnitter</title>
-
-   <!-- Stylesheets only in <head> -->
    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
       integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
    <link rel="stylesheet" href="style.css">
@@ -14,65 +12,353 @@
 
 <body>
 
-   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid ps-4">
-         <a class="navbar-brand fw-bold" href="#">PattKnitter</a>
-         <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
-               <li class="nav-item"><a class="nav-link active" href="index.html">Generator</a></li>
-               <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
-               <li class="nav-item"><a class="nav-link d-flex align-items-center gap-1" href="https://github.com/GeorgiaSweeny/pattKnitter" target="_blank" rel="noopener">GitHub <img src="images/GitHub_Invertocat_Black_Clearspace.svg" alt="GitHub" height="16"></a></li>
-            </ul>
-         </div>
+   <!-- ═══════════════════════════════════════════════════════════════
+        TOP NAV
+        Workflow steps act as the primary mode switcher.
+        data-mode values: "design" | "chart" | "export"
+   ════════════════════════════════════════════════════════════════ -->
+   <nav id="topnav">
+      <a class="brand" href="#">PattKnitter</a>
+
+      <div class="workflow-nav" role="tablist" aria-label="Workflow steps">
+         <button class="workflow-step active" data-mode="design" role="tab" aria-selected="true">
+            <span class="step-num">1</span><span class="step-label">Design</span>
+         </button>
+         <span class="step-arrow" aria-hidden="true">›</span>
+         <button class="workflow-step" data-mode="chart" role="tab" aria-selected="false">
+            <span class="step-num">2</span><span class="step-label">Chart</span>
+         </button>
+         <span class="step-arrow" aria-hidden="true">›</span>
+         <button class="workflow-step" data-mode="preview" role="tab" aria-selected="false">
+            <span class="step-num">3</span><span class="step-label">Preview</span>
+         </button>
+         <span class="step-arrow" aria-hidden="true">›</span>
+         <button class="workflow-step" data-mode="export" role="tab" aria-selected="false">
+            <span class="step-num">4</span><span class="step-label">Export</span>
+         </button>
       </div>
+
+      <span id="doc-name" class="doc-name" title="Document name">Fair Isle Sample</span>
    </nav>
 
-   <div class="container-fluid" id="app">
-      <div class="row g-0 h-100">
 
-         <div class="col-9 d-flex justify-content-center align-items-center p-4 overflow-hidden" id="canvas-workspace">
-            <div id="canvas-container"></div>
+   <!-- ═══════════════════════════════════════════════════════════════
+        MAIN WORKSPACE
+        CSS grid: [left panel] [canvas] [right panel]
+        Panels show/hide sections based on active mode via data-shows-in.
+   ════════════════════════════════════════════════════════════════ -->
+   <div id="app">
+
+
+      <!-- ───────────────────────────────────────────────
+           LEFT PANEL
+           Tab 1 — Library: browse & load patterns
+           Tab 2 — Tools:   draw / fill / erase / generate
+      ─────────────────────────────────────────────── -->
+      <aside id="panel-left">
+
+         <!-- Tab bar -->
+         <div class="panel-tabs">
+            <button class="panel-tab active" data-tab="library">Library</button>
+            <button class="panel-tab"        data-tab="tools">Tools</button>
          </div>
 
-         <div class="col-3 p-3 overflow-auto" id="control-panel">
-
-            <h6 class="panel-section-title text-uppercase fw-semibold section-toggle"
-                role="button" data-bs-toggle="collapse" data-bs-target="#canvas-collapse">
-               Canvas <span class="section-chevron">&#8250;</span>
-            </h6>
-            <div class="collapse show" id="canvas-collapse">
-               <div id="canvas-controls"></div>
+         <!-- ── Library tab ── -->
+         <div class="tab-content active" data-tab-content="library">
+            <div class="panel-search">
+               <input type="text" class="form-control form-control-sm" placeholder="Search patterns…" disabled
+                  title="Search coming soon">
             </div>
+            <!-- Populated by ui/workspace.js → buildLibrary() -->
+            <div id="library-list"></div>
+         </div>
 
-            <hr class="border-secondary">
+         <!-- ── Tools tab ── -->
+         <div class="tab-content" data-tab-content="tools">
 
-            <h6 class="panel-section-title text-uppercase fw-semibold section-toggle"
-                role="button" data-bs-toggle="collapse" data-bs-target="#pattern-collapse">
-               Pattern <span class="section-chevron">&#8250;</span>
-            </h6>
-            <div class="collapse show" id="pattern-collapse">
-               <div id="pattern-list"></div>
+            <!-- Tool palette: populated by workspace.js → buildToolPalette() -->
+            <div id="tool-palette"></div>
+
+            <hr class="panel-divider">
+
+            <div class="panel-section-title">Active Colour</div>
+            <!-- Swatch + name for the colour currently selected for drawing -->
+            <div id="active-colour-display" class="active-colour-display"></div>
+
+            <hr class="panel-divider">
+
+            <!-- Generate section — proxy UI (controls are disabled in prototype) -->
+            <div class="panel-section-title">
+               Generate
+               <span class="badge-proxy">Preview only</span>
             </div>
-
-            <hr class="border-secondary">
-
-            <h6 class="panel-section-title text-uppercase fw-semibold section-toggle"
-                role="button" data-bs-toggle="collapse" data-bs-target="#params-collapse">
-               Parameters <span class="section-chevron">&#8250;</span>
-            </h6>
-            <div class="collapse show" id="params-collapse">
-               <div id="params-container"></div>
+            <div class="generator-options">
+               <select class="form-select form-select-sm mb-2" disabled title="Generator selection coming soon">
+                  <option>Wave</option>
+                  <option>Grid</option>
+                  <option>Voronoi</option>
+               </select>
+               <div class="param-row">
+                  <label class="param-label">Density</label>
+                  <input type="range" class="form-range" disabled>
+               </div>
+               <button class="btn btn-sm btn-outline-light w-100 mt-1" disabled>Apply to Canvas</button>
             </div>
 
          </div>
 
-      </div>
-   </div>
+      </aside>
 
-   <!-- Scripts at end of <body> in dependency order.
-        Synchronous scripts (p5, Bootstrap) run immediately;
-        type="module" is implicitly deferred so it always runs after them. -->
-   <script src="https://cdn.jsdelivr.net/npm/p5@1.11.13/lib/p5.min.js"></script>
+
+      <!-- ───────────────────────────────────────────────
+           CANVAS WORKSPACE
+           The <canvas> element is sized by renderer.js.
+           The container scrolls if the canvas is larger
+           than the viewport.
+      ─────────────────────────────────────────────── -->
+      <main id="canvas-workspace">
+         <div id="canvas-container">
+            <canvas id="pattern-canvas"></canvas>
+         </div>
+      </main>
+
+
+      <!-- ───────────────────────────────────────────────
+           RIGHT PANEL
+           Content is context-sensitive to the active mode.
+           data-shows-in="design chart export" controls
+           which sections are visible — workspace.js syncs
+           visibility whenever the mode changes.
+      ─────────────────────────────────────────────── -->
+      <aside id="panel-right">
+
+
+         <!-- ── Design mode ── -->
+         <section data-shows-in="design">
+
+            <div class="panel-section-title">Palette</div>
+            <!-- Palette preset dropdown — populated by workspace.js -->
+            <select id="palette-selector" class="form-select form-select-sm mb-3"></select>
+
+            <div class="panel-section-title">Colours</div>
+            <!-- Colour swatches for the active palette — populated by workspace.js -->
+            <div id="palette-colours" class="palette-colours"></div>
+
+            <hr class="panel-divider">
+
+            <!-- Grid size — locked in prototype, shown as informational -->
+            <div class="panel-section-title">
+               Grid Size
+               <span class="badge-proxy">Locked</span>
+            </div>
+            <div class="locked-field">40 × 40 stitches</div>
+
+            <hr class="panel-divider">
+
+            <div class="panel-section-title">Gauge</div>
+            <div class="locked-field">20 st / 28 rows per 10 cm</div>
+            <div class="locked-field muted">DK weight · 4 mm needles</div>
+
+         </section>
+
+
+         <!-- ── Chart mode ── -->
+         <section data-shows-in="chart" hidden>
+
+            <!-- Knitting method affects row reading direction:
+                 in the round → every row right-to-left (←)
+                 flat         → RS rows ←, WS rows → -->
+            <div class="panel-section-title">Knitting Method</div>
+            <div class="btn-group w-100 mb-3" role="group" aria-label="Knitting method">
+               <button class="btn btn-sm btn-outline-light active" id="mode-round" data-knitting-mode="round">In the Round</button>
+               <button class="btn btn-sm btn-outline-light"        id="mode-flat"  data-knitting-mode="flat">Flat</button>
+            </div>
+            <!-- Reading direction note — updated by workspace.js -->
+            <p id="direction-note" class="direction-note">
+               Every round is read <strong>right → left</strong>.
+            </p>
+
+            <hr class="panel-divider">
+
+            <div class="panel-section-title">Display</div>
+
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="toggle-symbols">
+                  <label class="form-check-label small" for="toggle-symbols">Show symbols</label>
+               </div>
+            </div>
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="toggle-row-numbers" checked>
+                  <label class="form-check-label small" for="toggle-row-numbers">Row numbers</label>
+               </div>
+            </div>
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="toggle-directions" checked>
+                  <label class="form-check-label small" for="toggle-directions">Direction arrows</label>
+               </div>
+            </div>
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="toggle-grid-lines" checked>
+                  <label class="form-check-label small" for="toggle-grid-lines">Grid lines</label>
+               </div>
+            </div>
+
+            <hr class="panel-divider">
+
+            <!-- Repeat region: highlights a block of columns with a blue border.
+                 Standard Fair Isle repeats are 8 or 10 stitches wide. -->
+            <div class="panel-section-title">
+               Repeat Region
+               <span class="badge-proxy">Preview only</span>
+            </div>
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="toggle-repeat">
+                  <label class="form-check-label small" for="toggle-repeat">Show repeat marker</label>
+               </div>
+            </div>
+            <div id="repeat-controls" class="repeat-controls" hidden>
+
+               <!-- Reading direction reminder (charts read right → left):
+                    pre stitches are on the RIGHT, post stitches on the LEFT -->
+               <p class="repeat-zone-note">
+                  <span class="zone-tag zone-pre">pre</span> right edge, worked first &nbsp;·&nbsp;
+                  <span class="zone-tag zone-post">post</span> left edge, worked last
+               </p>
+
+               <div class="param-row">
+                  <label class="param-label" for="repeat-pre">
+                     Pre-repeat stitches <span class="param-hint">(right)</span>
+                  </label>
+                  <input type="number" class="form-control form-control-sm" id="repeat-pre"
+                     min="0" max="19" value="0">
+               </div>
+
+               <div class="param-row">
+                  <label class="param-label" for="repeat-width">
+                     Repeat width <span class="param-hint">(stitches)</span>
+                  </label>
+                  <div class="input-with-value">
+                     <input type="range" class="form-range" id="repeat-width" min="1" max="30" step="1" value="10">
+                     <span id="repeat-width-value" class="param-value-inline">10</span>
+                  </div>
+               </div>
+
+               <div class="param-row">
+                  <label class="param-label" for="repeat-post">
+                     Post-repeat stitches <span class="param-hint">(left)</span>
+                  </label>
+                  <input type="number" class="form-control form-control-sm" id="repeat-post"
+                     min="0" max="19" value="0">
+               </div>
+
+            </div>
+
+            <hr class="panel-divider">
+
+            <div class="panel-section-title">Colour Key</div>
+            <!-- Populated by workspace.js whenever palette changes -->
+            <div id="chart-colour-key" class="colour-key"></div>
+
+            <hr class="panel-divider">
+
+            <div class="panel-section-title">Stitch Count</div>
+            <div class="stat-row"><span>Width</span><span>40 st</span></div>
+            <div class="stat-row"><span>Rows</span><span>40</span></div>
+
+         </section>
+
+
+         <!-- ── Preview mode ── -->
+         <section data-shows-in="preview" hidden>
+
+            <!-- Future: this step will render a garment mockup (e.g. a jumper
+                 with the design applied to the knitting chart areas) — an
+                 approximate visual of what the finished product looks like,
+                 as if photographed after knitting.
+                 For now, the canvas shows a flat colour preview at true
+                 stitch proportions as a placeholder. -->
+
+            <div class="panel-section-title">
+               Garment Preview
+               <span class="badge-proxy">Coming soon</span>
+            </div>
+            <p class="direction-note">
+               Will render an approximate mockup of the finished knitted product
+               with your design applied — like seeing it after it's been knitted.
+            </p>
+            <p class="direction-note">
+               Currently showing a flat colour preview at true stitch proportions
+               (wider-than-tall cells, no annotations).
+            </p>
+
+            <hr class="panel-divider">
+
+            <div class="panel-section-title">Estimated Motif Size</div>
+            <!-- Calculated from PatternDocument.metadata.gauge -->
+            <div class="stat-row"><span>Width</span><span id="preview-size-w">—</span></div>
+            <div class="stat-row"><span>Height</span><span id="preview-size-h">—</span></div>
+            <div class="locked-field muted">Based on 20 st / 28 rows per 10 cm</div>
+
+            <hr class="panel-divider">
+
+            <div class="panel-section-title">Colour Usage</div>
+            <!-- Populated by workspace.js — stitch count per colour -->
+            <div id="preview-colour-usage" class="colour-key"></div>
+
+         </section>
+
+
+         <!-- ── Export mode ── -->
+         <section data-shows-in="export" hidden>
+
+            <div class="panel-section-title">Format</div>
+            <div class="btn-group w-100 mb-3" role="group">
+               <button class="btn btn-sm btn-outline-light active" id="fmt-png">PNG</button>
+               <button class="btn btn-sm btn-outline-light" id="fmt-pdf" disabled title="PDF export coming soon">PDF</button>
+            </div>
+
+            <div class="panel-section-title">Options</div>
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="export-row-numbers" checked>
+                  <label class="form-check-label small" for="export-row-numbers">Row numbers</label>
+               </div>
+            </div>
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="export-colour-key" checked>
+                  <label class="form-check-label small" for="export-colour-key">Colour key</label>
+               </div>
+            </div>
+            <div class="param-row">
+               <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="export-instructions" disabled
+                     title="Written instructions coming soon">
+                  <label class="form-check-label small text-muted" for="export-instructions">
+                     Written instructions
+                     <span class="badge-proxy">Soon</span>
+                  </label>
+               </div>
+            </div>
+
+            <hr class="panel-divider">
+
+            <button id="btn-export-png" class="btn btn-light w-100">
+               Download PNG
+            </button>
+
+         </section>
+
+
+      </aside>
+   </div><!-- /#app -->
+
+
    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
    <script type="module" src="main.js"></script>
