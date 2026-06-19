@@ -101,6 +101,40 @@ export const REGISTRY = [
       ],
    },
 
+   // ── Noise ─────────────────────────────────────────────────────────────────
+
+   {
+      id:        "perlin-noise",
+      name:      "Perlin Noise",
+      category:  "Noise",
+      generator: "noise",
+      params: [
+         { param: "mode",        value: "standard" },
+         { param: "scale",       archetype: "Density",    value: 0.01, map: [0.001, 0.05] },
+         { param: "octaves",     archetype: "Detail",     value: 1,    map: [1, 8] },
+         { param: "lacunarity",  archetype: "Complexity", value: 2.0,  map: [1.0, 4.0] },
+         { param: "persistence", archetype: "Threshold",  value: 0.5,  map: [0.1, 0.9] },
+         { param: "seed",        archetype: "Seed",       value: 1337 },
+      ],
+      actions: [{ label: "Randomize Seed", method: "randomize" }],
+   },
+
+   {
+      id:        "ridge-noise",
+      name:      "Ridge Noise",
+      category:  "Noise",
+      generator: "noise",
+      params: [
+         { param: "mode",        value: "ridge" },
+         { param: "scale",       archetype: "Density",    value: 0.01, map: [0.001, 0.05] },
+         { param: "octaves",     archetype: "Detail",     value: 4,    map: [1, 8] },
+         { param: "lacunarity",  archetype: "Complexity", value: 2.0,  map: [1.0, 4.0] },
+         { param: "persistence", archetype: "Threshold",  value: 0.5,  map: [0.1, 0.9] },
+         { param: "seed",        archetype: "Seed",       value: 1337 },
+      ],
+      actions: [{ label: "Randomize Seed", method: "randomize" }],
+   },
+
    // ── Wave ──────────────────────────────────────────────────────────────────
 
    {
