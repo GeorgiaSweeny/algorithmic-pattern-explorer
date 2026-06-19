@@ -13,7 +13,7 @@ NOISE-BASED PATTERN SYSTEM
 
 import { CANVAS } from "../config.js";
 import { Perlin } from "./noiseLib/perlinNoise.js";
-import { grayscale } from "./renderer.js";
+import { grayscale } from "../render.js";
 
 export class NoiseSystem {
    constructor() {

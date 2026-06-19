@@ -4,7 +4,7 @@
 NOISE ARCHETYPE
 ========================================
 */
-import { Perlin } from "./lib/perlinNoise.js";
+import { Perlin } from "../patternSystems/noiseLib/perlinNoise.js";
 
 // Seed-keyed cache so we never rebuild the permutation table mid-frame.
 const _perlinCache = new Map();
