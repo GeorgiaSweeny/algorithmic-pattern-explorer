@@ -11,19 +11,22 @@ import { ARCHETYPES } from "./archetypes.js";
 export class UIBuilder {
    build(pattern, binder, regen) {
       const frag = document.createDocumentFragment();
+      const syncFns = [];
 
       for (const paramDef of pattern.params) {
          if (paramDef.archetype) {
-            const el = this._buildSlider(paramDef, binder, regen);
-            if (el) frag.appendChild(el);
+            const { el, sync } = this._buildSlider(paramDef, binder, regen);
+            if (el) { frag.appendChild(el); syncFns.push(sync); }
          } else if (paramDef.control) {
             const el = this._buildSelect(paramDef, binder, regen);
             if (el) frag.appendChild(el);
          }
       }
 
+      const syncAll = () => syncFns.forEach(fn => fn(binder));
+
       for (const action of pattern.actions ?? []) {
-         frag.appendChild(this._buildAction(action, binder, regen));
+         frag.appendChild(this._buildAction(action, binder, regen, syncAll));
       }
 
       return frag;
@@ -31,7 +34,7 @@ export class UIBuilder {
 
    _buildSlider(paramDef, binder, regen) {
       const arch = ARCHETYPES[paramDef.archetype];
-      if (!arch) return null;
+      if (!arch) return { el: null, sync: () => {} };
 
       const row = el("div", "param-row");
 
@@ -60,7 +63,14 @@ export class UIBuilder {
       });
 
       row.append(labelRow, input);
-      return row;
+
+      const sync = (binder) => {
+         const val = binder.resolve()[paramDef.param];
+         input.value = toUI(val, paramDef, arch);
+         valueSpan.textContent = fmt(val, arch);
+      };
+
+      return { el: row, sync };
    }
 
    _buildSelect(paramDef, binder, regen) {
@@ -88,12 +98,13 @@ export class UIBuilder {
       return row;
    }
 
-   _buildAction(action, binder, regen) {
+   _buildAction(action, binder, regen, syncAll) {
       const btn = document.createElement("button");
       btn.className   = "btn btn-sm btn-outline-light w-100 mt-2";
       btn.textContent = action.label;
       btn.addEventListener("click", () => {
          binder[action.method]?.();
+         syncAll();
          regen();
       });
       return btn;
