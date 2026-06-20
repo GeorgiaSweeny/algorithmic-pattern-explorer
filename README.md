@@ -1,186 +1,200 @@
-# PatterKnitter
+# Interactive Algorithmic Pattern Generator (In Progress)
 
-PatternKnitter is a domain-specific language (DSL) and multi-output compiler system for knitting patterns. It enables users to write knitting instructions in a structured language (KnitLang v1) and automatically generate:
+## Overview
 
-- Written knitting instructions  
-- SVG knitting charts  
-- 2D fabric visualisations  
-- Optional 3D garment texture mapping (stretch goal)
+This project is a web-based generative design application developed as part of a dissertation exploring algorithmic pattern formation across a **stochastic–deterministic continuum**.
 
-The system treats knitting patterns as structured programs compiled from a single source of truth into multiple consistent representations.
+The system implements multiple procedural pattern generators spanning different computational paradigms, from controlled randomness to fully rule-based geometric construction. The aim is to investigate how varying degrees of randomness and constraint influence visual structure, complexity, and emergent form.
 
----
-
-## Project Motivation
-
-Knitting and programming share a long conceptual history based on rule-driven systems for constructing complex outputs from symbolic instructions. Historical systems such as the Jacquard loom demonstrate early forms of programmable textile design.
-
-Despite this, modern digital knitting tools often separate written instructions, chart representations, and visual previews into independent systems. This separation can introduce inconsistencies and increases the cognitive overhead of pattern design and modification.
-
-PatternKnitter explores whether a domain-specific language approach can unify these representations within a single compiler-style system.
+The application provides an interactive environment where users can manipulate generator parameters in real time and export outputs for digital, analytical, or fabrication use.
 
 ---
 
-## Core Concept
+### key concepts are:
 
-PatternKnitter introduces KnitLang v1, a domain-specific language for knitting patterns.
+- Algorithm-based
+- Generative / Generator
+- Interactive
+- Pattern creation
+- Parameter-driven exploration
 
-Example:
+## Research Context
 
-```text
-PATTERN "Scarf - Garter Stitch"
+This project is grounded in a comparative framework of generative systems positioned along a **stochastic–deterministic spectrum**:
 
-BODY:
+- **Stochastic systems**: rely on randomness or probabilistic inputs to generate structure  
+- **Deterministic systems**: rely on strict rules, symmetry, and geometric constraints  
+- **Hybrid systems**: combine controlled randomness with structured rule application  
 
-ROW 1-40: K ALL
+By situating multiple generative approaches within a unified interface, the project enables systematic comparison of how different algorithmic logics produce visual order, repetition, and complexity.
 
-FINISH:
-CAST OFF
-```
+This framing supports investigation into how generative systems transition from noise-driven emergence to rule-constrained geometric construction.
 
-This single source is compiled into multiple outputs:
+---
 
-- Human-readable instructions
-- SVG knitting chart
-- 2D product simulation (texture map?)
-- Optional 3D texture mapping
+## Implemented Pattern Generators
 
-## System Architecture
+Each generator occupies a distinct position on the generative spectrum:
 
-The system follows a compiler-style pipeline:
-```
-KnitLang Source Code
-        |
-        v
-      Parser
-        |
-        v
-       AST
-        |
-        +----------------------+
-        |          |           |
-        v          v           v
- Instructions   SVG Charts   Fabric Preview
-```
-All outputs are generated from a shared abstract syntax tree (AST), ensuring consistency across representations.
+### Perlin Noise (Highly Stochastic)
+Smooth gradient noise used to generate organic, cloud-like, or terrain-like textures.
 
-## Repository Structure
-```
-patternknitter/
-│
-├── packages/
-│   ├── core/              # DSL parser, AST, compiler logic
-│   ├── renderer-svg/      # SVG knitting chart generator
-│   ├── renderer-fabric/   # 2D fabric visualisation engine
-│   └── types/             # Shared TypeScript AST definitions
-│
-├── apps/
-│   └── web/              # React-based editor and preview interface
-│
-├── examples/             # Reference knitting patterns
-├── docs/                 # DSL specification and design documentation
-└── README.md
-```
-## KnitLang v1 Syntax
+- Based on interpolated gradient fields  
+- Emphasises controlled randomness and emergent continuity  
+- Represents continuous stochastic systems rather than discrete geometry  
 
-KnitLang is a row-based DSL designed to reflect traditional knitting notation while remaining structurally unambiguous.
+---
 
-### Example
-```
-PATTERN "Scarf"
+### Voronoi Diagrams (Hybrid)
+Cellular structures derived from spatial partitioning around seed points.
 
-BODY:
+- Random seed generation combined with deterministic geometric partitioning  
+- Produces organic, cellular, or “cracked” structures  
+- Bridges stochastic input with rule-based spatial structure  
 
-ROW 1-40: K ALL
+---
 
-FINISH:
-CAST OFF
-```
+### Escher-style Tessellations (Structured Transformations)
+Interlocking patterns based on symmetry-preserving transformations.
 
-### Supported constructs
-- ROW definitions (ROW X, ROW X-Y)
-- Stitch types (K, P)
-- Shorthand operations (K ALL, P ALL)
-- Repetition blocks (REPEAT N:)
-- Inline repetition ((K P) REPEAT N)
-- Finish operations (CAST OFF)
+- Uses geometric transformations and repetition rules  
+- Maintains structural constraints while allowing controlled variation  
+- Demonstrates rule-driven emergent complexity  
 
-## Features
-## DSL Compiler
-- Parses KnitLang into an abstract syntax tree (AST)
-- Validates syntax and structure
-- Produces deterministic intermediate representation
+---
 
-### Instruction Generator
-- Converts AST into human-readable knitting instructions
-- Preserves row structure and repetition logic
-### SVG Chart Generator
-- Produces scalable knitting charts
-- Suitable for digital use and printing
-### Fabric Visualisation
-- Generates 2D stitch-level representations of knitted fabric
-- Provides preview of final textile structure
-### Optional 3D Visualisation
-- Applies generated fabric textures to pre-modelled garments
-- Supports scarf, blanket, hat, and jumper models
+### Islamic Geometric Patterns (Highly Deterministic)
+Radial and polygonal constructions based on classical geometric and symmetry systems.
 
-## Evaluation Strategy
+- Derived from crystallographic symmetry principles  
+- Emphasises strict order, repetition, and mathematical precision  
+- Represents highly constrained deterministic generative systems  
 
-The system is evaluated using four reference patterns:
+---
 
-- Garter stitch scarf *(knit only)*
-- stocking stitch Blanket *(knit & purl)*
-- simple Beanie hat
-- Simple stocking stitch jumper
+## Key Features
 
-Each pattern is encoded in KnitLang and compared against original human-written patterns in terms of:
+- Real-time parameter manipulation for each generator  
+- Immediate visual feedback during pattern generation  
+- Comparative exploration across different generative systems  
+- Export functionality for:
+  - PNG (raster output)
+  - SVG (vector output for scaling, fabrication, CNC, laser cutting)
 
-- Instructional equivalence
-- Chart accuracy
-- Structural consistency
+---
 
-Qualitative feedback is collected from a local knitting group with mixed experience levels to assess usability and interpretability.
+## Technical Overview
 
-## Technologies
-- TypeScript / JavaScript
-- React (frontend application)
-- SVG (chart rendering)
-- HTML5 Canvas (fabric simulation)
-- Optional Three.js? (3D visualisation)
+- Built as a web-based interactive application  
+- Procedural generation implemented using modular algorithmic systems  
+- Shared rendering environment ensures consistency across generators  
+- Designed for extensibility to support additional generative models  
 
-## Project Status
+---
 
-MSc dissertation project in active development.
+## Rendering Strategy and Output Representation
 
-Target milestones:
+The system adopts a dual rendering strategy based on the mathematical structure of each generative model, distinguishing between vector-suitable and raster-suitable representations.
 
-- Core DSL and compiler: mid-August
-- Full evaluation and dissertation: mid-September
+Rather than enforcing a single output format, each generator is paired with the representation that best preserves its underlying generative logic.
 
-## Academic Context
+---
 
-This project is informed by research in:
+### Vector-based generation (SVG-first)
 
-- Domain-specific language design
-- Compiler architecture
-- Human-computer interaction
-- Textile computation systems (e.g. Jacquard loom)
-- Visual representation of procedural systems
+Most pattern generators are implemented as vector-native systems and exported primarily as SVG. This is based on their fundamentally geometric nature, where structure is defined through discrete shapes, transformations, and spatial relationships.
 
-## Current Todos
+Vector representation is used where:
 
-- [ ] Set up monorepo root (package.json, tsconfig.base.json)
+- geometry is explicitly defined (lines, polygons, paths)  
+- transformations preserve mathematical structure  
+- scalability without loss of fidelity is required  
+- downstream fabrication use cases (e.g. laser cutting, CNC machining) are relevant  
 
-- [ ] Build packages/types (AST + PatternDocument interfaces)
+This ensures that outputs remain faithful expressions of the underlying generative rules, preserving geometric fidelity and structural clarity.
 
-- [ ] Build packages/core — lexer
+Generators in this category include:
 
-- [ ] Build packages/core — parser
+- Voronoi diagrams  
+- Escher-style tessellations  
+- Islamic geometric patterns  
+- fractal-based systems (where applicable)  
 
-- [ ] Build packages/core — validator
+---
 
-- [ ] Build packages/core — compiler (AST → PatternDocument)
+### Raster-only generation (PNG)
 
-- [ ] Build packages/core — instruction generator
+Perlin noise is treated as a continuous stochastic field rather than a discrete geometric system. As such, it is implemented exclusively as a raster-based output.
 
+This decision is motivated by:
 
+- the continuous nature of noise functions over 2D space  
+- the absence of meaningful geometric primitives to encode as vectors  
+- the inefficiency and conceptual distortion of approximating noise fields as vector structures  
+
+As a result, Perlin noise is exported only as PNG, preserving its continuous tonal variation and avoiding unnecessary computational overhead.
+
+---
+
+### Hybrid export strategy
+
+Where applicable, systems support both SVG and PNG export via rasterization of vector outputs. This enables:
+
+- preservation of mathematical structure in vector form  
+- accessibility for digital and print workflows  
+- compatibility with downstream creative and fabrication pipelines  
+
+---
+
+### Design rationale
+
+This separation reflects a broader system design principle:
+
+> The choice of output modality is determined by the mathematical structure of the generative system, rather than being treated as a uniform rendering constraint.
+
+This ensures that each generator is expressed in the representation that most faithfully corresponds to its underlying generative model.
+
+---
+
+## Research Aim
+
+The primary aim of this project is to explore:
+
+> How do different generative logics—ranging from stochastic to deterministic—affect the emergence of visual structure, complexity, and perceived order within algorithmically generated patterns?
+
+This is achieved through comparative implementation and interactive exploration of multiple algorithmic systems within a unified interface.
+
+---
+
+## Status
+
+🚧 This project is currently in development as part of an ongoing dissertation.  
+Features, algorithms, and interface design are subject to change.
+
+---
+
+## Future Work
+
+- Additional pattern generators (e.g. reaction-diffusion, L-systems)  
+- Quantitative analysis of pattern complexity and entropy  
+- Improved parameter mapping and UI interaction design  
+- Performance optimisation for high-resolution generation and export  
+- Extended comparative evaluation framework  
+- Optional interpretive / educational layer for algorithmic explanation and learning  
+
+---
+
+## Potential Extension: Interpretive / Educational Layer
+
+An optional future direction for the system is the addition of an interpretive layer designed to improve algorithmic transparency and user understanding.
+
+This layer would map generator parameters and outputs to explanatory visualisations or structured annotations, supporting exploratory learning of generative systems.
+
+Potential applications include:
+
+- visualising relationships between parameters and output behaviour  
+- supporting intuitive understanding of algorithmic processes  
+- improving interpretability of stochastic vs deterministic systems  
+- bridging computational concepts with visual intuition  
+
+This extension does not alter the core research focus but introduces a secondary direction aligned with computational literacy and interactive learning systems.
