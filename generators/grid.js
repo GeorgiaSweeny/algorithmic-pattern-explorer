@@ -1,6 +1,6 @@
 /*
 ========================================
-GRID TESSELATION ARCHETYPE
+GRID TESSELLATION GENERATOR
 ========================================
 */
 // Pure grid tessellation. All shape logic lives here; no class state.
