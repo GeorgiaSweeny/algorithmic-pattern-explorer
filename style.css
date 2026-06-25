@@ -1,20 +1,163 @@
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+
 html, body {
+   height: 100%;
    margin: 0;
-   padding: 2rem;
-   color: white;
-   background-color: grey;
+   padding: 0;
 }
 
-h1 {
-   text-align: center;
+#app {
+   height: calc(100% - 56px);  /* 56px = Bootstrap navbar height */
 }
 
-#instructions {
-   text-align: center;
+#canvas-workspace {
+   background-color: #1a1a1a;
 }
 
-#canvas-container {
+#canvas-container canvas,
+#svg-canvas {
+   display: block;
+}
+
+/* ── Control panel ────────────────────────────────────────────────────────── */
+
+#control-panel {
+   background-color: #212529;
+   color: #dee2e6;
+   border-left: 1px solid #373b3e;
+}
+
+.panel-section-title {
+   color: #adb5bd;
+   font-size: 0.7rem;
+   letter-spacing: 0.08em;
+   margin-bottom: 0.5rem;
+}
+
+.section-chevron {
+   float: right;
+   font-size: 1rem;
+   line-height: 1;
+   color: #6c757d;
+}
+
+/* ── Pattern list ─────────────────────────────────────────────────────────── */
+
+.pattern-category-label {
+   font-size: 0.65rem;
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+   color: #6c757d;
+   margin-top: 0.6rem;
+   margin-bottom: 0.2rem;
+}
+
+.form-check-label {
+   color: #dee2e6;
+   font-size: 0.85rem;
+}
+
+.form-check-input:checked {
+   background-color: #0d6efd;
+   border-color: #0d6efd;
+}
+
+/* ── Spectrum bar ─────────────────────────────────────────────────────────── */
+
+.spectrum-labels {
    display: flex;
-   justify-content: center;
-   margin-top: 2rem;
+   justify-content: space-between;
+   font-size: 0.65rem;
+   color: #6c757d;
+   margin-bottom: 4px;
+}
+
+.spectrum-track {
+   position: relative;
+   height: 8px;
+   border-radius: 4px;
+   background: linear-gradient(to right, #9333ea, #0891b2);
+}
+
+.spectrum-marker {
+   position: absolute;
+   top: 50%;
+   transform: translate(-50%, -50%);
+   width: 14px;
+   height: 14px;
+   border-radius: 50%;
+   background: #fff;
+   border: 2px solid rgba(0, 0, 0, 0.35);
+   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+   transition: left 0.25s ease;
+}
+
+.spectrum-description {
+   font-size: 0.68rem;
+   color: #6c757d;
+   margin-top: 5px;
+   text-align: center;
+   font-style: italic;
+}
+
+/* ── Parameter controls ───────────────────────────────────────────────────── */
+
+.param-row {
+   margin-bottom: 0.75rem;
+}
+
+.param-label {
+   display: flex;
+   justify-content: space-between;
+   font-size: 0.8rem;
+   color: #adb5bd;
+   margin-bottom: 2px;
+}
+
+.param-value {
+   color: #dee2e6;
+   font-variant-numeric: tabular-nums;
+}
+
+.form-range::-webkit-slider-thumb {
+   background: #0d6efd;
+}
+
+.form-control-sm {
+   background-color: #2c3034;
+   border-color: #495057;
+   color: #dee2e6;
+}
+
+.form-control-sm:focus {
+   background-color: #2c3034;
+   color: #dee2e6;
+   border-color: #0d6efd;
+   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-outline-light {
+   font-size: 0.8rem;
+}
+
+/* ── Export controls ──────────────────────────────────────────────────────── */
+
+.export-btn {
+   font-size: 0.8rem;
+   display: flex;
+   align-items: center;
+   gap: 6px;
+}
+
+.export-btn.svg { border-color: #0891b2; color: #0891b2; }
+.export-btn.svg:hover { background-color: #0891b2; color: #fff; }
+
+.export-btn.png { border-color: #0891b2; color: #0891b2; }
+.export-btn.png:hover { background-color: #0891b2; color: #fff; }
+
+.export-format-tag {
+   font-size: 0.65rem;
+   font-weight: 700;
+   letter-spacing: 0.05em;
+   opacity: 0.7;
 }

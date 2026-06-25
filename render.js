@@ -19,12 +19,3 @@ export function grayscale(value) {
    };
 }
 
-/*
-Possible Options:
-   colour palettes
-   gradients
-   domain warping
-   heightmaps
-   biome maps
-   tessellation colours
-*/

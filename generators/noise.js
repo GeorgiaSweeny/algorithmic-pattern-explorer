@@ -1,7 +1,7 @@
 
 /*
 ========================================
-NOISE ARCHETYPE
+NOISE GENERATOR
 ========================================
 */
 import { Perlin } from "../patternSystems/noiseLib/perlinNoise.js";

@@ -1,6 +1,6 @@
 /*
 ========================================
-RECURSIVE ARCHETYPE
+RECURSIVE GENERATOR
 ========================================
 */
 import { CANVAS } from "../config.js";

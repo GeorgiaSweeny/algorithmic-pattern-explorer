@@ -12,102 +12,21 @@ PATTERN REGISTRY
 * Generators own math. Patterns own meaning.
 *
 * STATIC — this object is never mutated at runtime.
-* Live parameter state lives in runtime/patternLoader.js (one instance per active pattern).
+* Live parameter state is owned by PatternBinder (one instance per active pattern).
 -----------------------------------------
 */
 
 export const REGISTRY = [
 
-   // ── Tiles ─────────────────────────────────────────────────────────────────
+   // ── Noise — predominantly stochastic ──────────────────────────────────────
 
    {
-      id:        "square-grid",
-      name:      "Square Grid",
-      category:  "Tiles",
-      generator: "grid",
-      params: [
-         { param: "shape",    value: "square" },
-         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
-      ],
-   },
-
-   {
-      id:        "hex-grid",
-      name:      "Hex Grid",
-      category:  "Tiles",
-      generator: "grid",
-      params: [
-         { param: "shape",    value: "hexagon" },
-         { param: "tileSize", archetype: "Size", value: 30, map: [10, 120] },
-      ],
-   },
-
-   {
-      id:        "triangle-grid",
-      name:      "Triangle Grid",
-      category:  "Tiles",
-      generator: "grid",
-      params: [
-         { param: "shape",    value: "triangle" },
-         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
-      ],
-   },
-
-   {
-      id:        "brick-grid",
-      name:      "Brick",
-      category:  "Tiles",
-      generator: "grid",
-      params: [
-         { param: "shape",    value: "brick" },
-         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
-      ],
-   },
-
-   {
-      id:        "diamond-grid",
-      name:      "Diamond",
-      category:  "Tiles",
-      generator: "grid",
-      params: [
-         { param: "shape",    value: "diamond" },
-         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
-      ],
-   },
-
-   // ── Fractal ───────────────────────────────────────────────────────────────
-
-   {
-      id:        "sierpinski",
-      name:      "Sierpinski Carpet",
-      category:  "Fractal",
-      generator: "recursive",
-      params: [
-         { param: "mode",         value: "sierpinski" },
-         { param: "subdivisions", value: 3 },
-         { param: "depth",        archetype: "Complexity", value: 4, map: [1, 6] },
-      ],
-   },
-
-   {
-      id:        "recursive-grid",
-      name:      "Recursive Grid",
-      category:  "Fractal",
-      generator: "recursive",
-      params: [
-         { param: "mode",         value: "grid" },
-         { param: "depth",        archetype: "Complexity", value: 3, map: [1, 6] },
-         { param: "subdivisions", archetype: "Detail",     value: 4, map: [2, 9] },
-      ],
-   },
-
-   // ── Noise ─────────────────────────────────────────────────────────────────
-
-   {
-      id:        "perlin-noise",
-      name:      "Perlin Noise",
-      category:  "Noise",
-      generator: "noise",
+      id:           "perlin-noise",
+      name:         "Perlin Noise",
+      category:     "Noise",
+      generator:    "noise",
+      spectrum:     0.10,
+      nativeFormat: "raster",
       params: [
          { param: "mode",        value: "standard" },
          { param: "scale",       archetype: "Density",    value: 0.01, map: [0.001, 0.05] },
@@ -120,10 +39,12 @@ export const REGISTRY = [
    },
 
    {
-      id:        "ridge-noise",
-      name:      "Ridge Noise",
-      category:  "Noise",
-      generator: "noise",
+      id:           "ridge-noise",
+      name:         "Ridge Noise",
+      category:     "Noise",
+      generator:    "noise",
+      spectrum:     0.15,
+      nativeFormat: "raster",
       params: [
          { param: "mode",        value: "ridge" },
          { param: "scale",       archetype: "Density",    value: 0.01, map: [0.001, 0.05] },
@@ -135,13 +56,31 @@ export const REGISTRY = [
       actions: [{ label: "Randomize Seed", method: "randomize" }],
    },
 
-   // ── Wave ──────────────────────────────────────────────────────────────────
+   // ── Hybrid — stochastic input, deterministic construction ─────────────────
 
    {
-      id:        "wave-stripes",
-      name:      "Wave Stripes",
-      category:  "Wave",
-      generator: "wave",
+      id:           "voronoi-cells",
+      name:         "Voronoi Cells",
+      category:     "Voronoi",
+      generator:    "voronoi",
+      spectrum:     0.45,
+      nativeFormat: "vector",
+      params: [
+         { param: "seed",     value: 1337 },
+         { param: "numCells", archetype: "Density", value: 20, map: [5, 80] },
+      ],
+      actions: [{ label: "Randomize Seed", method: "randomize" }],
+   },
+
+   // ── Wave — mostly deterministic ───────────────────────────────────────────
+
+   {
+      id:           "wave-stripes",
+      name:         "Wave Stripes",
+      category:     "Wave",
+      generator:    "wave",
+      spectrum:     0.75,
+      nativeFormat: "vector",
       params: [
          { param: "mode",      value: "wave" },
          { param: "frequency", archetype: "Density", value: 0.05, map: [0.005, 0.15] },
@@ -149,26 +88,113 @@ export const REGISTRY = [
    },
 
    {
-      id:        "concentric-rings",
-      name:      "Concentric Rings",
-      category:  "Wave",
-      generator: "wave",
+      id:           "concentric-rings",
+      name:         "Concentric Rings",
+      category:     "Wave",
+      generator:    "wave",
+      spectrum:     0.75,
+      nativeFormat: "vector",
       params: [
          { param: "mode",      value: "rings" },
          { param: "frequency", archetype: "Density", value: 0.05, map: [0.005, 0.15] },
       ],
    },
 
+   // ── Fractal — highly deterministic ────────────────────────────────────────
+
    {
-      id:        "voronoi-cells",
-      name:      "Voronoi Cells",
-      category:  "Tiles",
-      generator: "voronoi",
+      id:           "sierpinski",
+      name:         "Sierpinski Carpet",
+      category:     "Fractal",
+      generator:    "recursive",
+      spectrum:     0.95,
+      nativeFormat: "vector",
       params: [
-         { param: "seed",     value: 1337 },
-         { param: "numCells", archetype: "Density", value: 20, map: [5, 80] },
+         { param: "mode",         value: "sierpinski" },
+         { param: "subdivisions", value: 3 },
+         { param: "depth",        archetype: "Complexity", value: 4, map: [1, 6] },
       ],
-      actions: [{ label: "Randomize Seed", method: "randomize" }],
+   },
+
+   {
+      id:           "recursive-grid",
+      name:         "Recursive Grid",
+      category:     "Fractal",
+      generator:    "recursive",
+      spectrum:     0.90,
+      nativeFormat: "vector",
+      params: [
+         { param: "mode",         value: "grid" },
+         { param: "depth",        archetype: "Complexity", value: 3, map: [1, 6] },
+         { param: "subdivisions", archetype: "Detail",     value: 4, map: [2, 9] },
+      ],
+   },
+
+   // ── Tiles — highly deterministic ──────────────────────────────────────────
+
+   {
+      id:           "square-grid",
+      name:         "Square Grid",
+      category:     "Tiles",
+      generator:    "grid",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "shape",    value: "square" },
+         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
+      ],
+   },
+
+   {
+      id:           "hex-grid",
+      name:         "Hex Grid",
+      category:     "Tiles",
+      generator:    "grid",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "shape",    value: "hexagon" },
+         { param: "tileSize", archetype: "Size", value: 30, map: [10, 120] },
+      ],
+   },
+
+   {
+      id:           "triangle-grid",
+      name:         "Triangle Grid",
+      category:     "Tiles",
+      generator:    "grid",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "shape",    value: "triangle" },
+         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
+      ],
+   },
+
+   {
+      id:           "brick-grid",
+      name:         "Brick",
+      category:     "Tiles",
+      generator:    "grid",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "shape",    value: "brick" },
+         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
+      ],
+   },
+
+   {
+      id:           "diamond-grid",
+      name:         "Diamond",
+      category:     "Tiles",
+      generator:    "grid",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "shape",    value: "diamond" },
+         { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
+      ],
    },
 
 ];
