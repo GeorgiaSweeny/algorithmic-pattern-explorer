@@ -197,4 +197,27 @@ export const REGISTRY = [
       ],
    },
 
+   // ── Escher Type I — translation tessellation ──────────────────────────────
+   // A single tile shape repeated across the plane by pure X/Y translation.
+   // Opposite edges are congruent so tiles interlock with no rotation or reflection.
+
+   {
+      id:           "escher-translation",
+      name:         "Translation (Type I)",
+      category:     "Escher",
+      generator:    "escher",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "baseShape", control: "select", label: "Base Polygon",
+           options: ["square", "hexagon"], value: "square" },
+         { param: "bumpType",  control: "select", label: "Edge Shape",
+           options: ["wave", "zigzag", "notch"], value: "wave" },
+         { param: "tones",     control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
+         { param: "tileSize",  archetype: "Size",       value: 60, map: [20, 120] },
+         { param: "bumpAmp",   archetype: "Complexity", value: 3,  map: [2, 25]  },
+      ],
+   },
+
 ];
