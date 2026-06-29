@@ -153,15 +153,53 @@ Core design principles include:
 
 ## Future Work
 
-Potential future developments include:
+The current MVP focuses on helping users explore and understand predefined generative algorithms through an interactive visual interface. Several extensions could further develop the application into a richer educational platform.
 
-* User-created algorithm workflows
-* Shape grammar construction tools
-* Tree grammar and combinator systems
-* Guided learning pathways
-* Interactive tutorials
-* Additional procedural generation algorithms
-* Classroom activities and lesson plans
+### Grammar-Based Pattern Construction
+
+A natural progression of the algorithm explorer would be to support user-created generative workflows. Rather than interacting with predefined algorithms, learners could construct their own pattern generators by composing reusable computational operations.
+
+Drawing inspiration from **shape grammars**, **tree grammars**, and **functional combinators**, each visual node could represent a modular rule such as:
+
+* Generate Grid
+* Apply Symmetry
+* Repeat
+* Rotate
+* Mirror
+* Subdivide
+* Add Randomness
+* Render
+
+Users could connect these operations to create new procedural workflows while learning how complex algorithms emerge from simple computational building blocks.
+
+### Interactive Algorithm Authoring
+
+The current visual workspace is designed as an educational algorithm explorer. Future versions could evolve into a guided authoring environment, allowing users to experiment with their own computational rules while maintaining valid graph structures through predefined constraints and validation.
+
+This approach would encourage learners to transition from understanding existing algorithms to designing their own procedural systems.
+
+### Guided Learning Pathways
+
+Additional educational content could include:
+
+* Step-by-step tutorials
+* Interactive programming exercises
+* Progressive difficulty levels
+* Classroom lesson plans
+* Self-assessment activities
+
+### Additional Generative Systems
+
+Future versions could introduce further procedural techniques for comparison, including:
+
+* L-Systems
+* Reaction–Diffusion Systems
+* Cellular Automata
+* Fractal Generation
+* Agent-Based Systems
+
+These additions would broaden the range of computational paradigms available for exploration while reinforcing the project's objective of making generative algorithms accessible through interactive visual learning.
+
 
 ---
 
