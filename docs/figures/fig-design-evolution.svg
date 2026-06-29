@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 498" width="760" height="498" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#9ca3af"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1e40af"/>
+    </marker>
+    <marker id="arr-mid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  <!-- White background -->
+  <rect width="760" height="498" fill="#ffffff"/>
+
+  <!-- ═══════════════ COLUMN HEADERS ═══════════════ -->
+  <rect x="20"  y="18" width="330" height="38" rx="3" fill="#4b5563"/>
+  <text x="185" y="42" text-anchor="middle" font-size="14" font-weight="bold" fill="#ffffff" letter-spacing="0.3">Undergraduate HDA</text>
+
+  <rect x="410" y="18" width="330" height="38" rx="3" fill="#1e40af"/>
+  <text x="575" y="42" text-anchor="middle" font-size="14" font-weight="bold" fill="#ffffff" letter-spacing="0.3">Dissertation Tool</text>
+
+  <!-- ═══════════════ LEFT COLUMN ═══════════════ -->
+
+  <!-- "Hidden from user" label -->
+  <text x="185" y="76" text-anchor="middle" font-size="10" fill="#9ca3af" font-style="italic">hidden from user</text>
+
+  <!-- L1: Shape Grammar (hidden) -->
+  <rect x="50" y="84" width="270" height="36" rx="3" fill="none" stroke="#d1d5db" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="185" y="107" text-anchor="middle" font-size="12" fill="#9ca3af">Parameterised Shape Grammar</text>
+
+  <!-- L1 → L2 arrow -->
+  <line x1="185" y1="120" x2="185" y2="138" stroke="#d1d5db" stroke-width="1.5" marker-end="url(#arr-grey)"/>
+
+  <!-- L2: Procedural Network (hidden) -->
+  <rect x="50" y="140" width="270" height="36" rx="3" fill="none" stroke="#d1d5db" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="185" y="163" text-anchor="middle" font-size="12" fill="#9ca3af">Procedural Network</text>
+
+  <!-- Arrow stub from L2 down to boundary — no arrowhead -->
+  <line x1="185" y1="176" x2="185" y2="190" stroke="#d1d5db" stroke-width="1.5"/>
+
+  <!-- user boundary dashed line -->
+  <line x1="24" y1="193" x2="346" y2="193" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- "visible to user" label — centred below boundary line -->
+  <text x="185" y="208" text-anchor="middle" font-size="10" fill="#9ca3af" font-style="italic">visible to user</text>
+
+  <!-- Arrow stub continuing downward from below label to L3 -->
+  <line x1="185" y1="214" x2="185" y2="230" stroke="#d1d5db" stroke-width="1.5" marker-end="url(#arr-grey)"/>
+
+  <!-- L3: Parameter Controls -->
+  <rect x="50" y="232" width="270" height="36" rx="3" fill="#f9fafb" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="185" y="255" text-anchor="middle" font-size="12" fill="#374151">Parameter Controls</text>
+
+  <!-- L3 → L4 arrow -->
+  <line x1="185" y1="268" x2="185" y2="284" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr-mid)"/>
+
+  <!-- L4: Pattern Output -->
+  <rect x="50" y="286" width="270" height="36" rx="3" fill="#f9fafb" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="185" y="309" text-anchor="middle" font-size="12" fill="#374151">Pattern Output</text>
+
+  <!-- Left summary box -->
+  <rect x="50" y="334" width="270" height="82" rx="3" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="185" y="353" text-anchor="middle" font-size="11" font-style="italic" fill="#374151">Goal: creative production</text>
+  <text x="185" y="370" text-anchor="middle" font-size="10" fill="#6b7280">Algorithm hidden beneath interface</text>
+  <text x="185" y="386" text-anchor="middle" font-size="10" fill="#6b7280">Constrained inputs → valid outputs</text>
+  <text x="185" y="402" text-anchor="middle" font-size="10" fill="#6b7280">Design accessibility</text>
+
+  <!-- ═══════════════ DIVIDER — stops at bottom border line ═══════════════ -->
+  <line x1="380" y1="14" x2="380" y2="424" stroke="#e5e7eb" stroke-width="1.5"/>
+
+  <!-- ═══════════════ RIGHT COLUMN ═══════════════ -->
+
+  <!-- R1: Algorithm Grammar -->
+  <rect x="440" y="84" width="270" height="36" rx="3" fill="#eff6ff" stroke="#1e40af" stroke-width="1.5"/>
+  <text x="575" y="107" text-anchor="middle" font-size="12" fill="#1e3a8a">Algorithm Grammar</text>
+
+  <!-- R1 → R2 arrow -->
+  <line x1="575" y1="120" x2="575" y2="138" stroke="#1e40af" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <!-- R2: Visual Node Graph — height increased to 90 for breathing room -->
+  <rect x="440" y="140" width="270" height="90" rx="3" fill="#eff6ff" stroke="#1e40af" stroke-width="1.5"/>
+  <text x="575" y="162" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">Visual Node Graph</text>
+  <line x1="452" y1="169" x2="698" y2="169" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="460" y="185" font-size="10" fill="#1e40af">· Computational concept label</text>
+  <text x="460" y="201" font-size="10" fill="#1e40af">· Adjustable parameters per stage</text>
+  <text x="460" y="217" font-size="10" fill="#1e40af">· Contextual explanation panel</text>
+
+  <!-- R2 → R3 arrow -->
+  <line x1="575" y1="230" x2="575" y2="248" stroke="#1e40af" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <!-- R3: Pattern Output -->
+  <rect x="440" y="250" width="270" height="36" rx="3" fill="#eff6ff" stroke="#1e40af" stroke-width="1.5"/>
+  <text x="575" y="273" text-anchor="middle" font-size="12" fill="#1e3a8a">Real-time Pattern Output</text>
+
+  <!-- R3 → R4 arrow -->
+  <line x1="575" y1="286" x2="575" y2="304" stroke="#1e40af" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <!-- R4: Computational Understanding -->
+  <rect x="440" y="306" width="270" height="36" rx="3" fill="#1e40af" stroke="#1e40af" stroke-width="1.5"/>
+  <text x="575" y="329" text-anchor="middle" font-size="12" fill="#ffffff">Computational Understanding</text>
+
+  <!-- Right summary box -->
+  <rect x="440" y="358" width="270" height="44" rx="3" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="575" y="378" text-anchor="middle" font-size="11" font-style="italic" fill="#1e3a8a">Goal: educational exploration</text>
+  <text x="575" y="394" text-anchor="middle" font-size="10" fill="#1e40af">Algorithm revealed as the interface</text>
+
+  <!-- ═══════════════ FIGURE CAPTION ═══════════════ -->
+  <line x1="20" y1="424" x2="740" y2="424" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="380" y="444" text-anchor="middle" font-size="11" fill="#374151" font-style="italic">
+    Figure X.X. Design evolution from a procedural design tool to an educational algorithm interface.
+  </text>
+  <text x="380" y="462" text-anchor="middle" font-size="11" fill="#374151" font-style="italic">
+    Dashed boxes indicate components hidden from the user in the undergraduate system.
+  </text>
+</svg>

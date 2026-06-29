@@ -1,135 +1,177 @@
-# Algorithmic Pattern Explorer (new working title)
+# Algorithmic Pattern Explorer
 
-An educational web application for exploring how different computational rules generate visual patterns.
+> An educational application that visualises generative algorithms to teach computational thinking through interactive pattern exploration.
 
-## Project Overview
+---
 
-The Algorithmic Pattern Generator is an interactive learning tool that teaches programming and computational thinking concepts through visual pattern creation. Users can experiment with a range of generative systems, from controlled randomness to highly deterministic rule-based structures, while learning how underlying algorithms influence visual outcomes.
+## Overview
 
-The project investigates how different generative logics affect the emergence of structure, complexity, and perceived order. Rather than presenting pattern generation as a black box, the application exposes the processes behind each algorithm through interactive controls, visual explanations, and educational content.
+Algorithmic Pattern Explorer is an educational web application developed as part of an MSc dissertation investigating how interactive visualisation can support the learning of computational thinking through generative art.
 
-## Research Aim
+Rather than treating procedural generation as a black box, the application exposes the structure of each algorithm through an interactive visual workspace. Users can manipulate parameters, inspect each stage of the generation process, and observe how computational rules influence the emergence of visual patterns in real time.
 
-This project explores the relationship between computational rules and visual pattern formation.
+The project combines procedural graphics, algorithm visualisation and educational interface design to make generative systems more understandable and accessible.
 
-The central research question is:
+---
+
+## Research Questions
+
+### Primary Research Question
 
 > **How can interactive visualisation of generative algorithms support understanding of computational thinking concepts through pattern creation?**
 
-A secondary research focus examines:
+### Secondary Research Question
 
 > **How do different generative logics influence the emergence of visual structure across a spectrum from stochastic to deterministic systems?**
 
-## Target Users
+---
 
-The application is designed for:
+## Educational Objectives
 
-* Students learning introductory programming concepts
-* Learners interested in computational art and design
-* Educators introducing procedural generation and algorithmic thinking
-* Creative coders exploring generative systems
+The application is designed to help learners develop an understanding of computational thinking through direct interaction with generative systems.
 
-The goal is to help users understand concepts such as:
+Key concepts include:
 
-* Iteration
-* Recursion
-* Transformation
 * Randomness
+* Iteration
+* Transformation
+* Symmetry
 * Rule-based generation
-* Emergence
 * Parameterisation
+* Emergence
+* Procedural modelling
 * Computational creativity
 
-## Educational Layer
+Rather than simply generating patterns, the application aims to explain **why** different algorithms produce different visual behaviours.
 
-A key feature of the project is the educational layer that accompanies each pattern generator.
-
-Users can:
-
-* Adjust algorithm parameters and immediately observe changes
-* Learn how parameters influence pattern formation
-* Explore visual representations of algorithm structure
-* Compare stochastic and deterministic approaches
-* Understand the computational processes behind generated outputs
-
-Rather than focusing solely on creating patterns, the application aims to make generative algorithms understandable and accessible.
+---
 
 ## Generative Spectrum
 
-The selected generators represent increasing levels of structure and constraint.
+The project investigates four generators representing increasing levels of algorithmic constraint.
 
-### Perlin Noise
+| Generator                      | Computational Approach                        | Position on Spectrum |
+| ------------------------------ | --------------------------------------------- | -------------------- |
+| **Perlin Noise**               | Controlled randomness                         | Stochastic           |
+| **Voronoi Diagrams**           | Random inputs with deterministic partitioning | Hybrid               |
+| **Escher Tessellations**       | Geometric transformations                     | Structured           |
+| **Islamic Geometric Patterns** | Mathematical construction rules               | Deterministic        |
 
-A stochastic system that uses controlled randomness to generate organic forms and textures.
+Together these demonstrate how different computational rules influence pattern formation.
 
-### Voronoi Diagrams
+---
 
-A hybrid system combining random point placement with deterministic spatial partitioning.
+# Educational Interface
 
-### Escher-Inspired Tessellations
+The core contribution of the project is an interactive algorithm explorer.
 
-A structured geometric system based on transformation rules and repetition.
+Instead of exposing only parameter controls, each generator is represented as a visual workflow composed of algorithmic stages.
 
-### Islamic Geometric Patterns
+Users can:
 
-A highly deterministic system constructed from mathematical principles, symmetry, and strict geometric relationships.
+* Explore the structure of each algorithm
+* Manipulate parameters at individual stages
+* Observe live updates to generated patterns
+* Learn the computational concepts represented by each operation
+* Compare stochastic and deterministic approaches
 
-Together these generators provide a continuum from randomness to rule-based construction.
+The educational interface transforms procedural generation from a hidden implementation into an explorable learning experience.
+
+### Design Evolution
+
+This interface design builds directly on a previous undergraduate R&D project: an Islamic geometric pattern generator implemented as a Houdini Digital Asset (HDA). That system used parameterised shape grammars to drive pattern generation, but kept the procedural graph hidden — users interacted only with a curated parameter panel, and could produce valid outputs without understanding the computational process behind them.
+
+The dissertation inverts this approach. Rather than abstracting the algorithm away, the node-based workspace surfaces it as the primary learning object. The shift is from *design accessibility* to *educational accessibility* — from helping users use a procedural tool, to helping them understand how one works.
+
+![Design evolution from a procedural design tool to an educational algorithm interface](docs/figures/fig-design-evolution.svg)
+
+---
 
 ## Minimum Viable Product
 
-The MVP includes:
+### Pattern Generators
 
-### Pattern Generation
+* Perlin Noise
+* Voronoi Diagrams
+* Escher-inspired Tessellations
+* Islamic Geometric Patterns
 
-* Perlin Noise Generator
-* Voronoi Generator
-* Escher-Inspired Tessellation Generator
-* Islamic Geometric Pattern Generator
+### Algorithm Explorer
 
-### Educational Features
+* Interactive visual workflow
+* Custom algorithm nodes
+* Stage-by-stage parameter editing
+* Live pattern updates
+* Educational explanations for each computational concept
 
-* Interactive parameter controls
-* Algorithm explanations
-* Visual workflow representations
-* Comparative exploration of generative systems
-* Contextual learning content
-
-### Export Features
+### Export
 
 * PNG export
 * SVG export (where supported)
 
+---
+
+## Target Audience
+
+The application is intended for:
+
+* Students learning programming and computational thinking
+* Learners exploring generative art
+* Creative coders
+* Designers interested in procedural workflows
+* Educators teaching algorithmic concepts through visual media
+
+---
+
 ## Evaluation
 
-The project will be evaluated through user testing with participants from the target audience.
+The project will be evaluated through user testing focusing on:
 
-Evaluation focuses on:
-
-* Usability of the interface
+* Usability
+* Learning experience
 * Understanding of computational concepts
-* Engagement with generative systems
-* Ability to identify relationships between algorithm parameters and visual outcomes
+* Understanding of algorithmic workflows
+* Relationship between parameter changes and visual outcomes
 * Perceived educational value
 
-## Technical Focus
+---
 
-The project prioritises:
+## Technical Architecture
 
-* Readable and maintainable code architecture
-* Reusable parameter systems
-* Interactive visualisation
-* Educational accessibility
-* Extensible generator design
+The application is built using a modular architecture that separates pattern generation from educational visualisation.
+
+Core design principles include:
+
+* Reusable generator architecture
+* Modular parameter system
+* Interactive node-based algorithm visualisation
+* Extensible educational content
+* Real-time procedural rendering
+* Vector and raster export
+
+---
 
 ## Future Work
 
 Potential future developments include:
 
-* Visual programming interfaces inspired by Scratch
-* Tree grammars and combinator-based pattern construction
-* User-created generative workflows
-* Additional procedural generation techniques
-* Expanded educational content and lesson pathways
+* User-created algorithm workflows
+* Shape grammar construction tools
+* Tree grammar and combinator systems
+* Guided learning pathways
+* Interactive tutorials
+* Additional procedural generation algorithms
+* Classroom activities and lesson plans
 
-These extensions would further support the project's goal of making generative systems more accessible and understandable for learners.
+---
+
+## Project Status
+
+🚧 **Active MSc Dissertation Project**
+
+Current development is focused on:
+
+* Implementing the four core generators
+* Building the React Flow algorithm explorer
+* Developing the educational layer
+* Designing and conducting user evaluation
