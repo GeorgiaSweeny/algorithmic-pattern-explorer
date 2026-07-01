@@ -8,9 +8,7 @@
 
 Algorithmic Pattern Explorer is an educational web application developed as part of an MSc dissertation investigating how interactive visualisation can support the learning of computational thinking through generative art.
 
-Rather than treating procedural generation as a black box, the application exposes the structure of each algorithm through an interactive visual workspace. Users can manipulate parameters, inspect each stage of the generation process, and observe how computational rules influence the emergence of visual patterns in real time.
-
-The project combines procedural graphics, algorithm visualisation and educational interface design to make generative systems more understandable and accessible.
+The application presents generative algorithms as interactive visual workflows, allowing learners to inspect, manipulate and step through each computational stage. Rather than programming algorithms themselves, users explore how parameterised operations transform intermediate representations into final patterns, supporting understanding of computational thinking concepts through visual explanation.
 
 ---
 
