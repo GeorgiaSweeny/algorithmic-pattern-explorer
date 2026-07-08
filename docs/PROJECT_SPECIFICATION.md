@@ -22,17 +22,27 @@ To investigate how interactive visualisation of procedural algorithms can improv
 
 The application is designed to support learning of fundamental computational thinking concepts including:
 
-* Iteration
-* Transformation
-* Randomness
-* Symmetry
-* Parameterisation
-* Rule-based generation
-* Emergence
-* Procedural modelling
-* Computational creativity
+- Iteration
+- Transformation
+- Randomness
+- Symmetry
+- Parameterisation
+- Rule-based generation
+- Emergence
+- Procedural modelling
+- Computational creativity
 
 These concepts should be communicated through interaction with procedural algorithms rather than through traditional programming exercises.
+
+---
+
+# Educational Contribution
+
+The primary contribution of this project is the development of an interactive environment for exploring procedural algorithms as educational artefacts rather than creative tools.
+
+Instead of treating procedural generation as a hidden implementation detail, the application makes computational processes visible through synchronised workflow visualisation, contextual documentation and real-time pattern rendering. By exposing intermediate algorithm states and allowing learners to manipulate meaningful parameters, the system aims to support deeper understanding of computational thinking concepts through direct exploration.
+
+This educational focus differentiates the application from professional procedural modelling software while preserving the key principle of inspectable procedural workflows.
 
 ---
 
@@ -47,6 +57,55 @@ Instead, each implemented pattern generator exposes a predefined computational w
 Each node represents a meaningful conceptual stage within the algorithm rather than an individual software function or implementation detail.
 
 The interface therefore acts as an algorithm explorer rather than an algorithm authoring environment.
+
+---
+
+# Design Principles
+
+The interface is guided by the following principles.
+
+## Educational Clarity
+
+Interface components should prioritise conceptual understanding over technical completeness.
+
+Only information that contributes to learning should be presented.
+
+## Immediate Feedback
+
+User interaction should produce immediate visual responses wherever possible, allowing learners to associate computational changes with visual outcomes.
+
+## Progressive Disclosure
+
+Complexity should be introduced gradually.
+
+Only the information required for the current stage of exploration should be visible.
+
+## Consistency
+
+Interaction patterns, terminology and visual language should remain consistent across all procedural generators to reduce unnecessary cognitive load.
+
+## Inspectability
+
+Every computational stage should be observable independently, allowing learners to understand how individual operations contribute to the final generated pattern.
+
+---
+
+# Educational Design Requirements
+
+The interface is intended to support exploratory learning through direct interaction with procedural algorithms.
+
+To achieve this, the application should:
+
+- present information progressively to minimise cognitive load
+- maintain synchronisation between the workflow, documentation and pattern canvas
+- provide immediate visual feedback following user interaction
+- expose only computational operations that contribute to conceptual understanding
+- allow learners to inspect intermediate algorithm states without requiring knowledge of implementation details
+- encourage experimentation through safe, reversible parameter modification
+- communicate computational thinking concepts using visual representations rather than textual explanation alone
+- maintain consistent interaction patterns across all implemented generators
+
+These requirements are intended to promote understanding of computational processes rather than mastery of software functionality.
 
 ---
 
@@ -231,18 +290,34 @@ The objective is not to recreate Houdini but to adapt its inspectable workflow p
 
 ---
 
+# User Requirements
+
+Users shall be able to:
+
+- select one of the available procedural pattern generators
+- navigate through an algorithm one computational stage at a time
+- select any computational stage to inspect its role within the algorithm
+- read educational explanations describing each stage in plain language
+- modify exposed parameters without requiring programming knowledge
+- observe immediate updates to the generated pattern following parameter changes
+- compare intermediate algorithm states with the final generated output
+- reset parameters to their default values
+- export generated patterns as image files where supported
+
+---
+
 # Functional Requirements
 
 The application shall:
 
-* implement four predefined procedural generators
-* present each generator as a visual computational workflow
-* allow node selection
-* display educational documentation for every node
-* support parameter manipulation
-* update the rendered pattern in real time
-* allow users to inspect intermediate algorithm stages
-* export generated patterns where supported
+- implement four predefined procedural generators
+- present each generator as a visual computational workflow
+- allow node selection
+- display educational documentation for every node
+- support parameter manipulation
+- update the rendered pattern in real time
+- allow users to inspect intermediate algorithm stages
+- export generated patterns where supported
 
 ---
 
@@ -250,11 +325,76 @@ The application shall:
 
 The application should:
 
-* remain visually simple and approachable
-* prioritise educational clarity over feature richness
-* provide immediate feedback for user interaction
-* maintain consistent interaction across all generators
-* support future extension with additional procedural systems
+- remain visually simple and approachable
+- prioritise educational clarity over feature richness
+- provide immediate feedback for user interaction
+- maintain consistent interaction across all generators
+- support future extension with additional procedural systems
+
+---
+
+# System Constraints
+
+The scope of the application is intentionally restricted to maintain educational clarity.
+
+The application shall not:
+
+- allow users to construct new procedural algorithms
+- support arbitrary node graph editing
+- expose implementation-specific functions or source code
+- include scripting or programming functionality
+- provide simulation or physics-based procedural systems
+- function as a general-purpose procedural modelling application
+- expose parameters that do not contribute to the educational objectives
+
+These constraints ensure the application remains focused on algorithm exploration rather than procedural content creation.
+
+---
+
+# Assumptions
+
+The application assumes that users:
+
+- possess basic computer literacy
+- have no prior experience with procedural modelling software
+- have little or no programming knowledge
+- are interested in learning computational thinking through visual exploration
+- are able to interpret simple diagrams and graphical interfaces
+
+No prior knowledge of procedural generation, computer graphics or mathematics is assumed.
+
+---
+
+# Out of Scope
+
+The following features are intentionally excluded from the project:
+
+- creation of custom procedural algorithms
+- user-defined node graphs
+- scripting or code generation
+- collaborative editing
+- animation authoring
+- three-dimensional procedural modelling
+- procedural simulation systems
+- user accounts or cloud synchronisation
+- assessment, grading or progress tracking
+- adaptive learning or intelligent tutoring functionality
+
+Restricting the scope allows the application to focus on supporting conceptual understanding of predefined procedural algorithms.
+
+---
+
+# Educational Outcomes
+
+Following exploration of the application, learners should be able to:
+
+- describe the sequence of operations within a procedural algorithm
+- explain the purpose of individual computational stages
+- recognise how parameter changes influence algorithm behaviour
+- identify computational thinking concepts demonstrated by each generator
+- distinguish between stochastic and deterministic procedural systems
+- explain how simple computational rules can produce complex visual outcomes
+- relate procedural generation techniques to broader concepts in computational thinking
 
 ---
 
@@ -262,10 +402,10 @@ The application should:
 
 The project will be considered successful if users can:
 
-* understand the sequence of computational operations within each algorithm
-* explain the role of individual computational stages
-* recognise relationships between parameter changes and visual outcomes
-* identify computational thinking concepts demonstrated by each algorithm
-* distinguish stochastic and deterministic approaches to procedural generation
+- understand the sequence of computational operations within each algorithm
+- explain the role of individual computational stages
+- recognise relationships between parameter changes and visual outcomes
+- identify computational thinking concepts demonstrated by each algorithm
+- distinguish stochastic and deterministic approaches to procedural generation
 
 Ultimately, the application should help learners understand not only what a procedural algorithm produces, but how and why it produces those results.
