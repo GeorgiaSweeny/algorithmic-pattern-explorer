@@ -13,8 +13,11 @@ function getPerlin(seed) {
    return _perlinCache.get(seed);
 }
 
-// fBm Perlin noise.
-// mode "ridge" → sharp ridgelines via 1 - 2|raw|
+// fBm Perlin noise (see docs/nodes/core/noise.md for the octave/lacunarity/
+// persistence construction). mode "ridge" folds the fBm value through
+// 1 - 2|raw| to turn its zero-crossings into sharp ridgelines instead of
+// smooth hills; "standard" and "ridge" are the same octave loop with only
+// that last line differing.
 export function noise(x, y, params) {
    const {
       scale       = 0.01,

@@ -38,3 +38,23 @@ new pattern to the registry automatically gets these checks for free.
 
 Algorithm-specific invariants (e.g. Voronoi partition exactness, Sierpinski self-similarity,
 Perlin continuity) live in one property test file per generator, alongside the generic suite.
+
+## Shared primitives (`src/generators/lib/`)
+
+A generator satisfies the interface above by composing smaller pure functions, each
+corresponding to exactly one node documented in `docs/nodes/`:
+
+| `lib/` module          | Node (`docs/nodes/`)      | Used by                      |
+|-------------------------|----------------------------|-------------------------------|
+| `rng.js`                | Seed                       | `noise.js` (via `Perlin`), `voronoi.js` |
+| *(n/a — `noise.js` itself)* | Noise (`docs/nodes/core/noise.md`) | `noise.js` |
+| `seedPoints.js`         | Seed Points                 | `voronoi.js`                  |
+| `distanceField.js`      | Distance Field              | `voronoi.js`                  |
+| `partition.js`          | Partition                    | (available; not yet consumed) |
+| `colourMapping.js`      | Colour Mapping               | `grid.js`, `voronoi.js`, `escher.js` |
+| `edgeDeformation.js`    | Edge Deformation             | `escher.js`                   |
+
+This exists so the node graph (ReactFlow) can wrap each `lib/` function as one node
+type directly, instead of a fresh implementation per node. A generator file (e.g.
+`voronoi.js`) is then just one particular composition of these nodes — the same
+composition the node graph should reproduce.

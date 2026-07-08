@@ -3,16 +3,12 @@
 GRID TESSELLATION GENERATOR
 ========================================
 */
-// tones[0] = background (1), tones[last] = dark (-1), evenly spaced in between.
-const TONES = {
-   "2": [1, -1],
-   "3": [1, 0, -1],
-};
+import { toneSet } from "./lib/colourMapping.js";
 
 // Pure grid tessellation. All shape logic lives here; no class state.
 export function grid(x, y, params) {
    const { shape = "square", tileSize = 40, tones = "2" } = params;
-   const shades = TONES[tones] ?? TONES["2"];
+   const shades = toneSet(tones);
    switch (shape) {
       case "square":   return _square(x, y, tileSize, shades);
       case "triangle": return _triangle(x, y, tileSize, shades);
