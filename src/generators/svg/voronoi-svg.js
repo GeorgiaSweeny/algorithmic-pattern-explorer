@@ -11,10 +11,17 @@ Seed generation uses the same xorshift32 RNG and layout as voronoi.js so
 SVG and raster outputs match exactly.
 */
 
+// fill[0] = background, fill[last] = dark tone, mid tone(s) in between.
+const FILLS = {
+   "2": ["#fff", "#000"],
+   "3": ["#fff", "#888", "#000"],
+};
+
 export function voronoiSvg(width, height, params) {
-   const { numCells = 20, seed = 1337 } = params;
+   const { numCells = 20, seed = 1337, tones = "2" } = params;
    const seeds = _generateSeeds(numCells, seed, width, height);
    const n     = seeds.length / 2;
+   const fill  = FILLS[tones] ?? FILLS["2"];
 
    const parts = [];
 
@@ -29,8 +36,7 @@ export function voronoiSvg(width, height, params) {
       }
 
       if (cell.length < 3) continue;
-      const fill = i % 2 === 0 ? "#fff" : "#000";
-      parts.push(_poly(cell.flat(), fill));
+      parts.push(_poly(cell.flat(), fill[i % fill.length]));
    }
 
    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" overflow="hidden">${parts.join("")}</svg>`;
