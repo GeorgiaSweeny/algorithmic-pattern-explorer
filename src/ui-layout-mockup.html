@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="utf-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>UI Layout Mockup — Algorithmic Pattern Explorer</title>
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+   <link rel="stylesheet" href="ui-layout-mockup.css">
+</head>
+
+<body>
+
+   <!-- MENU BAR -->
+   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid ps-4">
+         <a class="navbar-brand fw-bold" href="#">Algorithmic Pattern Explorer</a>
+         <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+               <li class="nav-item"><a class="nav-link active" href="#">Generator</a></li>
+               <li class="nav-item"><a class="nav-link" href="#">Node Library</a></li>
+               <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+            </ul>
+         </div>
+      </div>
+   </nav>
+
+   <div id="app-layout">
+
+      <!-- LEFT COLUMN: Generator Selection + Algorithm Workflow -->
+      <div id="left-column">
+
+         <div id="generator-selection" class="layout-panel">
+            <h6 class="panel-title">Algorithm Selector Panel</h6>
+            <div class="dropdown">
+               <button class="btn btn-outline-light btn-sm dropdown-toggle generator-dropdown-toggle" type="button"
+                  id="generator-dropdown-toggle" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                  Square Grid
+               </button>
+               <ul class="dropdown-menu dropdown-menu-dark generator-dropdown-menu">
+                  <li><a class="dropdown-item" href="#">Perlin Noise</a></li>
+                  <li><a class="dropdown-item" href="#">Voronoi</a></li>
+                  <li><h6 class="dropdown-header">Grid Tessellation</h6></li>
+                  <li><a class="dropdown-item generator-item active" href="#" data-shape="square">Square Grid</a></li>
+                  <li><a class="dropdown-item generator-item" href="#" data-shape="triangle">Triangle Grid</a></li>
+                  <li><a class="dropdown-item generator-item" href="#" data-shape="hexagon">Hex Grid</a></li>
+                  <li><a class="dropdown-item generator-item" href="#" data-shape="brick">Brick</a></li>
+                  <li><a class="dropdown-item generator-item" href="#" data-shape="diamond">Diamond</a></li>
+                  <li><a class="dropdown-item" href="#">Islamic Geometric</a></li>
+               </ul>
+            </div>
+         </div>
+
+         <div id="algorithm-workflow" class="layout-panel">
+            <h6 class="panel-title">Visual Algorithm Workflow <span class="text-muted fw-normal">(NODES)</span></h6>
+
+            <div class="workflow-nodes">
+               <div class="workflow-node-block">
+                  <button type="button" class="workflow-node" data-node="Workspace">Workspace</button>
+                  <div class="workflow-node-params" data-params="Workspace"></div>
+               </div>
+               <div class="workflow-connector">&#9660;</div>
+               <div class="workflow-node-block">
+                  <button type="button" class="workflow-node" data-node="Base Geometry">Base Geometry</button>
+                  <div class="workflow-node-params" data-params="Base Geometry"></div>
+               </div>
+               <div class="workflow-connector" style="display: none;">&#9660;</div>
+               <div class="workflow-node-block" style="display: none;">
+                  <button type="button" class="workflow-node" data-node="Rotate">Rotate</button>
+                  <div class="workflow-node-params" data-params="Rotate"></div>
+               </div>
+               <div class="workflow-connector" style="display: none;">&#9660;</div>
+               <div class="workflow-node-block" style="display: none;">
+                  <button type="button" class="workflow-node" data-node="Translate">Translate</button>
+                  <div class="workflow-node-params" data-params="Translate"></div>
+               </div>
+               <div class="workflow-connector">&#9660;</div>
+               <div class="workflow-node-block">
+                  <button type="button" class="workflow-node" data-node="Repeat X">Repeat X</button>
+                  <div class="workflow-node-params" data-params="Repeat X"></div>
+               </div>
+               <div class="workflow-connector">&#9660;</div>
+               <div class="workflow-node-block">
+                  <button type="button" class="workflow-node" data-node="Repeat Y">Repeat Y</button>
+                  <div class="workflow-node-params" data-params="Repeat Y"></div>
+               </div>
+               <div class="workflow-connector">&#9660;</div>
+               <div class="workflow-node-block">
+                  <button type="button" class="workflow-node" data-node="Colour Mapping">Colour Mapping</button>
+                  <div class="workflow-node-params" data-params="Colour Mapping"></div>
+               </div>
+               <div class="workflow-connector">&#9660;</div>
+               <div class="workflow-node-block">
+                  <button type="button" class="workflow-node" data-node="Render">Render</button>
+                  <div class="workflow-node-params" data-params="Render"></div>
+               </div>
+            </div>
+         </div>
+
+      </div>
+
+      <!-- MIDDLE COLUMN: Documentation Panel -->
+      <div id="documentation-panel" class="layout-panel">
+         <h6 class="panel-title">Documentation Panel</h6>
+
+         <div class="doc-block">
+            <span class="doc-label">Operation</span>
+            <div class="doc-value" id="doc-operation">No node selected</div>
+         </div>
+
+         <div class="doc-block">
+            <span class="doc-label">Visual Example</span>
+            <div class="doc-visual-placeholder">Illustration placeholder</div>
+         </div>
+
+         <div class="doc-block">
+            <span class="doc-label">Conceptual Explanation</span>
+            <p class="doc-text" id="doc-explanation">Select a node from the Visual Algorithm Workflow to see its explanation.</p>
+         </div>
+
+         <div class="doc-block">
+            <span class="doc-label">Purpose Within the Algorithm</span>
+            <p class="doc-text" id="doc-purpose"></p>
+         </div>
+
+         <div class="doc-block">
+            <span class="doc-label">Computational Thinking Concepts</span>
+            <div class="concept-tags" id="doc-concepts"></div>
+         </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Canvas Panel -->
+      <div id="canvas-panel" class="layout-panel">
+         <h6 class="panel-title">Canvas Panel</h6>
+         <div class="canvas-placeholder">
+            <div class="canvas-size-info">
+               <span id="canvas-size-label">Canvas: 400 &times; 400 px</span>
+               <span id="workspace-size-label" class="workspace-size-label">Workspace: 1 &times; 1 px</span>
+            </div>
+            <svg class="canvas-placeholder-svg" id="canvas-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img"
+               aria-label="No node selected">
+               <defs>
+                  <pattern id="tessellation-pattern" width="80" height="80" patternUnits="userSpaceOnUse">
+                     <rect width="80" height="80" fill="#e9ecef" />
+                     <rect x="0" y="0" width="40" height="40" fill="#495057" />
+                     <rect x="40" y="40" width="40" height="40" fill="#495057" />
+                  </pattern>
+               </defs>
+               <rect id="pattern-fill" width="400" height="400" fill="url(#tessellation-pattern)" style="display: none;" />
+               <g id="base-geometry-shapes" style="display: none;"></g>
+               <g id="rotate-shape" style="display: none;"></g>
+               <g id="translate-shapes" style="display: none;"></g>
+               <g id="repeat-x-shapes" style="display: none;"></g>
+               <g id="repeat-y-shapes" style="display: none;"></g>
+               <g id="colour-mapping-shapes" style="display: none;"></g>
+               <g id="render-output" style="display: none;"></g>
+               <rect id="workspace-box" x="0" y="0" width="0" height="0"
+                  fill="rgba(220, 53, 69, 0.25)" stroke="#dc3545" stroke-width="3"
+                  style="display: none;" />
+               <rect id="canvas-outline" x="0.5" y="0.5" width="399" height="399"
+                  fill="none" stroke="#6c757d" stroke-width="1" />
+            </svg>
+         </div>
+      </div>
+
+   </div>
+
+   <!-- STATUS & CONTROLS BAR -->
+   <div id="status-bar">
+      <div class="status-section step-controls">
+         <button class="btn btn-outline-light btn-sm" id="prev-step-btn">&#8592; Prev</button>
+         <button class="btn btn-outline-light btn-sm" id="next-step-btn">Next &#8594;</button>
+         <span class="step-indicator" id="step-indicator">No node selected</span>
+      </div>
+   </div>
+
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+   <script type="module">
+      import { gridSvg } from "./generators/svg/grid-svg.js";
+
+      const NODE_DOCS = {
+         "Workspace": {
+            explanation: "Defines the computational space in which the algorithm operates, establishing the coordinate system and dimensions used throughout pattern generation.",
+            purpose: "The workspace is not the canvas you see on screen &mdash; it's the algorithm's own coordinate space, the \"world\" that every object, transformation and calculation exists within. The canvas is just the window you view that world through, like a camera looking into a scene. If the workspace is larger than the canvas, the view is cropped; if smaller, it only fills part of the canvas.",
+            concepts: ["Abstraction", "Problem Definition", "Spatial Reasoning"],
+         },
+         "Base Geometry": {
+            explanation: "Creates a single instance of the chosen tile shape &mdash; the starting geometry, not yet duplicated or coloured.",
+            purpose: "Only certain regular shapes tile a plane without gaps. Whichever one is chosen here constrains every later step: it determines whether a rotation is needed to produce a second orientation, and what lattice vectors Repeat must use to tile the plane without overlaps or gaps.",
+            concepts: ["Initialisation", "Abstraction"],
+         },
+         "Rotate": {
+            explanation: "Rotates a copy of the base shape by a fixed angle.",
+            purpose: "Some shapes can't tile the plane by sliding copies of themselves around &mdash; a triangle's neighbouring gap is a mirror image of the triangle, not a slid copy of it, so a 180&deg; rotation is required before that neighbour can be placed. A diamond is just a square rotated 45&deg; before its own translation lattice applies. This angle is fixed by the shape's geometry, not a free creative choice.",
+            concepts: ["Transformation", "Symmetry"],
+         },
+         "Translate": {
+            explanation: "Positions the rotated copy relative to the original, completing one repeatable unit.",
+            purpose: "Repeat can only duplicate a single fixed unit. Where a shape needs two pieces &mdash; an upward and a downward triangle &mdash; to tile without gaps, Translate is what joins them into that one repeatable unit before Repeat takes over.",
+            concepts: ["Transformation", "Spatial Reasoning"],
+         },
+         "Repeat X": {
+            explanation: "Duplicates the repeatable unit along the shape's first lattice direction.",
+            purpose: "A single unit only becomes a pattern once it's duplicated. The direction and spacing used here aren't arbitrary &mdash; they're the exact vector this shape's copies need to sit edge-to-edge with no gap or overlap.",
+            concepts: ["Iteration", "Pattern Recognition"],
+         },
+         "Repeat Y": {
+            explanation: "Duplicates the resulting row along the shape's second lattice direction, completing the 2D tessellation.",
+            purpose: "The same operation as Repeat X, applied along the second axis the lattice needs &mdash; turning a 1D strip into a full 2D tiling.",
+            concepts: ["Iteration", "Emergence"],
+         },
+         "Colour Mapping": {
+            explanation: "Converts computational values into colours. Transforms numerical outputs into meaningful visual representations, mapping each tile's lattice position onto a colour scale using thresholding.",
+            purpose: "Rather than changing the underlying geometry, this stage controls how data is communicated visually &mdash; converting each tile's row/column position (and, for two-piece units, which piece it is) into a tone so that no two touching tiles share the same shade.",
+            concepts: ["Representation", "Abstraction"],
+         },
+         "Render": {
+            explanation: "Converts the computational representation into the final visual output, transforming the computed geometry into an image that can be viewed, explored and exported.",
+            purpose: "Separating rendering from computation reinforces that generating data and displaying it are distinct computational processes.",
+            concepts: ["Representation", "Visualisation", "Abstraction"],
+         },
+      };
+
+      // Matches FILLS in generators/svg/grid-svg.js so every preview shares the
+      // real generator's palette, building the illusion of one pattern taking
+      // shape progressively rather than a different mockup per stage.
+      const GENERATOR_TONES = {
+         2: ["#fff", "#000"],
+         3: ["#fff", "#888", "#000"],
+      };
+
+      const SHAPE_PATTERNS = {
+         square: {
+            label: "Square tile tessellation placeholder",
+            inner: `<rect width="80" height="80" fill="#fff" />
+                    <rect x="0" y="0" width="40" height="40" fill="#000" />
+                    <rect x="40" y="40" width="40" height="40" fill="#000" />`,
+         },
+         triangle: {
+            label: "Triangle tessellation placeholder",
+            inner: `<rect width="80" height="80" fill="#fff" />
+                    <polygon points="0,80 40,0 80,80" fill="#000" />`,
+         },
+         hexagon: {
+            label: "Hexagon tessellation placeholder",
+            inner: `<rect width="80" height="80" fill="#fff" />
+                    <polygon points="20,4 60,4 78,40 60,76 20,76 2,40" fill="#000" />`,
+         },
+         brick: {
+            label: "Brick tessellation placeholder",
+            inner: `<rect width="80" height="80" fill="#fff" />
+                    <rect x="0" y="0" width="76" height="36" fill="#000" />
+                    <rect x="-40" y="40" width="76" height="36" fill="#000" />
+                    <rect x="40" y="40" width="76" height="36" fill="#000" />`,
+         },
+         diamond: {
+            label: "Diamond tessellation placeholder",
+            inner: `<rect width="80" height="80" fill="#fff" />
+                    <polygon points="40,0 80,40 40,80 0,40" fill="#000" />`,
+         },
+      };
+
+      // ── Shape geometry: the actual construction rules per shape ────────────
+      // (see docs/nodes for why each of these is mathematically required, not
+      // a stylistic choice — Base Geometry + Rotate + Translate + Repeat×2)
+
+      function rotateAngle(shape) {
+         if (shape === "diamond") return 45;
+         if (shape === "triangle") return 180;
+         return 0;
+      }
+
+      function translateOffset(shape, size) {
+         if (shape === "triangle") return [size / 2, 0];
+         if (shape === "brick") return [size, 0]; // simplified stagger — see brick note below
+         return [0, 0];
+      }
+
+      // The two vectors Repeat X / Repeat Y must use for this shape's copies
+      // to sit edge-to-edge with no gap or overlap.
+      function latticeVectors(shape, size) {
+         switch (shape) {
+            case "hexagon":  return [[Math.sqrt(3) * size, 0], [Math.sqrt(3) * size / 2, 1.5 * size]];
+            case "diamond":  return [[size / Math.SQRT2, size / Math.SQRT2], [size / Math.SQRT2, -size / Math.SQRT2]];
+            case "triangle": return [[size, 0], [size / 2, size * Math.sqrt(3) / 2]];
+            case "brick":    return [[2 * size, 0], [0, size]];
+            default:         return [[size, 0], [0, size]]; // square
+         }
+      }
+
+      // The repeatable unit placed at every lattice point. Triangle needs two
+      // pieces (the original plus its rotated+translated pair); brick's true
+      // running-bond stagger is a known simplification deferred for now — its
+      // Translate node shows the idea, but the tiled lattice below still
+      // repeats a single piece per point.
+      function getUnitPieces(shape, size) {
+         if (shape === "diamond") return [{ dx: 0, dy: 0, angle: 45 }];
+         if (shape === "triangle") {
+            const [ox, oy] = translateOffset(shape, size);
+            return [{ dx: 0, dy: 0, angle: 0 }, { dx: ox, dy: oy, angle: 180 }];
+         }
+         return [{ dx: 0, dy: 0, angle: 0 }]; // square, hexagon, brick
+      }
+
+      function currentShapeValue() {
+         return NODE_PARAMS["Base Geometry"].find((p) => p.type === "select").value;
+      }
+      function currentSizeValue() {
+         return NODE_PARAMS["Base Geometry"].find((p) => p.type === "slider").value;
+      }
+
+      const NODE_PARAMS = {
+         "Workspace": [
+            { type: "slider", label: "Width",  value: 1, min: 1, max: 1920, step: 50, unit: "px" },
+            { type: "slider", label: "Height", value: 1, min: 1, max: 1920, step: 50, unit: "px" },
+         ],
+         "Base Geometry": [
+            { type: "select", label: "Shape Type", value: "square",
+              options: ["square", "triangle", "hexagon", "brick", "diamond"] },
+            { type: "slider", label: "Size", value: 40, min: 1, max: 100, step: 1, unit: "px" },
+         ],
+         "Rotate": [
+            { type: "readonly", label: "Angle",
+              compute: () => `${rotateAngle(currentShapeValue())}°` },
+         ],
+         "Translate": [
+            { type: "readonly", label: "Offset", compute: () => {
+                 const [x, y] = translateOffset(currentShapeValue(), currentSizeValue());
+                 return `(${Math.round(x)}px, ${Math.round(y)}px)`;
+              } },
+         ],
+         "Repeat X": [
+            { type: "readonly", label: "Offset", compute: () => {
+                 const [x, y] = latticeVectors(currentShapeValue(), currentSizeValue())[0];
+                 return `(${Math.round(x)}px, ${Math.round(y)}px)`;
+              } },
+            { type: "slider", label: "Count", value: 10, min: 1, max: 30, step: 1, unit: "" },
+         ],
+         "Repeat Y": [
+            { type: "readonly", label: "Offset", compute: () => {
+                 const [x, y] = latticeVectors(currentShapeValue(), currentSizeValue())[1];
+                 return `(${Math.round(x)}px, ${Math.round(y)}px)`;
+              } },
+            { type: "slider", label: "Count", value: 10, min: 1, max: 30, step: 1, unit: "" },
+         ],
+         "Colour Mapping": [
+            { type: "slider", label: "Threshold (Tone Bands)", value: 2, min: 2, max: 3, step: 1, unit: "" },
+         ],
+         "Render": [
+            { type: "export" },
+         ],
+      };
+
+      const tessellationPattern = document.getElementById("tessellation-pattern");
+      const canvasSvg = document.getElementById("canvas-svg");
+      const workspaceBox = document.getElementById("workspace-box");
+      const patternFill = document.getElementById("pattern-fill");
+      const baseGeometryShapes = document.getElementById("base-geometry-shapes");
+      const rotateShape = document.getElementById("rotate-shape");
+      const translateShapes = document.getElementById("translate-shapes");
+      const repeatXShapes = document.getElementById("repeat-x-shapes");
+      const repeatYShapes = document.getElementById("repeat-y-shapes");
+      const colourMappingShapes = document.getElementById("colour-mapping-shapes");
+      const renderOutput = document.getElementById("render-output");
+      const CANVAS_VIEW_SIZE = 400;
+
+      // The lattice can never occupy more space than the workspace it lives
+      // in. Clamped by cell size only, not the true per-shape bounding box —
+      // a simplification deferred for now, same as brick's stagger.
+      function computeLatticeLayout() {
+         const shape = currentShapeValue();
+         const size = currentSizeValue();
+         const [v1, v2] = latticeVectors(shape, size);
+
+         const colsParam = NODE_PARAMS["Repeat X"].find((p) => p.type === "slider");
+         const rowsParam = NODE_PARAMS["Repeat Y"].find((p) => p.type === "slider");
+
+         const workspaceParams = NODE_PARAMS["Workspace"];
+         const workspaceWidth = workspaceParams.find((p) => p.label === "Width").value;
+         const workspaceHeight = workspaceParams.find((p) => p.label === "Height").value;
+
+         const maxCols = Math.max(1, Math.floor(workspaceWidth / size));
+         const maxRows = Math.max(1, Math.floor(workspaceHeight / size));
+         const cols = Math.min(colsParam.value, maxCols);
+         const rows = Math.min(rowsParam.value, maxRows);
+
+         const width = cols * size;
+         const height = rows * size;
+         const x0 = (CANVAS_VIEW_SIZE - width) / 2;
+         const y0 = (CANVAS_VIEW_SIZE - height) / 2;
+
+         return { shape, size, v1, v2, cols, rows, width, height, x0, y0 };
+      }
+
+      function _mod(n, m) { return ((n % m) + m) % m; }
+
+      // Mirrors the proper n-colouring rule each shape actually uses in
+      // generators/grid.js / generators/svg/grid-svg.js, so the tone a cell
+      // gets here is the same tone Render will show for that shape and tone
+      // count. pieceIndex distinguishes a triangle unit's up/down half, which
+      // the real algorithm tones differently from one another.
+      function toneIndex(shape, row, col, toneCount, pieceIndex = 0) {
+         switch (shape) {
+            case "hexagon":
+               return toneCount === 3 ? _mod(2 * col + row, 3) : _mod(col + row, 2);
+            case "brick": {
+               const fineCol = 2 * col - (row % 2);
+               return toneCount === 3 ? _mod(fineCol, 3) : _mod(col + row, 2);
+            }
+            case "triangle":
+               return toneCount === 3 ? _mod(col + row - pieceIndex, 3) : pieceIndex;
+            default: // square, diamond
+               return _mod(col + row, toneCount);
+         }
+      }
+
+      // Renders one shape, optionally rotated about its own centre.
+      function shapeCellMarkup(shape, cx, cy, size, fill, angle = 0) {
+         const half = size / 2;
+         let markup;
+         switch (shape) {
+            case "triangle":
+               markup = `<polygon points="${cx},${cy - half} ${cx - half},${cy + half} ${cx + half},${cy + half}" fill="${fill}" />`;
+               break;
+            case "hexagon": {
+               const pts = Array.from({ length: 6 }, (_, i) => {
+                  const a = (Math.PI / 180) * (60 * i - 30);
+                  return `${cx + half * Math.cos(a)},${cy + half * Math.sin(a)}`;
+               }).join(" ");
+               markup = `<polygon points="${pts}" fill="${fill}" />`;
+               break;
+            }
+            case "brick":
+               markup = `<rect x="${cx - half}" y="${cy - size * 0.35}" width="${size}" height="${size * 0.7}" fill="${fill}" />`;
+               break;
+            case "diamond":
+               markup = `<polygon points="${cx},${cy - half} ${cx + half},${cy} ${cx},${cy + half} ${cx - half},${cy}" fill="${fill}" />`;
+               break;
+            default: // square
+               markup = `<rect x="${cx - half}" y="${cy - half}" width="${size}" height="${size}" fill="${fill}" />`;
+         }
+         return angle ? `<g transform="rotate(${angle}, ${cx}, ${cy})">${markup}</g>` : markup;
+      }
+
+      // Draws every lattice point from (0,0) through (cols-1,rows-1), placing
+      // the shape's full unit (one or two pieces) at each, centred on the
+      // canvas. Shared by Repeat Y and Colour Mapping — they show the same
+      // lattice, just toned differently.
+      function fullFieldMarkup(toneFn) {
+         const { shape, size, v1, v2, cols, rows } = computeLatticeLayout();
+         const pieces = getUnitPieces(shape, size);
+
+         const corners = [];
+         for (const cc of [0, cols - 1]) {
+            for (const rr of [0, rows - 1]) {
+               corners.push([cc * v1[0] + rr * v2[0], cc * v1[1] + rr * v2[1]]);
+            }
+         }
+         const xs = corners.map((p) => p[0]);
+         const ys = corners.map((p) => p[1]);
+         const offsetX = CANVAS_VIEW_SIZE / 2 - (Math.min(...xs) + Math.max(...xs)) / 2;
+         const offsetY = CANVAS_VIEW_SIZE / 2 - (Math.min(...ys) + Math.max(...ys)) / 2;
+
+         const parts = [];
+         for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+               const baseX = offsetX + c * v1[0] + r * v2[0];
+               const baseY = offsetY + c * v1[1] + r * v2[1];
+               pieces.forEach((piece, pieceIndex) => {
+                  const fill = toneFn(shape, r, c, pieceIndex);
+                  parts.push(shapeCellMarkup(shape, baseX + piece.dx, baseY + piece.dy, size, fill, piece.angle));
+               });
+            }
+         }
+         return parts.join("");
+      }
+
+      // Base Geometry: a single, uncoloured instance of the chosen shape.
+      function updateBaseGeometry() {
+         const shape = currentShapeValue();
+         const size = currentSizeValue();
+         const cx = CANVAS_VIEW_SIZE / 2, cy = CANVAS_VIEW_SIZE / 2;
+         baseGeometryShapes.innerHTML = shapeCellMarkup(shape, cx, cy, size, GENERATOR_TONES[2][0]);
+      }
+
+      // Rotate: the same single shape, rotated by the angle this shape requires.
+      function updateRotate() {
+         const shape = currentShapeValue();
+         const size = currentSizeValue();
+         const cx = CANVAS_VIEW_SIZE / 2, cy = CANVAS_VIEW_SIZE / 2;
+         rotateShape.innerHTML = shapeCellMarkup(shape, cx, cy, size, GENERATOR_TONES[2][0], rotateAngle(shape));
+      }
+
+      // Translate: the original plus the rotated copy, positioned to form one
+      // repeatable unit.
+      function updateTranslate() {
+         const shape = currentShapeValue();
+         const size = currentSizeValue();
+         const [ox, oy] = translateOffset(shape, size);
+         const cx = CANVAS_VIEW_SIZE / 2, cy = CANVAS_VIEW_SIZE / 2;
+         translateShapes.innerHTML = [
+            shapeCellMarkup(shape, cx, cy, size, GENERATOR_TONES[2][0], 0),
+            shapeCellMarkup(shape, cx + ox, cy + oy, size, GENERATOR_TONES[2][0], rotateAngle(shape)),
+         ].join("");
+      }
+
+      // Repeat X: the unit duplicated along the first lattice direction only —
+      // a single strip, not yet a 2D field.
+      function updateRepeatX() {
+         const shape = currentShapeValue();
+         const size = currentSizeValue();
+         const [v1] = latticeVectors(shape, size);
+         const count = NODE_PARAMS["Repeat X"].find((p) => p.type === "slider").value;
+         const pieces = getUnitPieces(shape, size);
+
+         const offsetX = CANVAS_VIEW_SIZE / 2 - (v1[0] * (count - 1)) / 2;
+         const offsetY = CANVAS_VIEW_SIZE / 2 - (v1[1] * (count - 1)) / 2;
+
+         const parts = [];
+         for (let i = 0; i < count; i++) {
+            const baseX = offsetX + i * v1[0];
+            const baseY = offsetY + i * v1[1];
+            pieces.forEach((piece) => {
+               parts.push(shapeCellMarkup(shape, baseX + piece.dx, baseY + piece.dy, size, GENERATOR_TONES[2][0], piece.angle));
+            });
+         }
+         repeatXShapes.innerHTML = parts.join("");
+      }
+
+      // Repeat Y: the strip duplicated along the second lattice direction —
+      // the full geometry, still uncoloured.
+      function updateRepeatY() {
+         repeatYShapes.innerHTML = fullFieldMarkup(() => GENERATOR_TONES[2][0]);
+      }
+
+      // Same lattice as Repeat Y, but toned by the proper n-colouring rule
+      // using the threshold's tone count.
+      function updateColourMapping() {
+         const threshold = NODE_PARAMS["Colour Mapping"].find((p) => p.type === "slider").value;
+         const tones = GENERATOR_TONES[threshold] || GENERATOR_TONES[2];
+         colourMappingShapes.innerHTML = fullFieldMarkup((shape, r, c, pieceIndex) =>
+            tones[toneIndex(shape, r, c, tones.length, pieceIndex)]);
+      }
+
+      // The actual production tessellation, generated by the same gridSvg()
+      // module index.html uses for its SVG export — not an approximation.
+      function updateRenderOutput() {
+         const { shape, size, x0, y0, width, height } = computeLatticeLayout();
+         const threshold = NODE_PARAMS["Colour Mapping"].find((p) => p.type === "slider").value;
+
+         const svgMarkup = gridSvg(width, height, {
+            shape,
+            tileSize: size,
+            tones: String(threshold),
+         });
+         renderOutput.innerHTML = `<g transform="translate(${x0}, ${y0})">${svgMarkup}</g>`;
+      }
+
+      const workspaceSizeLabel = document.getElementById("workspace-size-label");
+
+      function updateWorkspaceBox() {
+         const params = NODE_PARAMS["Workspace"];
+         const width = params.find((p) => p.label === "Width").value;
+         const height = params.find((p) => p.label === "Height").value;
+
+         workspaceBox.setAttribute("x", (CANVAS_VIEW_SIZE - width) / 2);
+         workspaceBox.setAttribute("y", (CANVAS_VIEW_SIZE - height) / 2);
+         workspaceBox.setAttribute("width", width);
+         workspaceBox.setAttribute("height", height);
+
+         workspaceSizeLabel.textContent = `Workspace: ${width} × ${height} px`;
+      }
+
+      // "primary" = Workspace node itself (filled red box). "outline" = a thin
+      // red boundary shown as context on the nodes that build inside the
+      // workspace. "hidden" = Render, where the final image should be clean.
+      function setWorkspaceOverlayMode(mode) {
+         if (mode === "hidden") {
+            workspaceBox.style.display = "none";
+            return;
+         }
+         updateWorkspaceBox();
+         workspaceBox.style.display = "";
+         if (mode === "primary") {
+            workspaceBox.setAttribute("fill", "rgba(220, 53, 69, 0.25)");
+            workspaceBox.setAttribute("stroke-width", "3");
+         } else {
+            workspaceBox.setAttribute("fill", "none");
+            workspaceBox.setAttribute("stroke-width", "1.5");
+         }
+      }
+
+      const generatorToggle = document.getElementById("generator-dropdown-toggle");
+      const generatorItems = Array.from(document.querySelectorAll(".generator-item"));
+      const nodeButtons = Array.from(document.querySelectorAll(".workflow-node"));
+
+      // Rotate/Translate only exist in the workflow for shapes that actually
+      // need them — showing them for square/hexagon would be lying about what
+      // the algorithm does.
+      function getVisibleNodeNames() {
+         const shape = currentShapeValue();
+         const names = ["Workspace", "Base Geometry"];
+         if (rotateAngle(shape) !== 0) names.push("Rotate");
+         const [tx, ty] = translateOffset(shape, currentSizeValue());
+         if (tx !== 0 || ty !== 0) names.push("Translate");
+         names.push("Repeat X", "Repeat Y", "Colour Mapping", "Render");
+         return names;
+      }
+
+      function visibleNodeButtons() {
+         const visible = new Set(getVisibleNodeNames());
+         return nodeButtons.filter((b) => visible.has(b.dataset.node));
+      }
+
+      function updateWorkflowVisibility() {
+         const visible = new Set(getVisibleNodeNames());
+         nodeButtons.forEach((btn) => {
+            const block = btn.closest(".workflow-node-block");
+            const connector = block.previousElementSibling;
+            const show = visible.has(btn.dataset.node);
+            block.style.display = show ? "" : "none";
+            if (connector && connector.classList.contains("workflow-connector")) {
+               connector.style.display = show ? "" : "none";
+            }
+         });
+      }
+
+      function setShape(shape) {
+         const def = SHAPE_PATTERNS[shape] || SHAPE_PATTERNS.square;
+         tessellationPattern.innerHTML = def.inner;
+         canvasSvg.setAttribute("aria-label", def.label);
+
+         const shapeParam = NODE_PARAMS["Base Geometry"].find((p) => p.type === "select");
+         shapeParam.value = shape;
+
+         generatorItems.forEach((item) => item.classList.toggle("active", item.dataset.shape === shape));
+         const activeItem = generatorItems.find((item) => item.dataset.shape === shape);
+         if (activeItem) generatorToggle.textContent = activeItem.textContent;
+
+         updateWorkflowVisibility();
+
+         const activeButton = nodeButtons.find((b) => b.classList.contains("active"));
+         if (!activeButton) return; // nothing selected yet — nothing to refresh
+
+         const visible = visibleNodeButtons();
+         const targetButton = visible.includes(activeButton) ? activeButton : visible[1]; // fall back to Base Geometry
+         const targetIndex = visible.indexOf(targetButton);
+         if (targetIndex !== -1) selectNode(targetIndex);
+      }
+
+      generatorItems.forEach((item) => {
+         item.addEventListener("click", (event) => {
+            event.preventDefault();
+            setShape(item.dataset.shape);
+         });
+      });
+
+      const docOperation = document.getElementById("doc-operation");
+      const docExplanation = document.getElementById("doc-explanation");
+      const docPurpose = document.getElementById("doc-purpose");
+      const docConcepts = document.getElementById("doc-concepts");
+      const stepIndicator = document.getElementById("step-indicator");
+      const prevStepBtn = document.getElementById("prev-step-btn");
+      const nextStepBtn = document.getElementById("next-step-btn");
+
+      let currentIndex = -1;
+
+      function buildParamControl(param, idx) {
+         if (param.type === "select") {
+            const options = param.options
+               .map((option) => `<option value="${option}"${option === param.value ? " selected" : ""}>${option}</option>`)
+               .join("");
+            return `
+               <div class="node-param">
+                  <label class="param-label">${param.label}</label>
+                  <select class="form-select form-select-sm" data-param-index="${idx}">${options}</select>
+               </div>`;
+         }
+         if (param.type === "export") {
+            return `
+               <div class="node-param node-param-export">
+                  <button type="button" class="btn btn-outline-light btn-sm">Export SVG</button>
+                  <button type="button" class="btn btn-outline-light btn-sm">Export PNG</button>
+               </div>`;
+         }
+         if (param.type === "readonly") {
+            return `
+               <div class="node-param">
+                  <label class="param-label">${param.label} <span class="param-value">${param.compute()}</span></label>
+                  <div class="node-param-note">Fixed by the shape's geometry &mdash; required for tiles to align, not a free choice.</div>
+               </div>`;
+         }
+         return `
+            <div class="node-param">
+               <label class="param-label">${param.label} <span class="param-value">${param.value}${param.unit}</span></label>
+               <input type="range" class="form-range" data-param-index="${idx}"
+                  min="${param.min}" max="${param.max}" step="${param.step}" value="${param.value}" disabled>
+            </div>`;
+      }
+
+      function renderNodeParams(name) {
+         const params = NODE_PARAMS[name];
+
+         document.querySelectorAll(".workflow-node-params").forEach((container) => {
+            container.innerHTML = "";
+            container.classList.remove("open");
+         });
+
+         const container = document.querySelector(`.workflow-node-params[data-params="${name}"]`);
+         container.innerHTML = params.map((param, idx) => buildParamControl(param, idx)).join("");
+         container.classList.add("open");
+
+         container.querySelectorAll("select[data-param-index]").forEach((select) => {
+            select.addEventListener("change", (event) => {
+               const param = params[Number(event.target.dataset.paramIndex)];
+               param.value = event.target.value;
+               if (name === "Base Geometry") setShape(event.target.value);
+            });
+         });
+
+         const liveRedraw = {
+            "Workspace": updateWorkspaceBox,
+            "Base Geometry": updateBaseGeometry,
+            "Repeat X": updateRepeatX,
+            "Repeat Y": updateRepeatY,
+            "Colour Mapping": updateColourMapping,
+         }[name];
+         if (liveRedraw) {
+            container.querySelectorAll('input[type="range"][data-param-index]').forEach((slider) => {
+               slider.disabled = false;
+               slider.addEventListener("input", (event) => {
+                  const param = params[Number(event.target.dataset.paramIndex)];
+                  param.value = Number(event.target.value);
+                  event.target.previousElementSibling.querySelector(".param-value").textContent =
+                     `${param.value}${param.unit}`;
+                  liveRedraw();
+               });
+            });
+         }
+      }
+
+      function selectNode(index) {
+         const visible = visibleNodeButtons();
+         currentIndex = index;
+         const button = visible[index];
+         const name = button.dataset.node;
+         const doc = NODE_DOCS[name];
+
+         nodeButtons.forEach((b) => b.classList.remove("active"));
+         button.classList.add("active");
+
+         docOperation.textContent = name;
+         docExplanation.innerHTML = doc.explanation;
+         docPurpose.innerHTML = doc.purpose;
+         docConcepts.innerHTML = doc.concepts
+            .map((concept) => `<span class="concept-tag">${concept}</span>`)
+            .join("");
+         stepIndicator.innerHTML = `Step ${index + 1} of ${visible.length} &mdash; ${name}`;
+
+         renderNodeParams(name);
+
+         baseGeometryShapes.style.display = "none";
+         rotateShape.style.display = "none";
+         translateShapes.style.display = "none";
+         repeatXShapes.style.display = "none";
+         repeatYShapes.style.display = "none";
+         colourMappingShapes.style.display = "none";
+         renderOutput.style.display = "none";
+         patternFill.style.display = "";
+         setWorkspaceOverlayMode("hidden");
+
+         if (name === "Workspace") {
+            setWorkspaceOverlayMode("primary");
+            patternFill.style.display = "none";
+         } else if (name === "Base Geometry") {
+            updateBaseGeometry();
+            baseGeometryShapes.style.display = "";
+            patternFill.style.display = "none";
+            setWorkspaceOverlayMode("outline");
+         } else if (name === "Rotate") {
+            updateRotate();
+            rotateShape.style.display = "";
+            patternFill.style.display = "none";
+            setWorkspaceOverlayMode("outline");
+         } else if (name === "Translate") {
+            updateTranslate();
+            translateShapes.style.display = "";
+            patternFill.style.display = "none";
+            setWorkspaceOverlayMode("outline");
+         } else if (name === "Repeat X") {
+            updateRepeatX();
+            repeatXShapes.style.display = "";
+            patternFill.style.display = "none";
+            setWorkspaceOverlayMode("outline");
+         } else if (name === "Repeat Y") {
+            updateRepeatY();
+            repeatYShapes.style.display = "";
+            patternFill.style.display = "none";
+            setWorkspaceOverlayMode("outline");
+         } else if (name === "Colour Mapping") {
+            updateColourMapping();
+            colourMappingShapes.style.display = "";
+            patternFill.style.display = "none";
+            setWorkspaceOverlayMode("outline");
+         } else if (name === "Render") {
+            updateRenderOutput();
+            renderOutput.style.display = "";
+            patternFill.style.display = "none";
+         }
+
+         prevStepBtn.disabled = index === 0;
+         nextStepBtn.disabled = index === visible.length - 1;
+      }
+
+      nodeButtons.forEach((button) => {
+         button.addEventListener("click", () => {
+            const visible = visibleNodeButtons();
+            const idx = visible.indexOf(button);
+            if (idx !== -1) selectNode(idx);
+         });
+      });
+
+      prevStepBtn.addEventListener("click", () => {
+         if (currentIndex > 0) selectNode(currentIndex - 1);
+      });
+
+      nextStepBtn.addEventListener("click", () => {
+         const visible = visibleNodeButtons();
+         if (currentIndex < visible.length - 1) selectNode(currentIndex + 1);
+      });
+
+      updateWorkflowVisibility();
+      setShape(currentShapeValue());
+      updateWorkspaceBox();
+
+      prevStepBtn.disabled = true;
+      nextStepBtn.disabled = false;
+   </script>
+
+</body>
+</html>
