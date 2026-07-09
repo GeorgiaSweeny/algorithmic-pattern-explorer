@@ -13,7 +13,7 @@ import { escher } from "../escher.js";
 
 const bumpTypeArb = fc.constantFrom("wave", "zigzag", "notch");
 const sizeArb = fc.double({ min: 20, max: 120, noNaN: true });
-// Domain matches the generator contract (docs/generator-contract.md): pixel
+// Domain matches the generator contract (docs/GENERATOR_CONTRACT.md): pixel
 // coordinates in [0, CANVAS.WIDTH] x [0, CANVAS.HEIGHT].
 const coordArb = fc.double({ min: 0, max: 600, noNaN: true });
 

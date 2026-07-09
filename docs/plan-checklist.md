@@ -23,7 +23,7 @@ MVP generators and SE rigor:
       `escher`) — `src/generators/`
 - [x] `patternRegistry.js` formalized into an explicit generator contract (pure
       `(x, y, params) => [-1, 1]` interface; determinism, range, totality) —
-      `docs/generator-contract.md`
+      `docs/GENERATOR_CONTRACT.md`
 - [x] Generic conformance test suite run against every registry entry —
       `src/generators/__tests__/contract.generic.test.js`
 - [x] Per-generator property tests (fast-check) for all 6 generators
@@ -33,7 +33,7 @@ Node-model alignment (supports the ReactFlow implementation below):
 
 - [x] Shared `src/generators/lib/` primitives extracted, one module per documented
       node (`rng`, `seedPoints`, `distanceField`, `partition`, `colourMapping`,
-      `edgeDeformation`, `subdivide`) — `docs/generator-contract.md`
+      `edgeDeformation`, `subdivide`) — `docs/GENERATOR_CONTRACT.md`
 - [x] `voronoi.js`, `grid.js`, `escher.js` composed from `lib/` primitives; fixed
       `escher.js` silently ignoring its registered `tones` param
 - [x] `recursive.js`, `wave.js` composed from `lib/` primitives (`subdivideCell`,
