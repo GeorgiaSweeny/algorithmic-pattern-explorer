@@ -21,11 +21,18 @@ function generateSeeds(numCells, seed) {
    return seeds;
 }
 
+// tones[0] = background (1), tones[last] = dark (-1), evenly spaced in between.
+const TONES = {
+   "2": [1, -1],
+   "3": [1, 0, -1],
+};
+
 export function voronoi(x, y, params) {
-   const { numCells = 20, seed = 1337 } = params;
+   const { numCells = 20, seed = 1337, tones = "2" } = params;
    const key = `${numCells}|${seed}`;
    if (!_cache.has(key)) _cache.set(key, generateSeeds(numCells, seed));
    const seeds = _cache.get(key);
+   const shades = TONES[tones] ?? TONES["2"];
 
    let minDist = Infinity, nearest = 0;
    for (let i = 0; i < seeds.length; i += 2) {
@@ -34,5 +41,6 @@ export function voronoi(x, y, params) {
       if (d < minDist) { minDist = d; nearest = i; }
    }
 
-   return (nearest / 2) % 2 === 0 ? 1 : -1;
+   const idx = (nearest / 2) % shades.length;
+   return shades[idx];
 }
