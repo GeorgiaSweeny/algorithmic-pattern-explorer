@@ -28,6 +28,7 @@ pattern.
 * [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md) — the primary research contribution: the composition vocabulary and the analysis of each generator against it.
 * [`docs/GENERATOR_CONTRACT.md`](docs/GENERATOR_CONTRACT.md) — the interface every generator satisfies, verified by the property-based test suite.
 * [`docs/benchmark-results.md`](docs/benchmark-results.md) — empirical time-complexity analysis per generator, including a couple of counter-intuitive findings.
+* [`docs/MOSCOW_PRIORITIES.md`](docs/MOSCOW_PRIORITIES.md) — consolidated MoSCoW priority table across the full project scope (generators, explorer interface, educational UX, evaluation), tracing back to `docs/PROJECT_SPECIFICATION.md` and the educator user-stories doc.
 
 ---
 
