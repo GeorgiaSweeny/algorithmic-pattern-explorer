@@ -23,6 +23,12 @@ actually see how a generator's output is built from its computational stages,
 rather than treating each algorithm as an opaque function from parameters to
 pattern.
 
+### Key Documents
+
+* [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md) — the primary research contribution: the composition vocabulary and the analysis of each generator against it.
+* [`docs/GENERATOR_CONTRACT.md`](docs/GENERATOR_CONTRACT.md) — the interface every generator satisfies, verified by the property-based test suite.
+* [`docs/benchmark-results.md`](docs/benchmark-results.md) — empirical time-complexity analysis per generator, including a couple of counter-intuitive findings.
+
 ---
 
 ## Research Questions
@@ -114,7 +120,7 @@ composition pattern of their own, for two different reasons:
   supporting material because its compositional status is unresolved, not
   because it's simpler.
 
-Both also support the benchmark suite (`docs/benchmark-results.md`) as a
+Both also support the benchmark suite ([`docs/benchmark-results.md`](docs/benchmark-results.md)) as a
 byproduct of sharing the same primitive library.
 
 ---
@@ -221,7 +227,7 @@ Core design principles include:
   each primitive corresponding to one conceptual node in `docs/nodes/` — see
   [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
   for how each generator's composition is analysed
-* A generator contract (`docs/GENERATOR_CONTRACT.md`) verified by a
+* A generator contract ([`docs/GENERATOR_CONTRACT.md`](docs/GENERATOR_CONTRACT.md)) verified by a
   property-based test suite (`src/generators/__tests__/`)
 * Modular parameter system
 * Interactive node-based algorithm visualisation
