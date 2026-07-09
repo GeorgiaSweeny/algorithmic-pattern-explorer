@@ -2,7 +2,7 @@
 ========================================
 DISTANCE FIELD
 ========================================
-* Maps to the "Distance Field" computation node (docs/nodes/distance-field.md):
+* Maps to the "Distance Field" computation node (docs/nodes/computation/distance-field.md):
 * the minimum Euclidean distance from a point to a set of features, and which
 * feature was nearest. Partition builds on this directly.
 */

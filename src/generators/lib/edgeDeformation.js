@@ -2,7 +2,7 @@
 ========================================
 EDGE DEFORMATION
 ========================================
-* Maps to the "Edge Deformation" pattern node (docs/nodes/edge-deformation.md):
+* Maps to the "Edge Deformation" pattern node (docs/nodes/pattern/edge-deformation.md):
 * a parametric displacement applied along a boundary so tiles interlock instead
 * of tiling as plain rectangles. All bump shapes satisfy b(0) = b(1) = 0 so tile
 * corners stay aligned regardless of which shape is chosen.

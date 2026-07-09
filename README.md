@@ -1,14 +1,27 @@
 # Algorithmic Pattern Explorer
 
-> An educational application that visualises generative algorithms to teach computational thinking through interactive pattern exploration.
+> An MSc dissertation project investigating the compositional structure of generative pattern algorithms, demonstrated through an interactive educational interface.
 
 ---
 
 ## Overview
 
-Algorithmic Pattern Explorer is an educational web application developed as part of an MSc dissertation investigating how interactive visualisation can support the learning of computational thinking through generative art.
+Algorithmic Pattern Explorer's primary research contribution is algorithmic: it
+investigates whether a small, fixed vocabulary of composition patterns — drawn
+from combinator-style function composition — can describe how a spectrum of
+generative pattern algorithms (stochastic → deterministic) is built from a
+minimal library of reusable primitives. See
+[`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
+for the full framing, the primitive library, and the composition analysis
+against the current generators.
 
-The application presents generative algorithms as interactive visual workflows, allowing learners to inspect, manipulate and step through each computational stage. Rather than programming algorithms themselves, users explore how parameterised operations transform intermediate representations into final patterns, supporting understanding of computational thinking concepts through visual explanation.
+The educational web interface is secondary: a demonstration and evaluation
+vehicle that shows this compositional structure is not only internally correct
+(verified by the property-based test suite in `src/generators/__tests__/`), but
+also externally legible — that a learner using the interactive workflow view can
+actually see how a generator's output is built from its computational stages,
+rather than treating each algorithm as an opaque function from parameters to
+pattern.
 
 ---
 
@@ -16,15 +29,31 @@ The application presents generative algorithms as interactive visual workflows, 
 
 ### Primary Research Question
 
-> **How can interactive visualisation of generative algorithms support understanding of computational thinking concepts through pattern creation?**
+> **Can a small, fixed vocabulary of composition patterns (atop/compose, fork, constant-bind, fold, repeat) describe how a spectrum of generative pattern algorithms is built from a minimal library of reusable primitives — and where that vocabulary doesn't fit a given generator, what does the gap reveal about the primitive library's completeness?**
+
+See [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
+for the current composition analysis against all six implemented generators.
 
 ### Secondary Research Question
 
-> **How do different generative logics influence the emergence of visual structure across a spectrum from stochastic to deterministic systems?**
+> **How do different generative logics influence the emergence of visual structure across a spectrum from stochastic to deterministic systems, and how do hybrid/composed generators extend or stress the compositional model above?**
+
+### Demonstration Question (supports the above, doesn't replace it)
+
+> **Does an interactive node-based workflow view make a generator's compositional structure visible and understandable to a novice learner?**
+
+This is the role of the educational interface and the pre/during/post evaluation
+study described below — it tests whether the *demonstration* succeeds, not
+whether the underlying compositional claim is true. That's established
+independently through the algorithmic analysis and automated testing.
 
 ---
 
 ## Educational Objectives
+
+These objectives belong to the secondary, demonstration layer of the project
+(see Overview above) — they describe what the interface aims to make visible,
+not the project's primary research claim.
 
 The application is designed to help learners develop an understanding of computational thinking through direct interaction with generative systems.
 
@@ -46,22 +75,56 @@ Rather than simply generating patterns, the application aims to explain **why** 
 
 ## Generative Spectrum
 
-The project investigates four generators representing increasing levels of algorithmic constraint.
+The project investigates five generators spanning the stochastic↔deterministic
+spectrum. Each contributes either a spectrum position or a composition pattern
+(see [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md))
+not covered by the others — including two, at the deterministic end, that
+reach full determinism by genuinely different mechanisms.
 
-| Generator                      | Computational Approach                        | Position on Spectrum |
-| ------------------------------ | --------------------------------------------- | -------------------- |
-| **Perlin Noise**               | Controlled randomness                         | Stochastic           |
-| **Voronoi Diagrams**           | Random inputs with deterministic partitioning | Hybrid               |
-| **Escher Tessellations**       | Geometric transformations                     | Structured           |
-| **Islamic Geometric Patterns** | Mathematical construction rules               | Deterministic        |
+| Generator                      | Computational Approach                        | Position on Spectrum | Composition pattern | Status         |
+| ------------------------------ | --------------------------------------------- | --------------------- | -------------------- | -------------- |
+| **Perlin / Ridge Noise**       | Controlled randomness                         | Stochastic            | Fold/reduce (only example) | ✅ Implemented |
+| **Voronoi Diagrams**           | Random inputs with deterministic partitioning | Hybrid                | Constant-bind → atop | ✅ Implemented |
+| **Escher Tessellations**       | Geometric transformations                     | Structured            | Cross-fork → atop (only fork example) | ✅ Implemented |
+| **Recursive / Fractal (Sierpinski)** | Rule-based recursive subdivision       | Deterministic          | Repeat/power (only example) | ✅ Implemented |
+| **Islamic Geometric Patterns** | Mathematical construction rules (symmetry groups) | Deterministic     | Expected distinct from recursive subdivision — tbc once built | 🚧 In progress |
 
-Together these demonstrate how different computational rules influence pattern formation.
+Together these demonstrate how different computational rules — and different
+ways of composing a small set of shared primitives — influence pattern
+formation.
+
+### Additional generators
+
+Two further generators — Wave / Concentric Rings and Grid Tessellations —
+support the core five without adding a distinct spectrum position or
+composition pattern of their own, for two different reasons:
+
+* **Wave** (rings mode) uses the *same* composition pattern as Voronoi
+  (constant-bind → atop), just against a single fixed point instead of a
+  searched set of seed points. It doesn't introduce anything new
+  compositionally — that's exactly what makes it useful pedagogical
+  scaffolding: a simpler first appearance of the pattern Voronoi later shows in
+  full.
+* **Grid** isn't cleanly decomposed into the shared primitive library yet —
+  only its final colour-mapping stage is a shared primitive; the five
+  tiling shapes' index arithmetic is bespoke and undecomposed (see the open
+  question in
+  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
+  on whether it reduces to the existing `partition.js` primitive). It's
+  supporting material because its compositional status is unresolved, not
+  because it's simpler.
+
+Both also support the benchmark suite (`docs/benchmark-results.md`) as a
+byproduct of sharing the same primitive library.
 
 ---
 
 # Educational Interface
 
-The core contribution of the project is an interactive algorithm explorer.
+The secondary, demonstration-layer contribution of the project is an interactive
+algorithm explorer that makes the compositional structure identified in
+[`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
+visible to a learner.
 
 Instead of exposing only parameter controls, each generator is represented as a visual workflow composed of algorithmic stages.
 
@@ -89,10 +152,18 @@ The dissertation inverts this approach. Rather than abstracting the algorithm aw
 
 ### Pattern Generators
 
-* Perlin Noise
+Core spectrum (Generative Spectrum, above):
+
+* Perlin / Ridge Noise
 * Voronoi Diagrams
 * Escher-inspired Tessellations
-* Islamic Geometric Patterns
+* Recursive / Fractal (Sierpinski)
+* Islamic Geometric Patterns *(in progress)*
+
+Additional generators (support the core five without a distinct spectrum position or composition pattern of their own — see Generative Spectrum above):
+
+* Wave / Concentric Rings
+* Grid Tessellations (square, hex, triangle, brick, diamond)
 
 ### Algorithm Explorer
 
@@ -123,6 +194,12 @@ The application is intended for:
 
 ## Evaluation
 
+This evaluates the demonstration layer (the Demonstration Question above) — it
+does not evaluate the algorithmic composition claim, which is established
+independently through the analysis in
+[`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
+and the property-based test suite (`src/generators/__tests__/`).
+
 The project will be evaluated through user testing focusing on:
 
 * Usability
@@ -140,7 +217,12 @@ The application is built using a modular architecture that separates pattern gen
 
 Core design principles include:
 
-* Reusable generator architecture
+* Generators composed from a shared primitive library (`src/generators/lib/`),
+  each primitive corresponding to one conceptual node in `docs/nodes/` — see
+  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
+  for how each generator's composition is analysed
+* A generator contract (`docs/GENERATOR_CONTRACT.md`) verified by a
+  property-based test suite (`src/generators/__tests__/`)
 * Modular parameter system
 * Interactive node-based algorithm visualisation
 * Extensible educational content
@@ -154,6 +236,11 @@ Core design principles include:
 The current MVP focuses on helping users explore and understand predefined generative algorithms through an interactive visual interface. Several extensions could further develop the application into a richer educational platform.
 
 ### Grammar-Based Pattern Construction
+
+*Speculative future work, out of current scope — distinct from the current
+composition research in [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md),
+which analyses composition patterns already present in the codebase rather than
+building a user-facing authoring language or grammar.*
 
 A natural progression of the algorithm explorer would be to support user-created generative workflows. Rather than interacting with predefined algorithms, learners could construct their own pattern generators by composing reusable computational operations.
 
@@ -207,7 +294,10 @@ These additions would broaden the range of computational paradigms available for
 
 Current development is focused on:
 
-* Implementing the four core generators
-* Building the React Flow algorithm explorer
+* Analysing generator composition against the vocabulary in
+  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
+  (primary research contribution)
+* Implementing the core generators and property-based test suite
+* Building the React Flow algorithm explorer (demonstration layer)
 * Developing the educational layer
-* Designing and conducting user evaluation
+* Designing and conducting user evaluation of the demonstration layer

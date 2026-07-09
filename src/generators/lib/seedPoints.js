@@ -2,7 +2,7 @@
 ========================================
 SEED POINTS
 ========================================
-* Maps to the "Seed Points" generation node (docs/nodes/seed-points.md): produces a
+* Maps to the "Seed Points" generation node (docs/nodes/generation/seed-points.md): produces a
 * set of 2D positions from a Seed, used as anchors by downstream computation
 * (Distance Field, Partition). Currently used by Voronoi; any future generator that
 * needs a random point cloud (e.g. a Voronoi-seeded hybrid) draws from here too.

@@ -2,7 +2,7 @@
 ========================================
 PARTITION
 ========================================
-* Maps to the "Partition" computation node (docs/nodes/partition.md): assigns every
+* Maps to the "Partition" computation node (docs/nodes/computation/partition.md): assigns every
 * position in space to a discrete region, built on top of a Distance Field's
 * nearest-feature result.
 */
