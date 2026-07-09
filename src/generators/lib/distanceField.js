@@ -18,3 +18,10 @@ export function nearestPoint(x, y, points) {
    }
    return { index: nearestIndex, distSq: minDistSq };
 }
+
+// The single-feature case of a Distance Field: Euclidean distance from (x, y) to one
+// fixed point (e.g. the workspace centre for a concentric-rings pattern).
+export function distanceToPoint(x, y, px, py) {
+   const dx = x - px, dy = y - py;
+   return Math.sqrt(dx * dx + dy * dy);
+}

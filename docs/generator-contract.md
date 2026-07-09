@@ -49,12 +49,17 @@ corresponding to exactly one node documented in `docs/nodes/`:
 | `rng.js`                | Seed                       | `noise.js` (via `Perlin`), `voronoi.js` |
 | *(n/a — `noise.js` itself)* | Noise (`docs/nodes/core/noise.md`) | `noise.js` |
 | `seedPoints.js`         | Seed Points                 | `voronoi.js`                  |
-| `distanceField.js`      | Distance Field              | `voronoi.js`                  |
+| `distanceField.js`      | Distance Field              | `voronoi.js` (`nearestPoint`), `wave.js` (`distanceToPoint`) |
 | `partition.js`          | Partition                    | (available; not yet consumed) |
 | `colourMapping.js`      | Colour Mapping               | `grid.js`, `voronoi.js`, `escher.js` |
 | `edgeDeformation.js`    | Edge Deformation             | `escher.js`                   |
+| `subdivide.js`          | Subdivide (`docs/nodes/pattern/subdivide.md`) | `recursive.js` |
 
 This exists so the node graph (ReactFlow) can wrap each `lib/` function as one node
 type directly, instead of a fresh implementation per node. A generator file (e.g.
 `voronoi.js`) is then just one particular composition of these nodes — the same
 composition the node graph should reproduce.
+
+`noise.js` is the one remaining generator not yet decomposed this way: its fBm octave
+loop and ridge-mode fold still live inline (see `docs/nodes/core/noise.md`), rather
+than as separate composable `lib/` primitives. Left for a follow-up.
