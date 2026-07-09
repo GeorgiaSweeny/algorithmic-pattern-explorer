@@ -111,12 +111,23 @@ Outstanding from this phase (not blocking, tracked for later):
 
 ## Priorities if time runs short
 
+This ranks what to defer *out of the 14-day coding window* first — it is not
+a statement that deferred items are optional overall. In particular,
+evaluation data collection is a Must for the project as a whole (see
+`docs/MOSCOW_PRIORITIES.md` §5); it's ranked first here only because its
+natural execution window is after the coding deadline, not during it.
+
+Dissertation submission deadline: Sep 7 (treating this as the firm date even
+though the actual deadline may be later, to build in buffer).
+
 In order of what to cut or defer first:
 
 1. **Evaluation data collection.** Two days is enough to build the quiz/prompt
    infrastructure, not to recruit participants and collect a real pre/post sample.
-   Deliverable for Aug 12 is the instrument built and working; data collection runs
-   alongside dissertation write-up.
+   Deliverable for Aug 12 is the instrument built and working; data collection and
+   write-up happen after Aug 12, during the dissertation write-up period, targeting
+   Aug 31 to leave roughly a week before Sep 7 submission — deferred in time, not
+   dropped in scope.
 2. **Entropy/structure metrics** for the hybrids — separable from having the
    hybrids exist and work.
 3. **Islamic-pattern-driven hybrid** — the other two hybrids do not depend on it.
