@@ -2,17 +2,24 @@
 
 Scope: selected ideas #2 (compositional hybrid generators), #3 (SE rigor: contract,
 property tests, benchmarks), and #4 (pre/during/post learning-outcomes experiment).
-Schedule: Jul 8 - Aug 11, with a revision block for exams.
+Schedule: Jul 8 - Aug 12, with a revision block for exams.
 
 ## Constraints
 
-- **Exams:** Jul 27 and Jul 31, with two weeks of revision required before the
-  first. Jul 13-31 is reserved for revision; no project work is scheduled in that
-  window. Working days are therefore Jul 9-12 (4 days) and Aug 1-11 (11 days).
+- **Exams:** Jul 27 and Jul 31 (fixed university dates), with two weeks of
+  revision required before the first. Jul 13-31 is reserved for revision; no
+  project work is scheduled in that window — this boundary doesn't move even
+  when the rest of the schedule shifts. Working days are therefore Jul 10-12
+  (3 days) and Aug 2-12 (11 days).
+- **Schedule shifted back one day** (originally Jul 9 start / Aug 11 finish).
+  Since the revision block start (Jul 13) is fixed, the pre-exam window absorbed
+  the day as a compression (4 days → 3 days) rather than a plain shift; the
+  post-exam window, unconstrained by another fixed date, shifted uniformly.
+  Total working time available dropped from 15 to 14 days as a result.
 - **ReactFlow:** the node graph has always been the intended implementation of the
   node workflow interface. It is now scheduled explicitly, alongside turning the
   website mockup into a working functional page for the core algorithms.
-- **Total working time available:** 15 days, against a scope originally planned
+- **Total working time available:** 14 days, against a scope originally planned
   across five weeks. See Priorities below for what yields first if time runs short.
 
 ## Done (Jul 8-9)
@@ -48,25 +55,27 @@ Outstanding from this phase (not blocking, tracked for later):
       effect — both registry entries produce identical output; needs a decision on
       intended behaviour before it becomes a node graph choice
 
-## Jul 9: Islamic geometric pattern generator (1 day)
+## Jul 10: Islamic geometric pattern generator (1 day)
 
 - [ ] Implementation on top of the `lib/` primitives
 - [ ] Property tests + registry entry, matching the other 6 generators
 
-## Jul 10-12: ReactFlow nodes + functional page (start)
+## Jul 11-12: ReactFlow nodes + functional page (start)
 
 - [ ] Begin implementing the ReactFlow node graph, using the `lib/` primitives and
       `docs/nodes/` docs as the source of node types/params
 - [ ] Begin turning the website mockup into a working page for the core (non-hybrid)
       algorithms
-- [ ] Continues into Aug 1-5
+- [ ] Continues into Aug 2-6
+- Compressed from 3 to 2 days by the one-day schedule shift (see Constraints) —
+      the fixed Jul 13 revision start absorbed the delay.
 
 ## Jul 13-31: Revision block
 
 - Exams: Jul 27, Jul 31.
 - No project work scheduled.
 
-## Aug 1-5: ReactFlow nodes + functional page (complete)
+## Aug 2-6: ReactFlow nodes + functional page (complete)
 
 - [ ] Node graph covers all 7 core generators (6 existing + Islamic)
 - [ ] Functional page: select a generator, view its node graph, adjust params, see
@@ -75,7 +84,7 @@ Outstanding from this phase (not blocking, tracked for later):
 - [ ] Highest overrun risk in the plan: first working build of the interactive
       frontend against the node model, not a refactor of existing code
 
-## Aug 6-8: Compositional/hybrid generators
+## Aug 7-9: Compositional/hybrid generators
 
 - [ ] Perlin-perturbed recursive subdivision (noise controls Sierpinski-carpet split
       threshold — stochastic/deterministic hybrid)
@@ -86,15 +95,15 @@ Outstanding from this phase (not blocking, tracked for later):
 - [ ] Entropy/structure metrics measured as composition parameters vary (secondary
       RQ empirical content)
 
-## Aug 9: Benchmark suite extension (1 day)
+## Aug 10: Benchmark suite extension (1 day)
 
 - [x] Runtime/complexity measured for all generators as grid size scales —
       `src/generators/__benchmarks__/benchmark.js`, `results.json`
 - [x] Parameter sweeps (octaves, numCells, depth) analyzed and written up —
       `docs/benchmark-results.md`
-- [ ] Re-run/extend once the Aug 6-8 hybrid generators exist
+- [ ] Re-run/extend once the Aug 7-9 hybrid generators exist
 
-## Aug 10-11: Lightweight evaluation
+## Aug 11-12: Lightweight evaluation
 
 - [ ] Computational-thinking quiz instrument drafted (pre/during/post, single-group)
 - [ ] In-app concept-check prompts during use
@@ -106,11 +115,11 @@ In order of what to cut or defer first:
 
 1. **Evaluation data collection.** Two days is enough to build the quiz/prompt
    infrastructure, not to recruit participants and collect a real pre/post sample.
-   Deliverable for Aug 11 is the instrument built and working; data collection runs
+   Deliverable for Aug 12 is the instrument built and working; data collection runs
    alongside dissertation write-up.
 2. **Entropy/structure metrics** for the hybrids — separable from having the
    hybrids exist and work.
 3. **Islamic-pattern-driven hybrid** — the other two hybrids do not depend on it.
 4. **Functional page polish** — ship the MVP interaction loop (select generator,
    view graph, adjust params, canvas updates) without full documentation/education
-   UI; treat that polish as post-Aug-11 work.
+   UI; treat that polish as post-Aug-12 work.
