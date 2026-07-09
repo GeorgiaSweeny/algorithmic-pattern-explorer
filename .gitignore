@@ -1,8 +1,9 @@
 node_modules/
 packages/
 tsconfig.base.json
-package.json
-package-lock.json
+/package.json
+/package-lock.json
 .DS_Store
 dissertation/
 proposal/
+src/generators/__benchmarks__/results.json

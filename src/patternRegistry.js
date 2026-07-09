@@ -66,8 +66,10 @@ export const REGISTRY = [
       spectrum:     0.45,
       nativeFormat: "vector",
       params: [
-         { param: "seed",     value: 1337 },
          { param: "numCells", archetype: "Density", value: 20, map: [5, 80] },
+         { param: "tones",    control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
+         { param: "seed",     archetype: "Seed",    value: 1337 },
       ],
       actions: [{ label: "Randomize Seed", method: "randomize" }],
    },
@@ -141,6 +143,8 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "shape",    value: "square" },
+         { param: "tones",    control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
          { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
       ],
    },
@@ -154,6 +158,8 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "shape",    value: "hexagon" },
+         { param: "tones",    control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
          { param: "tileSize", archetype: "Size", value: 30, map: [10, 120] },
       ],
    },
@@ -167,6 +173,8 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "shape",    value: "triangle" },
+         { param: "tones",    control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
          { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
       ],
    },
@@ -180,6 +188,8 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "shape",    value: "brick" },
+         { param: "tones",    control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
          { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
       ],
    },
@@ -193,6 +203,8 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "shape",    value: "diamond" },
+         { param: "tones",    control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
          { param: "tileSize", archetype: "Size", value: 40, map: [10, 120] },
       ],
    },

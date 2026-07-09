@@ -7,7 +7,10 @@ import { CANVAS } from "../config.js";
 
 export function recursive(x, y, params) {
    const { depth = 4, subdivisions = 3 } = params;
-   return _recurse(x / CANVAS.WIDTH, y / CANVAS.HEIGHT, depth, subdivisions);
+   // depth arrives from a continuous archetype slider (see patternRegistry.js), so it
+   // is not guaranteed to be an integer; _recurse's base case is depth === 0, which a
+   // non-integer depth would never reach, recursing until the call stack overflows.
+   return _recurse(x / CANVAS.WIDTH, y / CANVAS.HEIGHT, Math.round(depth), subdivisions);
 }
 
 function _recurse(x, y, depth, sub) {
