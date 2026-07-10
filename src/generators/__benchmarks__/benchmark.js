@@ -5,13 +5,13 @@ GENERATOR BENCHMARK SUITE
 * Measures wall-clock time to evaluate each generator over an N x N sample grid
 * spanning the canvas, at increasing N (render resolution), and separately
 * measures sensitivity to each generator's key per-pixel cost driver (Perlin
-* octaves, Voronoi cell count, recursion depth). All six generators are
-* per-pixel pure functions, so grid-size scaling should empirically confirm
-* O(N^2) for every one of them; the parameter sweep is what actually
-* distinguishes generators with O(1) per-pixel work (grid, wave, escher) from
-* ones with per-pixel work that scales with a parameter (noise: O(octaves),
-* voronoi: O(numCells) from its brute-force nearest-seed search, recursive:
-* O(depth)).
+* octaves, Voronoi cell count, recursion depth, Islamic segment count). All
+* seven generators are per-pixel pure functions, so grid-size scaling should
+* empirically confirm O(N^2) for every one of them; the parameter sweep is
+* what actually distinguishes generators with O(1) per-pixel work (grid, wave,
+* escher) from ones with per-pixel work that scales with a parameter (noise:
+* O(octaves), voronoi: O(numCells) and islamic: O(segments), both from
+* distanceField.js's brute-force nearest-point search, recursive: O(depth)).
 *
 * Run with: npm run bench   (from src/)
 * Writes raw results to __benchmarks__/results.json for the dissertation plots.
@@ -101,14 +101,21 @@ const REPRESENTATIVE_PARAMS = {
    voronoi:   { numCells: 40, seed: 1337, tones: "2" },
    recursive: { mode: "sierpinski", depth: 4, subdivisions: 3 },
    escher:    { tileSize: 60, bumpAmp: 3, bumpType: "wave" },
+   islamic:   { mode: "rosette", tileSize: 100, segments: 8, frequency: 0.15, tones: "2" },
 };
 
 // Each entry sweeps the parameter believed to drive per-pixel cost, at a fixed
-// grid size, to isolate that dependence from grid-size scaling.
+// grid size, to isolate that dependence from grid-size scaling. islamic sweeps
+// `segments` for the same reason voronoi sweeps `numCells`: both ultimately call
+// distanceField.js's nearestPoint, a brute-force O(points) search, so both
+// should show the same near-linear cost growth against their respective point
+// counts (grid.js's latticeIndex.js primitives are the counterexample — no
+// point search, so no parameter drives their per-pixel cost this way).
 const PARAM_SWEEPS = {
    noise:     { param: "octaves",  values: [1, 2, 4, 8, 16], gridSize: 150 },
    voronoi:   { param: "numCells", values: [10, 20, 40, 80, 160, 320, 1280, 5120], gridSize: 150 },
    recursive: { param: "depth",    values: [1, 2, 3, 4, 6, 12, 24, 48], gridSize: 150 },
+   islamic:   { param: "segments", values: [4, 8, 16, 32, 64, 128], gridSize: 150 },
 };
 
 // ---- run --------------------------------------------------------------------

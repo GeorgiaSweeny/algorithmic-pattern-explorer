@@ -21,7 +21,7 @@ import { grid } from "../grid.js";
 
 const tonesArb = fc.constantFrom("2", "3");
 const sizeArb = fc.double({ min: 10, max: 120, noNaN: true });
-// Domain matches the generator contract (docs/generator-contract.md): pixel
+// Domain matches the generator contract (docs/GENERATOR_CONTRACT.md): pixel
 // coordinates in [0, CANVAS.WIDTH] x [0, CANVAS.HEIGHT]. Values outside this range
 // (e.g. subnormal negatives near zero) can trip sign-dependent floor() behaviour
 // that has nothing to do with the colouring algorithm itself.

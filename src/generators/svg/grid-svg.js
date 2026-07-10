@@ -3,8 +3,8 @@
 GRID TESSELLATION — SVG RENDERER
 ========================================
 Generates a standalone SVG string for each tessellation shape.
-Mirrors the math in generators/grid.js but emits vector primitives
-instead of per-pixel scalar values.
+Mirrors the math in generators/lib/latticeIndex.js but emits vector
+primitives (whole cells) instead of a per-pixel scalar index.
 
 API:  gridSvg(width, height, params) → SVG string
 */
@@ -51,10 +51,10 @@ function _square(parts, W, H, s, fill) {
 }
 
 // ── Brick ─────────────────────────────────────────────────────────────────────
-// Mirrors _brick in grid.js: 2:1 brick units, row offset shifts x by half
-// a brick width on odd rows. Each brick touches 2 neighbours per side row, so
+// Mirrors brickIndex in lib/latticeIndex.js: 2:1 brick units, row offset shifts x
+// by half a brick width on odd rows. Each brick touches 2 neighbours per side row, so
 // plain (col+row) mod 3 puts same-tone bricks in contact; doubled-resolution
-// fineCol = 2*col - (row%2) restores a proper 3-colouring (see grid.js).
+// fineCol = 2*col - (row%2) restores a proper 3-colouring (see lib/latticeIndex.js).
 
 function _brick(parts, W, H, s, fill) {
    const bw   = s * 2;
@@ -147,7 +147,7 @@ function _hexPoly(cx, cy, s, fillColor) {
 // proper colouring since up/down triangles are never mutually adjacent).
 // 3-tone: U(os,ot) touches D(os,ot), D(os-1,ot), D(os,ot-1) — colouring both
 // by (os+ot) mod 3, offset by a constant between up/down, satisfies all three
-// simultaneously and varies across both axes (see grid.js).
+// simultaneously and varies across both axes (see lib/latticeIndex.js).
 
 function _triangle(parts, W, H, s, fill) {
    const otMax = Math.ceil(2 * H / (SQ3 * s)) + 2;

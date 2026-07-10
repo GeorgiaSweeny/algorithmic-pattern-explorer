@@ -4,21 +4,54 @@
 
 ### Purpose
 
-Algorithmic Pattern Explorer is an educational web application developed as part of an MSc dissertation investigating how interactive visualisation can support the learning of computational thinking through generative pattern creation.
+Algorithmic Pattern Explorer is an MSc dissertation project with two halves of
+unequal weight. The **primary research contribution is algorithmic**: it
+investigates whether a small, fixed vocabulary of composition patterns —
+drawn from combinator-style function composition — can describe how a
+spectrum of generative pattern algorithms (stochastic → deterministic) is
+built from a minimal library of reusable primitives. See
+[`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](ALGORITHMIC_COMPOSITION_RESEARCH.md)
+for the full framing, the primitive library, and the composition analysis
+against the current generators.
 
-The project aims to transform procedural generation from an opaque implementation into an inspectable learning experience. Rather than allowing users to construct their own procedural systems, the application presents carefully designed representations of existing generative algorithms that can be explored, manipulated and understood through an interactive visual interface.
+The **educational web application is secondary**: a demonstration and
+evaluation vehicle showing that this compositional structure is not only
+internally correct (verified by the property-based test suite in
+`src/generators/__tests__/`, against the contract in
+[`docs/GENERATOR_CONTRACT.md`](GENERATOR_CONTRACT.md)) but also externally
+legible — that a learner can actually see how a generator's output is built
+from its computational stages, rather than treating each algorithm as an
+opaque function from parameters to pattern. The remainder of this document,
+from Design Philosophy onward, specifies that secondary, demonstration layer.
 
-The application is inspired by the procedural workflow philosophy of Houdini while intentionally avoiding the complexity of professional node-based authoring tools. The emphasis is educational rather than creative, enabling learners to understand how computational processes produce visual outcomes.
+Rather than allowing users to construct their own procedural systems, the application presents carefully designed representations of existing generative algorithms that can be explored, manipulated and understood through an interactive visual interface.
+
+The application is inspired by the procedural workflow philosophy of Houdini while intentionally avoiding the complexity of professional node-based authoring tools. The emphasis of the demonstration layer is educational rather than creative, enabling learners to understand how computational processes produce visual outcomes.
 
 ---
 
 # Research Aim
 
-To investigate how interactive visualisation of procedural algorithms can improve understanding of computational thinking concepts through direct exploration of generative pattern creation.
+**Primary**: to investigate whether a small, fixed vocabulary of composition
+patterns can describe how a spectrum of generative pattern algorithms is built
+from a minimal library of reusable primitives, and what any gaps in that
+vocabulary reveal about the primitive library's completeness. See
+[`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](ALGORITHMIC_COMPOSITION_RESEARCH.md).
+
+**Secondary (demonstration)**: to investigate how interactive visualisation of
+procedural algorithms can improve understanding of computational thinking
+concepts through direct exploration of generative pattern creation — i.e.
+whether the demonstration layer specified below succeeds at making the
+primary research's findings legible to a learner, not whether those findings
+are themselves true.
 
 ---
 
 # Educational Objectives
+
+These objectives belong to the secondary, demonstration layer (see Purpose
+above) — they describe what the interface aims to make visible, not the
+project's primary research claim.
 
 The application is designed to support learning of fundamental computational thinking concepts including:
 
@@ -36,9 +69,9 @@ These concepts should be communicated through interaction with procedural algori
 
 ---
 
-# Educational Contribution
+# Demonstration-Layer Contribution
 
-The primary contribution of this project is the development of an interactive environment for exploring procedural algorithms as educational artefacts rather than creative tools.
+The contribution of this secondary layer is the development of an interactive environment for exploring procedural algorithms as educational artefacts rather than creative tools — demonstrating the primary, algorithmic research contribution (`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`), not standing as the project's contribution in its own right.
 
 Instead of treating procedural generation as a hidden implementation detail, the application makes computational processes visible through synchronised workflow visualisation, contextual documentation and real-time pattern rendering. By exposing intermediate algorithm states and allowing learners to manipulate meaningful parameters, the system aims to support deeper understanding of computational thinking concepts through direct exploration.
 
@@ -177,15 +210,21 @@ Learners should be able to:
 * compare intermediate and final outputs
 * understand how local changes influence global behaviour
 
-This inspection capability forms the primary educational contribution of the project.
+This inspection capability forms the core contribution of the demonstration layer specifically (see Purpose above for how this relates to the project's overall primary, algorithmic contribution).
 
 ---
 
 # Pattern Generators
 
-The project includes four predefined procedural generators representing increasing levels of algorithmic constraint.
+The project includes five core predefined procedural generators representing
+increasing levels of algorithmic constraint, plus two additional generators
+that support the core set without adding a distinct spectrum position or
+composition pattern of their own. See
+[`README.md`](../README.md#generative-spectrum) for the full spectrum table and
+[`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](ALGORITHMIC_COMPOSITION_RESEARCH.md)
+for how each generator's composition is analysed.
 
-## Perlin Noise
+## Perlin / Ridge Noise — *implemented*
 
 Focus:
 
@@ -194,9 +233,12 @@ Focus:
 * continuous fields
 * procedural variation
 
+Composition: fold/reduce over increasing octaves — the only generator built
+this way.
+
 ---
 
-## Voronoi Diagrams
+## Voronoi Diagrams — *implemented*
 
 Focus:
 
@@ -204,9 +246,12 @@ Focus:
 * distance relationships
 * deterministic construction from random inputs
 
+Composition: constant-bind (seed points, fixed per render) → atop (nearest-seed
+search → colour mapping).
+
 ---
 
-## Escher-Inspired Tessellations
+## Escher-Inspired Tessellations — *implemented*
 
 Focus:
 
@@ -214,6 +259,24 @@ Focus:
 * repetition
 * symmetry
 * tiling
+
+Composition: cross-fork (each axis's edge displacement is driven by the
+*other* axis's position) → atop — the only generator requiring a fork.
+
+---
+
+## Recursive / Fractal (Sierpinski) — *implemented*
+
+Focus:
+
+* rule-based recursive subdivision
+* self-similarity
+* deterministic procedural generation
+
+Composition: repeat/power (a subdivision primitive applied to its own
+remapped output, a fixed number of times) — the only generator built this way,
+and a genuinely different route to full determinism than Islamic Geometric
+Patterns below (recursive subdivision vs. symmetry-group construction).
 
 ---
 
@@ -226,7 +289,43 @@ Focus:
 * rule-based geometry
 * deterministic procedural generation
 
-Together these generators demonstrate a progression from stochastic to deterministic computational systems.
+Composition: constant-bind → atop, reusing the same Distance Field primitive
+Voronoi uses (`nearestPoint`), fed by a deterministic ring of construction
+points (`lib/constructionCircle.js`) instead of Voronoi's RNG-scattered seed
+points — confirmed distinct from the recursive generator's repeat/power
+pattern, and requiring no new composition pattern of its own (see
+`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`). Scoped down from the shape-grammar
+construction method in this project's own prior R&D
+(`docs/references/Maths to Magic...pdf`) to fit the pure-function generator
+contract every other generator satisfies, rather than reproducing that
+research's boolean-CSG authoring pipeline — see `docs/nodes/WORKFLOWS.md` §7
+for the full reasoning.
+
+---
+
+Together these five generators demonstrate a progression from stochastic to
+deterministic computational systems, including two different mechanisms for
+reaching full determinism.
+
+## Additional generators
+
+Two further generators — Wave / Concentric Rings and Grid Tessellations — are
+also implemented, supporting the core five rather than adding a distinct
+spectrum position or composition pattern:
+
+* **Wave** (rings mode) uses the same constant-bind → atop pattern as Voronoi,
+  against a single fixed point rather than a searched set of seed points — a
+  simpler first appearance of that pattern, useful as pedagogical scaffolding.
+* **Grid** is now fully decomposed into the shared primitive library
+  (`src/generators/lib/latticeIndex.js`) — its five tiling shapes' index
+  arithmetic turned out not to reduce to the existing `partition.js`
+  primitive (a tiling has no finite point set to search against), so it's a
+  sixth reusable primitive family rather than a `partition.js` in disguise
+  (see
+  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](ALGORITHMIC_COMPOSITION_RESEARCH.md)).
+  It's supporting material because it doesn't add a distinct spectrum
+  position or composition pattern (Atop, same as Voronoi/Wave), not because
+  of any unresolved status.
 
 ---
 
@@ -308,9 +407,14 @@ Users shall be able to:
 
 # Functional Requirements
 
-The application shall:
+The primary, algorithmic contribution shall:
 
-- implement four predefined procedural generators
+- implement the five core procedural generators plus the two supporting generators, per the Pattern Generators section above
+- decompose each generator, where its compositional status is resolved, from the shared primitive library (`src/generators/lib/`)
+- satisfy the documented generator contract (`docs/GENERATOR_CONTRACT.md`), verified by an automated property-based test suite (`src/generators/__tests__/`)
+
+The demonstration layer shall:
+
 - present each generator as a visual computational workflow
 - allow node selection
 - display educational documentation for every node
@@ -323,7 +427,12 @@ The application shall:
 
 # Non-Functional Requirements
 
-The application should:
+The primary, algorithmic contribution should:
+
+- keep the composition vocabulary (`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`) small and explicit, extending it only when a generator demonstrably doesn't fit
+- keep every generator's contract verifiable by automated tests rather than manual inspection
+
+The demonstration layer should:
 
 - remain visually simple and approachable
 - prioritise educational clarity over feature richness
@@ -400,7 +509,15 @@ Following exploration of the application, learners should be able to:
 
 # Success Criteria
 
-The project will be considered successful if users can:
+**Primary (algorithmic)**: the project will be considered successful if the
+composition analysis (`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`) produces a
+defensible account of which composition patterns describe the implemented
+generators, where the vocabulary needed extension, and why — supported by the
+automated generator contract and property-based test suite, not by user
+testing.
+
+**Secondary (demonstration)**: the project will be considered successful if
+users can:
 
 - understand the sequence of computational operations within each algorithm
 - explain the role of individual computational stages
@@ -408,4 +525,4 @@ The project will be considered successful if users can:
 - identify computational thinking concepts demonstrated by each algorithm
 - distinguish stochastic and deterministic approaches to procedural generation
 
-Ultimately, the application should help learners understand not only what a procedural algorithm produces, but how and why it produces those results.
+Ultimately, the application should help learners understand not only what a procedural algorithm produces, but how and why it produces those results — as a demonstration that the primary research's findings are legible, not as the research finding itself.
