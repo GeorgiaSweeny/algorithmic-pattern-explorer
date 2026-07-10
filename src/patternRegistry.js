@@ -209,6 +209,43 @@ export const REGISTRY = [
       ],
    },
 
+   // ── Islamic Geometric Patterns — deterministic radial symmetry ────────────
+   // Distance to a deterministic ring of construction points (Construction
+   // Circle + Radial Divisions), reusing Voronoi's nearest-point search with a
+   // fixed angular point set instead of a random one — see src/generators/islamic.js.
+
+   {
+      id:           "islamic-rosette",
+      name:         "Islamic Rosette",
+      category:     "Islamic",
+      generator:    "islamic",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "mode",      value: "rosette" },
+         { param: "tones",     control: "select", label: "Tones",
+           options: ["2", "3"], value: "2" },
+         { param: "tileSize",  archetype: "Size",       value: 100, map: [40, 200] },
+         { param: "segments",  archetype: "Complexity", value: 8,   map: [4, 16]   },
+         { param: "frequency", archetype: "Detail",     value: 0.15, map: [0.05, 0.4] },
+      ],
+   },
+
+   {
+      id:           "islamic-star-lines",
+      name:         "Islamic Star Lines",
+      category:     "Islamic",
+      generator:    "islamic",
+      spectrum:     0.95,
+      nativeFormat: "vector",
+      params: [
+         { param: "mode",      value: "star-lines" },
+         { param: "tileSize",  archetype: "Size",       value: 100, map: [40, 200] },
+         { param: "segments",  archetype: "Complexity", value: 8,   map: [4, 16]   },
+         { param: "frequency", archetype: "Density",    value: 0.2, map: [0.05, 0.5] },
+      ],
+   },
+
    // ── Escher Type I — translation tessellation ──────────────────────────────
    // A single tile shape repeated across the plane by pure X/Y translation.
    // Opposite edges are congruent so tiles interlock with no rotation or reflection.

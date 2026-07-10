@@ -10,7 +10,7 @@ Creates the initial geometric structure from which the algorithm begins.
 
 The Base Geometry node defines the starting shape or structure that later operations transform into more complex patterns.
 
-Different algorithms use different forms of base geometry. For example, an Escher tessellation begins with a polygonal tile, while an Islamic geometric pattern begins with a construction circle.
+Different algorithms use different forms of base geometry. For example, an Escher tessellation begins with a single square tile sized by Cell Size (no Shape Type choice — Type I translation tessellation always starts square), a grid tessellation begins with one of several tile shapes, and an Islamic geometric pattern begins with a construction circle.
 
 ---
 

@@ -2,7 +2,7 @@
 ========================================
 GENERIC GENERATOR CONFORMANCE SUITE
 ========================================
-* Runs the contract in docs/generator-contract.md against every REGISTRY entry.
+* Runs the contract in docs/GENERATOR_CONTRACT.md against every REGISTRY entry.
 * New patterns get range/determinism/totality checks for free — nothing to add here
 * when a new pattern is registered.
 */

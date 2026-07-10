@@ -5,25 +5,14 @@ PERLIN NOISE ALGORITHM
 Adapted from KEN PERLINS IMPOROVED PERLIN NOISE in JAVA and Abdelrahman Said'S 2D implementation in C
 
 */
+import { xorshift32 } from "../../generators/lib/rng.js";
+
 export class Perlin {
    constructor(seed = 1337) {
       this.PERMUTATION_COUNT = 256;
       this.perm = new Uint32Array(this.PERMUTATION_COUNT * 2);
 
-      this.rngState = seed >>> 0;
-
       this.init(seed);
-   }
-
-   randomU32() {
-      let x = this.rngState;
-
-      x ^= x << 13;
-      x ^= x >>> 17; //force unsigned values
-      x ^= x << 5;
-
-      this.rngState = x >>> 0;
-      return this.rngState;
    }
 
    //Fisher-Yates shuffle
@@ -39,7 +28,9 @@ export class Perlin {
 
    //Initialize permutation table
    init(seed = 1337) {
-      this.rngState = seed >>> 0;
+      // Seed node (src/generators/lib/rng.js): one xorshift32 implementation
+      // shared with Voronoi's seed points, rather than a second copy here.
+      this.randomU32 = xorshift32(seed);
 
       const tmp = new Uint32Array(this.PERMUTATION_COUNT);
 

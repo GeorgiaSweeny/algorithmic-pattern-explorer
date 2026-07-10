@@ -70,5 +70,5 @@ Increase frequency for more complex interlocking patterns.
 
 ## Related Nodes
 
-- Base Tile
+- Base Geometry
 - Repeat
