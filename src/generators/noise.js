@@ -3,8 +3,14 @@
 ========================================
 NOISE GENERATOR
 ========================================
+* Composition: Seed -> Noise, where Noise's fBm octave loop is a Fold
+* (src/generators/lib/fold.js) over repeated Perlin samples at increasing
+* frequency/decreasing amplitude. mode "ridge" folds the fBm value again,
+* through 1 - 2|raw|, to turn its zero-crossings into sharp ridgelines
+* instead of smooth hills — see docs/nodes/core/noise.md.
 */
 import { Perlin } from "../patternSystems/noiseLib/perlinNoise.js";
+import { foldOctaves } from "./lib/fold.js";
 
 // Seed-keyed cache so we never rebuild the permutation table mid-frame.
 const _perlinCache = new Map();
@@ -13,11 +19,6 @@ function getPerlin(seed) {
    return _perlinCache.get(seed);
 }
 
-// fBm Perlin noise (see docs/nodes/core/noise.md for the octave/lacunarity/
-// persistence construction). mode "ridge" folds the fBm value through
-// 1 - 2|raw| to turn its zero-crossings into sharp ridgelines instead of
-// smooth hills; "standard" and "ridge" are the same octave loop with only
-// that last line differing.
 export function noise(x, y, params) {
    const {
       scale       = 0.01,
@@ -30,14 +31,11 @@ export function noise(x, y, params) {
 
    const perlin = getPerlin(seed);
 
-   let sum = 0, amplitude = 1, frequency = 1, normalization = 0;
-   for (let i = 0; i < octaves; i++) {
-      sum           += amplitude * perlin.noise2D(x * scale * frequency, y * scale * frequency);
-      normalization += amplitude;
-      amplitude     *= persistence;
-      frequency     *= lacunarity;
-   }
+   const raw = foldOctaves(
+      (frequency) => perlin.noise2D(x * scale * frequency, y * scale * frequency),
+      octaves,
+      { persistence, lacunarity }
+   );
 
-   const raw = sum / normalization;
    return mode === "ridge" ? 1 - 2 * Math.abs(raw) : raw;
 }

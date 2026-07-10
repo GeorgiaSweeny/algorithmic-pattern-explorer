@@ -280,7 +280,7 @@ Patterns below (recursive subdivision vs. symmetry-group construction).
 
 ---
 
-## Islamic Geometric Patterns — *in progress*
+## Islamic Geometric Patterns
 
 Focus:
 
@@ -289,9 +289,17 @@ Focus:
 * rule-based geometry
 * deterministic procedural generation
 
-Composition: expected to be distinct from the recursive generator's
-repeat/power pattern (a different deterministic construction mechanism); to be
-confirmed once implemented.
+Composition: constant-bind → atop, reusing the same Distance Field primitive
+Voronoi uses (`nearestPoint`), fed by a deterministic ring of construction
+points (`lib/constructionCircle.js`) instead of Voronoi's RNG-scattered seed
+points — confirmed distinct from the recursive generator's repeat/power
+pattern, and requiring no new composition pattern of its own (see
+`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`). Scoped down from the shape-grammar
+construction method in this project's own prior R&D
+(`docs/references/Maths to Magic...pdf`) to fit the pure-function generator
+contract every other generator satisfies, rather than reproducing that
+research's boolean-CSG authoring pipeline — see `docs/nodes/WORKFLOWS.md` §7
+for the full reasoning.
 
 ---
 
@@ -308,12 +316,16 @@ spectrum position or composition pattern:
 * **Wave** (rings mode) uses the same constant-bind → atop pattern as Voronoi,
   against a single fixed point rather than a searched set of seed points — a
   simpler first appearance of that pattern, useful as pedagogical scaffolding.
-* **Grid** is not yet cleanly decomposed into the shared primitive library
-  (`src/generators/lib/`) — only its colour-mapping stage is a shared
-  primitive, the five tiling shapes' index arithmetic is bespoke. Its
-  compositional status is an open question (see
-  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](ALGORITHMIC_COMPOSITION_RESEARCH.md)),
-  not a simplification.
+* **Grid** is now fully decomposed into the shared primitive library
+  (`src/generators/lib/latticeIndex.js`) — its five tiling shapes' index
+  arithmetic turned out not to reduce to the existing `partition.js`
+  primitive (a tiling has no finite point set to search against), so it's a
+  sixth reusable primitive family rather than a `partition.js` in disguise
+  (see
+  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](ALGORITHMIC_COMPOSITION_RESEARCH.md)).
+  It's supporting material because it doesn't add a distinct spectrum
+  position or composition pattern (Atop, same as Voronoi/Wave), not because
+  of any unresolved status.
 
 ---
 

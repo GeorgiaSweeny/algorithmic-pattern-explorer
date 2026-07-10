@@ -36,14 +36,14 @@ Priority definitions used throughout:
 | Voronoi Diagrams generator | Must | Implemented. Constant-bind → atop. |
 | Escher-inspired Tessellations generator | Must | Implemented. Only cross-fork example. |
 | Recursive/Fractal (Sierpinski) generator | Must | Implemented. Repeat/power composition. |
-| Islamic Geometric Patterns generator | Must | In progress — 5th core spectrum position, distinct deterministic mechanism from recursive. |
+| Islamic Geometric Patterns generator | Must | Implemented (`islamic.js`) — 5th core spectrum position, deterministic mechanism (Distance Field over a fixed radial point set, no RNG) distinct from recursive's repeat/power. |
 | Wave/Concentric Rings generator | Should | Implemented. Pedagogical scaffolding for Voronoi's pattern; not a distinct spectrum/composition position. |
-| Grid Tessellations generator | Should | Implemented. Compositional status unresolved (open question in `ALGORITHMIC_COMPOSITION_RESEARCH.md`). |
+| Grid Tessellations generator | Should | Implemented. Fully decomposed via `lib/latticeIndex.js` (composition question resolved in `ALGORITHMIC_COMPOSITION_RESEARCH.md` — not a `partition.js` reuse, a sixth reusable primitive family). |
 | Generator contract (`GENERATOR_CONTRACT.md`) | Must | Verified by automated property-based tests, not manual inspection (non-functional requirement). |
 | Property-based test suite, all 7 generators | Must | Primary contribution's success criterion is defensible, test-backed composition analysis. |
 | `lib/` primitive decomposition per generator | Must | Required so the composition analysis in `ALGORITHMIC_COMPOSITION_RESEARCH.md` is checkable against real code, not just claimed. |
-| `noise.js` internals decomposed into `lib/` primitives | Could | Backlog; not blocking — noise.js still satisfies the contract without it. |
-| `recursive.js` `mode` param behaviour decided | Could | Backlog; needed before it becomes a node-graph choice, not before MVP. |
+| `noise.js` and `recursive.js` internals decomposed into `lib/` primitives | Could | Done — `lib/fold.js`, `lib/repeat.js`; both existing property-test suites pass unchanged. |
+| `recursive.js` `mode` param behaviour decided | Could | Done — `grid` mode accumulates per-level cell parity (self-similar checkerboard, no holes), distinct from `sierpinski`'s centre-cell exclusion. |
 
 ## 2. Compositional/Hybrid Generators (secondary research question)
 

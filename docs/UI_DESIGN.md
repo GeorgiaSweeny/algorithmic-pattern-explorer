@@ -106,7 +106,7 @@ The workflow provides a simplified visual representation of each procedural algo
 
 Each node corresponds to a meaningful conceptual operation rather than an individual implementation function.
 
-Example (Grid Tessellation, triangle shape — see `src/ui-layout-mockup.html`):
+Example (Grid Tessellation, any shape — square, triangle, hexagon, brick or diamond):
 
 ```text
 Workspace
@@ -115,16 +115,7 @@ Workspace
 Base Geometry
     │
     ▼
-Rotate           ← shown only for shapes that need it (e.g. triangle, diamond)
-    │
-    ▼
-Translate        ← shown only for shapes that need it (e.g. triangle, brick)
-    │
-    ▼
-Repeat X
-    │
-    ▼
-Repeat Y
+Lattice Index
     │
     ▼
 Colour Mapping
@@ -133,10 +124,24 @@ Colour Mapping
 Render
 ```
 
-For a shape that doesn't need them (e.g. square, hexagon), Rotate and
-Translate are omitted from the workflow entirely rather than shown as
-no-op steps — the workflow always reflects what the current algorithm is
-actually doing, not a fixed template.
+This is the same 5-step workflow for every shape, not a template with
+Rotate/Translate/Repeat X/Repeat Y steps that appear or disappear by shape.
+An earlier version of this document showed Grid Tessellation going through
+those four extra stages (shown conditionally per shape), on the assumption
+that a diamond tile's 45° frame or a brick's row offset would be
+independently observable steps a learner could inspect. Checked against the
+actual implementation (`src/generators/grid.js`), that isn't how any of the
+five shapes are computed: each one maps `(x, y)` straight to a colour-class
+index via one closed-form coordinate calculation — an oblique basis for
+triangle, cube coordinates for hexagon, a running-bond offset for brick, a
+rotated frame for diamond — with no intermediate rotated- or
+translated-geometry object a Rotate or Translate node could meaningfully
+show. That calculation is the Lattice Index node
+(`docs/nodes/computation/lattice-index.md`); see
+`docs/nodes/WORKFLOWS.md` §5 for the full account of why the four-step
+version didn't match the code, and why Lattice Index — rather than forcing
+the shapes through Rotate/Translate/Repeat, which would misrepresent a shear
+as a rotation for triangle and hexagon — is the honest fix.
 
 The graph should remain primarily linear, with branching introduced only where it contributes meaningfully to understanding.
 
@@ -178,44 +183,33 @@ A central feature of the application is the ability to inspect procedural genera
 
 Users should be able to move forwards and backwards through the workflow.
 
-Example (Grid Tessellation, triangle shape):
+Example (Grid Tessellation, any shape):
 
 ```text
-Step 1 of 8 — Workspace
+Step 1 of 5 — Workspace
 
 ↓
 
-Step 2 of 8 — Base Geometry
+Step 2 of 5 — Base Geometry
 
 ↓
 
-Step 3 of 8 — Rotate
+Step 3 of 5 — Lattice Index
 
 ↓
 
-Step 4 of 8 — Translate
+Step 4 of 5 — Colour Mapping
 
 ↓
 
-Step 5 of 8 — Repeat X
-
-↓
-
-Step 6 of 8 — Repeat Y
-
-↓
-
-Step 7 of 8 — Colour Mapping
-
-↓
-
-Step 8 of 8 — Render
+Step 5 of 5 — Render
 ```
 
-The step count adjusts to the current algorithm — a shape that doesn't need
-Rotate/Translate steps through 6 stages instead of 8, per Algorithm Workflow
-above. Navigation is available both via Prev/Next controls and by selecting
-a node directly.
+Grid Tessellation steps through the same 5 stages regardless of shape (see
+Algorithm Workflow above); other generators' step counts still vary — e.g.
+Wave/Concentric Rings' Distance Field step only appears in `rings` mode.
+Navigation is available both via Prev/Next controls and by selecting a node
+directly.
 
 At each step, the pattern canvas displays the intermediate output produced by that stage of the algorithm.
 

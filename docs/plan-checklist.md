@@ -50,15 +50,52 @@ Node-model alignment (supports the ReactFlow implementation below):
 
 Outstanding from this phase (not blocking, tracked for later):
 
-- [ ] `noise.js` internals (fBm loop, ridge fold) decomposed into `lib/` primitives
-- [ ] `recursive.js`'s `mode` param (`"sierpinski"` vs `"grid"`) is read but has no
-      effect — both registry entries produce identical output; needs a decision on
-      intended behaviour before it becomes a node graph choice
+- [x] `noise.js` internals (fBm loop) decomposed into `lib/` primitives —
+      `lib/fold.js` (`foldOctaves`), also used to decompose `recursive.js`'s
+      recursion (`lib/repeat.js`); both existing property-test suites pass
+      unchanged, both combinators additionally unit-tested independently
+      (`lib.fold.test.js`, `lib.repeat.test.js`). Ridge fold stays inline in
+      `noise.js` — it's one line applied after the fold completes, not part
+      of the fold loop itself.
+- [x] `recursive.js`'s `mode` param (`"sierpinski"` vs `"grid"`) now behaves
+      differently per mode — `grid` accumulates each Subdivide level's cell
+      parity instead of `sierpinski`'s centre-cell exclusion, giving a
+      self-similar checkerboard with no holes rather than a duplicate
+      Sierpinski Carpet under a different name. `recursive.property.test.js`
+      covers both modes, including a proof that `grid` composes correctly
+      across depth levels. Full suite: 84/84 passing.
 
 ## Jul 10: Islamic geometric pattern generator (1 day)
 
-- [ ] Implementation on top of the `lib/` primitives
-- [ ] Property tests + registry entry, matching the other 6 generators
+- [x] Implementation on top of the `lib/` primitives — `src/generators/islamic.js`,
+      composed from `lib/constructionCircle.js` (new: Construction Circle +
+      Radial Divisions) and the existing `distanceField.js`/`colourMapping.js`;
+      added `lib/waveform.js` (new: Waveform node) along the way, closing a gap
+      where `wave.js`'s plain-sine mode had no corresponding node — see
+      `docs/nodes/WORKFLOWS.md`
+- [x] Property tests + registry entry, matching the other 6 generators —
+      `src/generators/__tests__/islamic.property.test.js`, `islamic-rosette` /
+      `islamic-star-lines` in `src/patternRegistry.js`.
+- [x] Node workflow designed and cross-checked against the node library for all
+      7 generators (not just Islamic) — `docs/nodes/WORKFLOWS.md`, including a
+      gap analysis. Two gaps found and since closed: Wave's plain-sine mode had
+      no corresponding node (added Waveform), and Grid's documented
+      UI_DESIGN.md workflow (Rotate/Translate/Repeat X/Repeat Y) didn't match
+      `grid.js`'s real implementation — resolved by adding the `Lattice Index`
+      node + `lib/latticeIndex.js`, refactoring `grid.js` to use it, and
+      correcting `docs/UI_DESIGN.md`'s worked example to the real 5-step
+      workflow (same for every shape). Also decomposed `noise.js`'s fold and
+      `recursive.js`'s repeat into generic, independently tested `lib/`
+      primitives (`fold.js`, `repeat.js`) while auditing the library.
+- [x] SVG (vector) export — `islamic-rosette`/`islamic-star-lines` declare
+      `nativeFormat: "vector"` in `patternRegistry.js`, which would have thrown
+      at runtime in `ui.js` (no guard against a missing `SVG_GENERATORS`
+      entry) the first time either was selected. Added
+      `src/generators/svg/islamic-svg.js`; verified against the raster
+      generator numerically (band math and cell geometry cross-checked over
+      1000+ points each, zero mismatches), not just "renders without
+      throwing." Found during a follow-up stale-code audit, not part of the
+      original day's scope. Full suite: 84/84 passing throughout.
 
 ## Jul 11-12: ReactFlow nodes + functional page (start)
 
