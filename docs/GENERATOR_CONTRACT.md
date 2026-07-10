@@ -47,19 +47,29 @@ corresponding to exactly one node documented in `docs/nodes/`:
 | `lib/` module          | Node (`docs/nodes/`)      | Used by                      |
 |-------------------------|----------------------------|-------------------------------|
 | `rng.js`                | Seed                       | `noise.js` (via `Perlin`), `voronoi.js` |
-| *(n/a — `noise.js` itself)* | Noise (`docs/nodes/core/noise.md`) | `noise.js` |
+| `fold.js` (`foldOctaves`) | Noise (`docs/nodes/core/noise.md`) | `noise.js` |
 | `seedPoints.js`         | Seed Points                 | `voronoi.js`                  |
-| `distanceField.js`      | Distance Field              | `voronoi.js` (`nearestPoint`), `wave.js` (`distanceToPoint`) |
-| `partition.js`          | Partition                    | (available; not yet consumed) |
-| `colourMapping.js`      | Colour Mapping               | `grid.js`, `voronoi.js`, `escher.js` |
+| `distanceField.js`      | Distance Field              | `voronoi.js` (`nearestPoint`), `wave.js` (`distanceToPoint`), `islamic.js` (`nearestPoint`) |
+| `partition.js`          | Partition                    | (available; not yet consumed — `grid.js` was checked against it and found to need `latticeIndex.js` instead, see `docs/ALGORITHMIC_COMPOSITION_RESEARCH.md` open question 1) |
+| `colourMapping.js`      | Colour Mapping               | `grid.js`, `voronoi.js`, `escher.js`, `islamic.js` (`rosette` mode) |
 | `edgeDeformation.js`    | Edge Deformation             | `escher.js`                   |
 | `subdivide.js`          | Subdivide (`docs/nodes/pattern/subdivide.md`) | `recursive.js` |
+| `repeat.js`             | Subdivide's recursive reapplication (`docs/nodes/pattern/subdivide.md`) | `recursive.js` |
+| `waveform.js`           | Waveform (`docs/nodes/computation/waveform.md`) | `wave.js` (both modes), `islamic.js` (`star-lines` mode) |
+| `latticeIndex.js`       | Lattice Index (`docs/nodes/computation/lattice-index.md`) | `grid.js` (all five shapes) |
+| `constructionCircle.js` | Construction Circle + Radial Divisions (`docs/nodes/generation/construction-circle.md`, `docs/nodes/pattern/radial-divisions.md`) | `islamic.js` |
 
 This exists so the node graph (ReactFlow) can wrap each `lib/` function as one node
 type directly, instead of a fresh implementation per node. A generator file (e.g.
 `voronoi.js`) is then just one particular composition of these nodes — the same
 composition the node graph should reproduce.
 
-`noise.js` is the one remaining generator not yet decomposed this way: its fBm octave
-loop and ridge-mode fold still live inline (see `docs/nodes/core/noise.md`), rather
-than as separate composable `lib/` primitives. Left for a follow-up.
+`noise.js`'s fBm octave loop and `recursive.js`'s recursion are now decomposed the
+same way: `fold.js` (`foldOctaves`) and `repeat.js` (`repeat`) are the generic
+fold/repeat combinators named in `docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`,
+tested independently of either generator in
+`src/generators/__tests__/lib.fold.test.js` and `lib.repeat.test.js`. Both
+`fold.js` and `repeat.js` back an *existing* node (Noise, Subdivide) rather than
+introducing a new one — the workflow view a learner sees is unchanged; what
+changed is that those nodes' documented behaviour is now backed by tested,
+reusable code instead of logic inlined in one generator file.

@@ -39,7 +39,7 @@ pattern.
 > **Can a small, fixed vocabulary of composition patterns (atop/compose, fork, constant-bind, fold, repeat) describe how a spectrum of generative pattern algorithms is built from a minimal library of reusable primitives — and where that vocabulary doesn't fit a given generator, what does the gap reveal about the primitive library's completeness?**
 
 See [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
-for the current composition analysis against all six implemented generators.
+for the current composition analysis against all seven implemented generators.
 
 ### Secondary Research Question
 
@@ -94,7 +94,7 @@ reach full determinism by genuinely different mechanisms.
 | **Voronoi Diagrams**           | Random inputs with deterministic partitioning | Hybrid                | Constant-bind → atop | ✅ Implemented |
 | **Escher Tessellations**       | Geometric transformations                     | Structured            | Cross-fork → atop (only fork example) | ✅ Implemented |
 | **Recursive / Fractal (Sierpinski)** | Rule-based recursive subdivision       | Deterministic          | Repeat/power (only example) | ✅ Implemented |
-| **Islamic Geometric Patterns** | Mathematical construction rules (symmetry groups) | Deterministic     | Expected distinct from recursive subdivision — tbc once built | 🚧 In progress |
+| **Islamic Geometric Patterns** | Mathematical construction rules (symmetry groups) | Deterministic     | Constant-bind → atop, reusing Voronoi's Distance Field with a deterministic (not RNG) point source — distinct mechanism from recursive subdivision's repeat/power; see `docs/nodes/WORKFLOWS.md` §7 | ✅ Implemented |
 
 Together these demonstrate how different computational rules — and different
 ways of composing a small set of shared primitives — influence pattern
@@ -112,14 +112,17 @@ composition pattern of their own, for two different reasons:
   compositionally — that's exactly what makes it useful pedagogical
   scaffolding: a simpler first appearance of the pattern Voronoi later shows in
   full.
-* **Grid** isn't cleanly decomposed into the shared primitive library yet —
-  only its final colour-mapping stage is a shared primitive; the five
-  tiling shapes' index arithmetic is bespoke and undecomposed (see the open
-  question in
-  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md)
-  on whether it reduces to the existing `partition.js` primitive). It's
-  supporting material because its compositional status is unresolved, not
-  because it's simpler.
+* **Grid** is now fully decomposed — each of the five tiling shapes' index
+  arithmetic lives in `lib/latticeIndex.js`, composed with the same
+  colour-mapping stage every other generator uses. Checking that decomposition
+  answered the open question in
+  [`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`](docs/ALGORITHMIC_COMPOSITION_RESEARCH.md):
+  the arithmetic doesn't reduce to the existing `partition.js` primitive (a
+  tiling has no finite point set to search against), so it's a sixth
+  reusable primitive family rather than a `partition.js` in disguise. It's
+  supporting material because it doesn't add a distinct spectrum position or
+  composition *pattern* of its own (Atop, the same as Voronoi/Wave) — not
+  because its status is unresolved.
 
 Both also support the benchmark suite ([`docs/benchmark-results.md`](docs/benchmark-results.md)) as a
 byproduct of sharing the same primitive library.
@@ -165,7 +168,7 @@ Core spectrum (Generative Spectrum, above):
 * Voronoi Diagrams
 * Escher-inspired Tessellations
 * Recursive / Fractal (Sierpinski)
-* Islamic Geometric Patterns *(in progress)*
+* Islamic Geometric Patterns
 
 Additional generators (support the core five without a distinct spectrum position or composition pattern of their own — see Generative Spectrum above):
 
