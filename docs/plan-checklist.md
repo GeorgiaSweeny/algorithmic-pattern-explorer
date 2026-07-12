@@ -99,10 +99,17 @@ Outstanding from this phase (not blocking, tracked for later):
 
 ## Jul 11-12: ReactFlow nodes + functional page (start)
 
-- [ ] Begin implementing the ReactFlow node graph, using the `lib/` primitives and
-      `docs/nodes/` docs as the source of node types/params
-- [ ] Begin turning the website mockup into a working page for the core (non-hybrid)
-      algorithms
+- [x] ReactFlow node graph implemented for all 7 generators — `src/app/` (new
+      `@xyflow/react` + Vite app), `src/app/src/workflows.js` builds each
+      pattern's `{nodes, edges}` from `docs/nodes/WORKFLOWS.md`'s documented
+      sequence and `patternRegistry.js`'s params, keyed off `NODE_LIBRARY`
+      (one entry per `docs/nodes/` node type); `WorkflowNode.jsx` renders each
+      node coloured by category with its param controls (slider/select/fixed,
+      matching the registry's param shapes). Covered by `workflows.test.js`.
+- [ ] Functional page not yet wired to a live canvas render — per `App.jsx`'s
+      own inline note, dragging a param slider updates only that node's local
+      state; it does not call back into a generator or redraw output. Turning
+      the mockup into a working page for the core algorithms is still open.
 - [ ] Continues into Aug 2-6
 - Compressed from 3 to 2 days by the one-day schedule shift (see Constraints) —
       the fixed Jul 13 revision start absorbed the delay.
