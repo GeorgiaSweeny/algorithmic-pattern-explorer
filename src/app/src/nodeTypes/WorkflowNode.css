@@ -1,0 +1,70 @@
+.workflow-node {
+   min-width: 190px;
+   border: 2px solid;
+   border-radius: 8px;
+   background: #fff;
+   font-family: system-ui, sans-serif;
+   font-size: 12px;
+   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+   overflow: hidden;
+}
+
+.workflow-node-header {
+   color: #fff;
+   font-weight: 600;
+   padding: 6px 10px;
+   font-size: 13px;
+}
+
+.workflow-node-body {
+   padding: 8px 10px;
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+}
+
+.param-control {
+   display: flex;
+   flex-direction: column;
+   gap: 2px;
+}
+
+.param-label {
+   color: #4b5563;
+   font-size: 11px;
+}
+
+.param-label em {
+   font-style: normal;
+   color: #9ca3af;
+}
+
+.param-row {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+}
+
+.param-row input[type="range"] {
+   flex: 1;
+}
+
+.param-value {
+   font-variant-numeric: tabular-nums;
+   color: #111827;
+   min-width: 2.5em;
+   text-align: right;
+}
+
+.param-fixed {
+   flex-direction: row;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.param-fixed .param-value {
+   font-family: monospace;
+   background: #f3f4f6;
+   padding: 1px 6px;
+   border-radius: 4px;
+}
