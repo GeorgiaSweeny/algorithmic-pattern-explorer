@@ -41,6 +41,7 @@ Priority definitions used throughout:
 | Grid Tessellations generator | Should | Implemented. Fully decomposed via `lib/latticeIndex.js` (composition question resolved in `ALGORITHMIC_COMPOSITION_RESEARCH.md` — not a `partition.js` reuse, a sixth reusable primitive family). |
 | Generator contract (`GENERATOR_CONTRACT.md`) | Must | Verified by automated property-based tests, not manual inspection (non-functional requirement). |
 | Property-based test suite, all 7 generators | Must | Primary contribution's success criterion is defensible, test-backed composition analysis. |
+| Registry/generator param-consistency guard | Must | `registry.params-consistency.test.js` — same rigor bar; caught a live bug (`recursive-svg.js` ignores `mode`), still open, fix scheduled with Aug 2-6 wiring work per `plan-checklist.md`. |
 | `lib/` primitive decomposition per generator | Must | Required so the composition analysis in `ALGORITHMIC_COMPOSITION_RESEARCH.md` is checkable against real code, not just claimed. |
 | `noise.js` and `recursive.js` internals decomposed into `lib/` primitives | Could | Done — `lib/fold.js`, `lib/repeat.js`; both existing property-test suites pass unchanged. |
 | `recursive.js` `mode` param behaviour decided | Could | Done — `grid` mode accumulates per-level cell parity (self-similar checkerboard, no holes), distinct from `sierpinski`'s centre-cell exclusion. |
