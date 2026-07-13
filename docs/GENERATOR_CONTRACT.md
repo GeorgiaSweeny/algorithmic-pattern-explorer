@@ -39,6 +39,15 @@ new pattern to the registry automatically gets these checks for free.
 Algorithm-specific invariants (e.g. Voronoi partition exactness, Sierpinski self-similarity,
 Perlin continuity) live in one property test file per generator, alongside the generic suite.
 
+A separate check, `src/generators/__tests__/registry.params-consistency.test.js`, guards a
+failure mode outside this contract: a `REGISTRY` entry declaring a param (and so exposing a
+UI control for it) that the generator actually rendering that pattern never reads. It resolves
+each entry's real render path — `GENERATORS[generator]` for `nativeFormat: "raster"`,
+`SVG_GENERATORS[generator]` for `"vector"` — and asserts every declared param name appears in
+that function's source. It caught a live bug: `recursive-svg.js` never reads `mode`, so
+`recursive-grid` and `sierpinski` render identically as vector patterns despite declaring
+different `mode` values; that bug is still open (`recursive-svg.js` not yet fixed).
+
 ## Shared primitives (`src/generators/lib/`)
 
 A generator satisfies the interface above by composing smaller pure functions, each
