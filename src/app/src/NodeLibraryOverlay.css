@@ -1,0 +1,175 @@
+.lib-overlay {
+   position: fixed;
+   inset: 0;
+   background: rgba(17, 24, 39, 0.6);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 1000;
+}
+
+.lib-panel {
+   position: relative;
+   background: #fff;
+   border-radius: 10px;
+   padding: 28px 32px;
+   width: min(920px, 94vw);
+   height: min(700px, 88vh);
+   display: flex;
+   flex-direction: column;
+   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.lib-close {
+   position: absolute;
+   top: 12px;
+   right: 14px;
+   border: none;
+   background: none;
+   font-size: 22px;
+   line-height: 1;
+   cursor: pointer;
+   color: #6b7280;
+}
+
+.lib-close:hover {
+   color: #111827;
+}
+
+.lib-title {
+   margin: 0 0 12px;
+   flex: 0 0 auto;
+}
+
+.lib-tabs {
+   flex: 0 0 auto;
+   display: flex;
+   gap: 8px;
+   border-bottom: 1px solid #e5e7eb;
+   margin-bottom: 16px;
+}
+
+.lib-tab {
+   background: none;
+   border: none;
+   border-bottom: 2px solid transparent;
+   padding: 8px 4px;
+   font-size: 14px;
+   font-weight: 500;
+   color: #6b7280;
+   cursor: pointer;
+}
+
+.lib-tab:hover {
+   color: #111827;
+}
+
+.lib-tab.selected {
+   color: #111827;
+   border-bottom-color: #111827;
+}
+
+.lib-body {
+   flex: 1;
+   display: grid;
+   grid-template-columns: 220px 1fr;
+   gap: 20px;
+   min-height: 0;
+}
+
+.lib-sidebar {
+   overflow-y: auto;
+   border-right: 1px solid #e5e7eb;
+   padding-right: 12px;
+}
+
+.lib-sidebar-group h4 {
+   margin: 12px 0 4px;
+   font-size: 11px;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   color: #9ca3af;
+}
+
+.lib-sidebar-group:first-child h4 {
+   margin-top: 0;
+}
+
+.lib-sidebar ul {
+   list-style: none;
+   margin: 0;
+   padding: 0;
+}
+
+.lib-sidebar button {
+   display: block;
+   width: 100%;
+   text-align: left;
+   background: none;
+   border: none;
+   padding: 6px 8px;
+   border-radius: 6px;
+   font-size: 13px;
+   color: #374151;
+   cursor: pointer;
+}
+
+.lib-sidebar button:hover {
+   background: #f3f4f6;
+}
+
+.lib-sidebar button.selected {
+   background: #111827;
+   color: #fff;
+}
+
+.lib-content {
+   overflow-y: auto;
+   padding-right: 8px;
+   font-size: 14px;
+   line-height: 1.6;
+   color: #1f2937;
+}
+
+.lib-content h2,
+.lib-content h3,
+.lib-content h4,
+.lib-content h5 {
+   margin: 20px 0 8px;
+}
+
+.lib-content h2:first-child {
+   margin-top: 0;
+}
+
+.lib-content ul {
+   margin: 4px 0;
+   padding-left: 20px;
+}
+
+.lib-content pre {
+   background: #f3f4f6;
+   padding: 10px 12px;
+   border-radius: 6px;
+   overflow-x: auto;
+   font-size: 12.5px;
+}
+
+.lib-content code {
+   background: #f3f4f6;
+   padding: 1px 4px;
+   border-radius: 4px;
+   font-size: 0.9em;
+}
+
+.lib-content pre code {
+   background: none;
+   padding: 0;
+}
+
+.lib-content hr {
+   border: none;
+   border-top: 1px solid #e5e7eb;
+   margin: 16px 0;
+}
+
