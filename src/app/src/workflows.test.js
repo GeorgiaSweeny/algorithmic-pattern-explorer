@@ -43,6 +43,26 @@ const EXPECTED = {
       "colourMapping",
       "render",
    ],
+   "perlin-sierpinski": [
+      "workspace",
+      "baseGeometry",
+      "noise", "subdivide",
+      "noise", "subdivide",
+      "noise", "subdivide",
+      "noise", "subdivide",
+      "colourMapping",
+      "render",
+   ], // depth: 4
+   "voronoi-islamic": [
+      "workspace",
+      "seed",
+      "seedPoints",
+      "constructionCircle",
+      "radialDivisions",
+      "distanceField",
+      "colourMapping",
+      "render",
+   ],
 };
 
 describe("buildWorkflow", () => {
