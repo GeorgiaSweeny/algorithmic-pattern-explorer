@@ -72,6 +72,10 @@ Switch from uniform to Poisson distribution and observe clustering differences.
 
 - Voronoi Diagram system
 - Distance Field computation
+- Voronoi-Seeded Islamic Tiling (`voronoiIslamic.js`, added 2026-08-21) —
+  the same seed points also feed `lib/seedPoints.js`'s
+  `nearestNeighbourDistances`, giving each cell a locally-appropriate
+  Construction Circle radius; see `docs/nodes/WORKFLOWS.md` §8
 
 ---
 

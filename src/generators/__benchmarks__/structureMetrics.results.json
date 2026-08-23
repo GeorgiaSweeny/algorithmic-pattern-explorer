@@ -1,0 +1,194 @@
+{
+  "gridSize": 300,
+  "sweeps": {
+    "recursiveNoise": {
+      "label": "amplitude",
+      "fixedParams": {
+        "depth": 4,
+        "seed": 1337
+      },
+      "rows": [
+        {
+          "amplitude": 0,
+          "fillFraction": 0.6279555555555556,
+          "edgeDensity": 0.06559643255295429,
+          "blockEntropyBits": 1.6405159677654628
+        },
+        {
+          "amplitude": 0.02,
+          "fillFraction": 0.6294666666666666,
+          "edgeDensity": 0.06713489409141583,
+          "blockEntropyBits": 1.7332390154288362
+        },
+        {
+          "amplitude": 0.05,
+          "fillFraction": 0.6325222222222222,
+          "edgeDensity": 0.069520624303233,
+          "blockEntropyBits": 1.8152612639341597
+        },
+        {
+          "amplitude": 0.08,
+          "fillFraction": 0.6364777777777778,
+          "edgeDensity": 0.0719732441471572,
+          "blockEntropyBits": 1.855098150577955
+        },
+        {
+          "amplitude": 0.12,
+          "fillFraction": 0.6420111111111111,
+          "edgeDensity": 0.07441471571906355,
+          "blockEntropyBits": 1.874581835520831
+        },
+        {
+          "amplitude": 0.16,
+          "fillFraction": 0.6456777777777778,
+          "edgeDensity": 0.07962095875139354,
+          "blockEntropyBits": 1.923199109621564
+        },
+        {
+          "amplitude": 0.2,
+          "fillFraction": 0.6476333333333333,
+          "edgeDensity": 0.08744704570791527,
+          "blockEntropyBits": 2.016161961781287
+        },
+        {
+          "amplitude": 0.25,
+          "fillFraction": 0.6504,
+          "edgeDensity": 0.09778149386845039,
+          "blockEntropyBits": 2.1087814588731435
+        },
+        {
+          "amplitude": 0.3,
+          "fillFraction": 0.6526888888888889,
+          "edgeDensity": 0.10565217391304348,
+          "blockEntropyBits": 2.173515648035317
+        },
+        {
+          "amplitude": 0.4,
+          "fillFraction": 0.6579888888888888,
+          "edgeDensity": 0.11819397993311037,
+          "blockEntropyBits": 2.287336193078693
+        },
+        {
+          "amplitude": 0.5,
+          "fillFraction": 0.6491,
+          "edgeDensity": 0.13771460423634338,
+          "blockEntropyBits": 2.4323652564762503
+        },
+        {
+          "amplitude": 0.7,
+          "fillFraction": 0.6315,
+          "edgeDensity": 0.181917502787068,
+          "blockEntropyBits": 2.7507712734528478
+        },
+        {
+          "amplitude": 1,
+          "fillFraction": 0.6149777777777777,
+          "edgeDensity": 0.22033444816053513,
+          "blockEntropyBits": 2.980790098331843
+        },
+        {
+          "amplitude": 1.5,
+          "fillFraction": 0.5953777777777778,
+          "edgeDensity": 0.2529319955406912,
+          "blockEntropyBits": 3.1775159772283303
+        },
+        {
+          "amplitude": 2,
+          "fillFraction": 0.5911666666666666,
+          "edgeDensity": 0.27202898550724636,
+          "blockEntropyBits": 3.246183140708806
+        }
+      ]
+    },
+    "voronoiIslamic": {
+      "label": "variation",
+      "fixedParams": {
+        "numCells": 20,
+        "segments": 8,
+        "scale": 0.35,
+        "frequency": 2,
+        "seed": 1337
+      },
+      "rows": [
+        {
+          "variation": 0,
+          "fillFraction": 0.7371222222222222,
+          "edgeDensity": 0.25618171683389074,
+          "blockEntropyBits": 3.0094694180783472
+        },
+        {
+          "variation": 0.05,
+          "fillFraction": 0.7371222222222222,
+          "edgeDensity": 0.25618171683389074,
+          "blockEntropyBits": 3.0094694180783472
+        },
+        {
+          "variation": 0.1,
+          "fillFraction": 0.7369555555555556,
+          "edgeDensity": 0.25385172798216277,
+          "blockEntropyBits": 3.0054616726074195
+        },
+        {
+          "variation": 0.15,
+          "fillFraction": 0.7327555555555556,
+          "edgeDensity": 0.25420289855072464,
+          "blockEntropyBits": 3.018353659749281
+        },
+        {
+          "variation": 0.2,
+          "fillFraction": 0.7323,
+          "edgeDensity": 0.25408584169453735,
+          "blockEntropyBits": 3.0116577993832765
+        },
+        {
+          "variation": 0.3,
+          "fillFraction": 0.7317222222222223,
+          "edgeDensity": 0.25440356744704573,
+          "blockEntropyBits": 3.0078134099910674
+        },
+        {
+          "variation": 0.4,
+          "fillFraction": 0.7320333333333333,
+          "edgeDensity": 0.25474358974358974,
+          "blockEntropyBits": 3.0138592919083647
+        },
+        {
+          "variation": 0.5,
+          "fillFraction": 0.7337333333333333,
+          "edgeDensity": 0.25438127090301005,
+          "blockEntropyBits": 3.0122119637175464
+        },
+        {
+          "variation": 0.6,
+          "fillFraction": 0.7321777777777778,
+          "edgeDensity": 0.25474358974358974,
+          "blockEntropyBits": 3.015572549613046
+        },
+        {
+          "variation": 0.7,
+          "fillFraction": 0.7312444444444445,
+          "edgeDensity": 0.25520624303232997,
+          "blockEntropyBits": 3.0159225471091005
+        },
+        {
+          "variation": 0.8,
+          "fillFraction": 0.7308222222222223,
+          "edgeDensity": 0.2537123745819398,
+          "blockEntropyBits": 3.0066796523934687
+        },
+        {
+          "variation": 0.9,
+          "fillFraction": 0.7298888888888889,
+          "edgeDensity": 0.25388517279821626,
+          "blockEntropyBits": 3.00962268107844
+        },
+        {
+          "variation": 1,
+          "fillFraction": 0.7293111111111111,
+          "edgeDensity": 0.25462653288740245,
+          "blockEntropyBits": 3.029203752544743
+        }
+      ]
+    }
+  }
+}

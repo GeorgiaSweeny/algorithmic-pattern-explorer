@@ -100,6 +100,22 @@ Together these demonstrate how different computational rules — and different
 ways of composing a small set of shared primitives — influence pattern
 formation.
 
+### Hybrid generators (secondary research question)
+
+Two further generators test how far the compositional model above extends
+under direct composition of two already-implemented pipelines — see
+`docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`'s secondary research question and
+each generator's own composition-table row.
+
+| Generator | Computational Approach | Composition pattern | Status |
+| --- | --- | --- | --- |
+| **Perlin Sierpinski** (`recursiveNoise.js`) | Recursive subdivision domain-warped by Perlin noise; `amplitude = 0` is byte-identical to Sierpinski Carpet, a falsifiable deterministic baseline | Repeat, whose step is a Fork → Atop — a genuinely new *shape*, zero new primitives | ✅ Implemented |
+| **Voronoi Islamic** (`voronoiIslamic.js`) | Islamic Geometric Patterns' rosette construction, reused unmodified, seeded from Voronoi's stochastic point source instead of a regular grid | Constant-bind → Atop → Atop → Fork → Atop — one new primitive (`nearestNeighbourDistances`), zero new patterns | ✅ Implemented |
+
+Both are raster-only (`nativeFormat: "raster"` — no SVG renderer; see each
+generator's own header comment for why) and fully covered by the same
+property-based test suite standard as the core seven.
+
 ### Additional generators
 
 Two further generators — Wave / Concentric Rings and Grid Tessellations —
@@ -174,6 +190,11 @@ Additional generators (support the core five without a distinct spectrum positio
 
 * Wave / Concentric Rings
 * Grid Tessellations (square, hex, triangle, brick, diamond)
+
+Hybrid generators (secondary research question — see Hybrid generators above):
+
+* Perlin Sierpinski
+* Voronoi Islamic
 
 ### Algorithm Explorer
 
@@ -291,6 +312,15 @@ Future versions could introduce further procedural techniques for comparison, in
 * Reaction–Diffusion Systems
 * Cellular Automata
 * Fractal Generation
+* Aperiodic monotile tiling (the "hat" and "spectre" — Smith, Myers, Kaplan &
+  Goodman-Strauss, 2023 — the recent resolution of the "Einstein problem").
+  Full feasibility discussion, references, and honest assessment against
+  this project's composition vocabulary in
+  [`docs/EINSTEIN_APERIODIC_STRETCH.md`](docs/EINSTEIN_APERIODIC_STRETCH.md):
+  the construction's hierarchical substitution system doesn't obviously fit
+  the per-pixel atop/fork/constant-bind/repeat vocabulary used by every
+  current generator, which is itself a useful data point for the primary
+  research question rather than a reason to skip the citation.
 * Agent-Based Systems
 
 These additions would broaden the range of computational paradigms available for exploration while reinforcing the project's objective of making generative algorithms accessible through interactive visual learning.
