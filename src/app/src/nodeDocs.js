@@ -1,0 +1,182 @@
+// Documentation Panel content, one entry per NODE_LIBRARY type (see
+// workflows.js). Transcribed verbatim from each node's Summary/Purpose/
+// Computational Thinking Concepts sections in docs/nodes/ — this panel is
+// explanatory only (docs/UI_DESIGN.md's Documentation Panel section), so it
+// stays in sync with the same source the written node docs use rather than
+// inventing separate copy.
+// `objective` (added 2026-08-21): a one-line, explicit "why am I looking at
+// this stage" statement, answering
+// docs/evaluation/educator-consultation-user-stories.md's US-6.1 ("I want
+// to see the explicit learning objective for a node, so that I understand
+// why I'm engaging with it") — distinct from `purpose` (this stage's role
+// within the algorithm) by being about the *learner's* takeaway, not the
+// algorithm's own mechanics.
+export const NODE_DOCS = {
+   workspace: {
+      explanation: "Defines the computational space in which the algorithm operates.",
+      purpose:
+         "The workspace is not the same as the canvas the learner sees on screen. The workspace is the algorithm's own coordinate space — the \"world\" that seed points, transformations and calculations exist within. The canvas is simply the window through which that world is viewed, much like a camera looking into a scene.",
+      objective: "Understand that an algorithm's own coordinate space is distinct from the pixels you eventually see.",
+      concepts: ["Abstraction", "Problem Definition", "Spatial Reasoning"],
+   },
+   seed: {
+      explanation: "Initialises the pseudo-random number generator used by stochastic algorithms.",
+      purpose:
+         "Although the generated values appear random, using the same seed always produces the same sequence. This demonstrates that many procedural systems are deterministic despite appearing unpredictable.",
+      objective: "Recognise that \"random-looking\" and \"unpredictable\" aren't the same thing.",
+      concepts: ["Randomness", "Determinism", "Reproducibility"],
+   },
+   seedPoints: {
+      explanation:
+         "Generates a set of spatial points used as the basis for procedural structures such as Voronoi diagrams.",
+      purpose:
+         "Creates a distributed set of positions within the workspace. These points act as anchors for further computation such as partitioning, distance calculation, or region generation.",
+      objective: "See how a scattering of points, on its own, becomes the seed for later geometric structure.",
+      concepts: ["Randomness", "Sampling", "Spatial Reasoning"],
+   },
+   baseGeometry: {
+      explanation: "Creates the initial geometric structure from which the algorithm begins.",
+      purpose:
+         "Defines the starting shape or structure that later operations transform into more complex patterns. Different algorithms use different forms of base geometry — an Escher tessellation begins with a single square tile, a grid tessellation begins with one of several tile shapes, an Islamic geometric pattern begins with a construction circle.",
+      objective: "Identify the simple starting shape every later stage of this algorithm builds on top of.",
+      concepts: ["Initialisation", "Abstraction"],
+   },
+   grid: {
+      explanation: "Creates a regular arrangement of positions for subsequent computations.",
+      purpose:
+         "Divides the workspace into evenly spaced cells. Many procedural algorithms use grids as an organisational structure for placing geometry or sampling values.",
+      objective: "See how a regular grid gives every later stage a consistent \"which cell am I in\" answer.",
+      concepts: ["Spatial Reasoning", "Pattern Recognition", "Abstraction"],
+   },
+   constructionCircle: {
+      explanation: "Defines a geometric construction framework based on circular symmetry.",
+      purpose:
+         "Establishes radial structure used in geometric construction systems, particularly Islamic geometric design. It acts as a scaffold for symmetry-based pattern generation.",
+      objective: "Understand why a circle, not a square, is the natural scaffold for radially symmetric patterns.",
+      concepts: ["Symmetry", "Spatial Reasoning", "Abstraction"],
+   },
+   radialDivisions: {
+      explanation: "Divides a circular structure into equal angular segments.",
+      purpose: "Transforms circular symmetry into discrete structural guides used for pattern construction.",
+      objective: "See how one number (segment count) controls a pattern's entire rotational symmetry.",
+      concepts: ["Symmetry", "Iteration", "Pattern Formation"],
+   },
+   noise: {
+      explanation: "Generates smooth, continuous random values across space.",
+      purpose:
+         "Produces controlled randomness. Unlike purely random values, neighbouring positions produce similar outputs, allowing natural-looking patterns to emerge.",
+      objective: "Distinguish \"random\" from \"smoothly varying random\" and see why the difference matters visually.",
+      concepts: ["Randomness", "Emergence", "Parameterisation"],
+   },
+   distanceField: {
+      explanation:
+         "Computes a scalar field representing the distance from each point in space to a set of geometric features.",
+      purpose:
+         "Transforms discrete geometric structures into continuous spatial data. Used to generate smooth transitions between regions and forms the basis of many advanced procedural techniques.",
+      objective: "See how measuring distance to a few points turns them into a pattern covering the whole plane.",
+      concepts: ["Spatial Reasoning", "Abstraction", "Continuous Representation"],
+   },
+   latticeIndex: {
+      explanation:
+         "Assigns a discrete colour-class index to a position within a regular, infinitely repeating tiling.",
+      purpose:
+         "A tiling of the plane has no finite set of \"seed\" points to search, so each tiling shape has its own closed-form coordinate arithmetic that maps any position directly to which tile it falls in, and which colour class that tile belongs to — a proper colouring of the tiling's adjacency graph, not an arbitrary banding.",
+      objective: "Understand why keeping neighbouring tiles differently coloured is itself a small computational problem.",
+      concepts: ["Spatial Reasoning", "Pattern Recognition", "Abstraction"],
+   },
+   waveform: {
+      explanation: "Turns a scalar value (a distance, a coordinate) into a periodic value by applying a sine function.",
+      purpose:
+         "Many patterns are built by first computing some non-repeating scalar value at a point, then folding that value through a periodic function to produce repeating rings, stripes or line work — extracted here as its own reusable stage rather than left as an inline calculation.",
+      objective: "See how a single repeating function turns an ever-increasing number into a bounded, cyclic pattern.",
+      concepts: ["Transformation", "Parameterisation", "Pattern Formation"],
+   },
+   subdivide: {
+      explanation:
+         "Divides a region into a smaller grid of cells and recurses into one, building self-similar structure one level at a time.",
+      purpose:
+         "Applies the same grid-division rule repeatedly, feeding each level's output back in as the next level's input. This recursive reapplication is what produces fractal, self-similar structures such as the Sierpinski carpet — each level looks like the level above it, just at a smaller scale.",
+      objective: "Watch the same simple rule, reapplied, build up visible detail one level at a time.",
+      concepts: ["Decomposition", "Iteration", "Recursion", "Pattern Recognition"],
+   },
+   edgeDeformation: {
+      explanation: "Modifies geometry boundaries to create interlocking or organic patterns.",
+      purpose: "Adjusts tile or shape boundaries to enable seamless tiling or stylised pattern behaviour.",
+      objective: "See how deforming one tile's edge in a matched way is what lets its neighbour still fit perfectly.",
+      concepts: ["Transformation", "Pattern Formation", "Constraint Satisfaction"],
+   },
+   colourMapping: {
+      explanation: "Converts computational values into colours.",
+      purpose:
+         "Transforms numerical outputs into meaningful visual representations. Rather than changing the underlying computation, this stage controls how data is communicated visually.",
+      objective: "Separate \"what was computed\" from \"how it's shown\" — the same numbers could be coloured many ways.",
+      concepts: ["Representation", "Abstraction"],
+   },
+   render: {
+      explanation: "Converts the computational representation into the final visual output.",
+      purpose:
+         "The final stage of every algorithm. It transforms the computed geometry or scalar values into an image that can be viewed, explored and exported. Separating rendering from computation reinforces that generating data and displaying it are distinct computational processes.",
+      objective: "Recognise the finished image as the last step of a pipeline, not the whole algorithm itself.",
+      concepts: ["Representation", "Visualisation", "Abstraction"],
+   },
+};
+
+// What each registry param actually does to the rendered pattern — shown
+// in the Documentation Panel's Parameters section (added 2026-08-21) so
+// selecting a node explains not just what that *node* does in the
+// abstract (NODE_DOCS above) but what each of its own current sliders/
+// pickers changes about the output. Keyed by param name: the same name
+// means the same thing for almost every pattern that uses it, since
+// patternRegistry.js's params are drawn from a small shared vocabulary
+// (docs/ALGORITHMIC_COMPOSITION_RESEARCH.md's "minimal language set" —
+// tones/colourN, tileSize, frequency, seed etc. are the same concept
+// wherever they appear), so one description per name covers every
+// pattern that declares it rather than duplicating text per registry
+// entry. PARAM_DOC_OVERRIDES below covers the handful of names whose
+// meaning genuinely diverges by generator (`mode`, `scale`).
+export const PARAM_DOCS = {
+   scale: "Zooms the underlying field in or out — larger values sample it more coarsely, producing bigger, smoother features; smaller values sample it more finely, producing smaller, busier detail.",
+   octaves: "How many layered noise samples (each at double the frequency and half the strength of the last) are summed together. 1 gives smooth blobs; higher values add progressively finer detail on top, the same way musical overtones add texture to a fundamental note.",
+   lacunarity: "How much the frequency multiplies between successive octaves. Higher values make each added octave's detail noticeably finer-grained than the one before, rather than closely spaced.",
+   persistence: "How much each successive octave's contribution shrinks. Higher values let finer octaves stay closer in strength to coarser ones, producing rougher, more textured output; lower values let the coarsest octave dominate, producing smoother output.",
+   seed: "Initialises the random number generator. The same seed always reproduces the exact same layout — change it to get a different-looking result with everything else held constant, or use \"Randomize Seed\" to jump to a new one.",
+   numCells: "How many seed points are scattered across the canvas. More cells means more, smaller regions; fewer cells means larger, fewer regions.",
+   tones: "How many distinct colour classes the pattern is divided into (2-5). Each declared tone gets its own independently editable colour slot below.",
+   colour1: "The lightest/background colour slot. Always present, regardless of how many tones are declared.",
+   colour2: "The second colour slot — the only other one used when tones = 2 (the default), where it's the pattern's dark/primary colour.",
+   colour3: "A third colour slot, only shown and used once tones is set to 3 or more.",
+   colour4: "A fourth colour slot, only shown and used once tones is set to 4 or more.",
+   colour5: "A fifth colour slot, only shown and used once tones is set to 5.",
+   frequency: "How tightly the pattern repeats. Higher values pack more repetitions (stripes, rings, or echo lines) into the same space; lower values stretch each repetition out further.",
+   lineWidth: "How thick the traced lines are, as a fraction of the medallion's own radius — independent of frequency, so changing ring spacing doesn't also change line thickness.",
+   subdivisions: "How many cells each recursive step divides its region into along each axis (e.g. 3 = a 3x3 grid per level). Higher values create a finer-grained, busier self-similar structure at every recursion depth.",
+   depth: "How many times the recursive rule is reapplied to its own output. Each extra level adds one more, smaller-scale layer of self-similar detail — 0 shows the base shape untouched.",
+   amplitude: "How strongly each recursion level's coordinates are pushed off their exact fractal-lattice position by Perlin noise before subdividing. 0 reproduces the plain fractal exactly; higher values distort the lattice into an increasingly organic, less regular structure.",
+   rotation: "Turns the medallion about its own centre, snapped to the finest increment that preserves its vertical symmetry. At its default (0) the medallion sits in its original orientation.",
+   segments: "How many-fold rotational symmetry the construction has — e.g. 8 gives an 8-pointed star. Also controls how many radial construction points the downstream geometry is built from.",
+   tileSize: "The size, in pixels, of one repeating tile of the pattern. Larger tiles mean fewer, bigger repetitions across the canvas; smaller tiles mean more, smaller repetitions.",
+   tileShape: "Which lattice the pattern's tiles are arranged on (square or hexagon) — changes where each tile's centre falls, without changing the motif drawn at each one.",
+   shape: "Which of the five regular tilings (square, triangle, hexagon, brick, diamond) covers the plane. Each shape has its own tile geometry and its own colouring rule for keeping adjacent tiles visually distinct.",
+   baseShape: "The base polygon each tessellated tile is built from (square or hexagon) before its edges are deformed.",
+   bumpType: "The waveform used to deform each tile's edges (wave = smooth sine curve, zigzag = sharp angular teeth, notch = a squared-off step). Opposite tile edges always deform as exact mirror images, so tiles still interlock with no gaps.",
+   bumpAmp: "How far each tile's edges bulge away from a straight line. 0 would leave perfectly straight-edged tiles (a plain grid); higher values make the interlocking deformation more pronounced.",
+   variation: "How much each cell's own star shape and orientation is independently randomised, rather than staying identical across every cell. 0 keeps every medallion structurally uniform (only cell placement is stochastic); higher values let each cell's point-count and rotation vary too, for a more organic, less repetitive result.",
+};
+
+// Per-(generator, param) overrides for the handful of shared names whose
+// meaning genuinely diverges by generator, keyed "generator:param". Falls
+// back to PARAM_DOCS[param] when no override exists for the current
+// generator.
+export const PARAM_DOC_OVERRIDES = {
+   "islamic:scale": "Resizes the medallion within its own tile, as a fraction of the tile's size — capped below half the tile's width so it always stays a self-contained motif with no overlap into neighbouring tiles.",
+   "voronoiIslamic:scale": "Resizes each cell's medallion, as a fraction of that specific cell's own distance to its nearest neighbouring seed — so every medallion stays sized appropriately to its own irregular cell rather than one fixed size for every cell.",
+   "noise:mode": "Fixed per pattern: \"standard\" produces smooth rolling hills; \"ridge\" folds the same field through 1 - 2|value| to turn its zero-crossings into sharp connected ridgelines instead.",
+   "wave:mode": "Fixed per pattern: \"wave\" applies the sine function directly to the vertical position (horizontal stripes); \"rings\" applies it to distance from the canvas centre instead (concentric rings).",
+   "recursive:mode": "Fixed per pattern: \"sierpinski\" excludes each level's centre cell, carving self-similar holes (a carpet); \"grid\" keeps every cell but colours it by accumulated parity across all levels, producing a self-similar checkerboard with no holes.",
+};
+
+// Resolves the description to show for one param on one generator —
+// looks up the override first, falls back to the generic by-name entry.
+export function paramDoc(generator, paramName) {
+   return PARAM_DOC_OVERRIDES[`${generator}:${paramName}`] ?? PARAM_DOCS[paramName];
+}
