@@ -71,3 +71,16 @@ describe("App: Reset to Defaults", () => {
       expect(container.querySelectorAll('input[type="range"]')[0].value).toBe(defaultValue);
    });
 });
+
+describe("App: Evaluation overlay", () => {
+   it("opens from the menu bar and closes via its own close control", () => {
+      render(<App />);
+      expect(screen.queryByText("Evaluation", { selector: "h2" })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
+      expect(screen.getByText("Evaluation", { selector: "h2" })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByLabelText("Close evaluation"));
+      expect(screen.queryByText("Evaluation", { selector: "h2" })).not.toBeInTheDocument();
+   });
+});
