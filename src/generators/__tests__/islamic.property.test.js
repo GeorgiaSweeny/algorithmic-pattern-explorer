@@ -2,57 +2,151 @@
 ========================================
 ISLAMIC — ALGORITHM-SPECIFIC PROPERTIES
 ========================================
-* islamic.js is a Grid lookup (tile centre) feeding a Distance Field search
-* against a deterministic ring of Radial Divisions points — no RNG anywhere.
-* The properties that follow check the two things that construction should
-* guarantee: n-fold rotational symmetry around each tile centre, and exact
-* periodicity across tile boundaries (the Grid stage is a straight repeat).
+* islamic.js is a Grid/hex-lattice lookup (tile centroid) feeding a signed
+* Distance Field search against a single star-polygon silhouette
+* (lib/starPolygon.js's starOutline, built from a Radial Divisions ring) —
+* no RNG anywhere, and no `mode` branch: one construction, banded by
+* frequency/tones. The properties below check what that construction
+* should guarantee: n-fold rotational symmetry about each tile centroid
+* (the silhouette itself has exact n-fold symmetry, and each tile is
+* self-contained — no neighbour-tile interaction), exact periodicity
+* across tile boundaries, and that islamic() is exactly the signed-
+* distance line test its composition claims — for both tile shapes, and
+* down to segments = 3 (the smallest valid Radial Divisions count), since
+* segments 3 and 4 are degenerate cases of starPolygon.js's starSkip(n)
+* construction that must still render validly, not collapse to nothing.
+*
+* The rigorous academic source for this "polygons in contact" construction
+* (already established in docs/ISLAMIC_PATTERN_CONSTRUCTION.md and
+* docs/VORONOI_ISLAMIC_HYBRID_PLAN.md §8, backfilled here so the property
+* test file itself states it too): Kaplan, C.S. & Salesin, D.H. (2004).
+* "Islamic Star Patterns in Absolute Geometry." ACM Transactions on
+* Graphics, 23(2), 97-119. The n-fold rotational symmetry property tested
+* below is exactly that paper's own defining property of a single
+* construction-circle-derived star motif.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
-import { islamic } from "../islamic.js";
+import { islamic, snapRotation } from "../islamic.js";
+import { constructionCircle, radialDivisions } from "../lib/constructionCircle.js";
+import { starOutline, starSkip } from "../lib/starPolygon.js";
+import { nearestSegmentDistSq, pointInPolygon } from "../lib/distanceField.js";
+import { hexagonCentroid } from "../lib/latticeIndex.js";
+import { toneSet, bandTone } from "../lib/colourMapping.js";
 
 const tileSizeArb = fc.double({ min: 40, max: 200, noNaN: true });
-const segmentsArb = fc.integer({ min: 4, max: 16 });
-const freqArb = fc.double({ min: 0.05, max: 0.4, noNaN: true });
-const modeArb = fc.constantFrom("rosette", "star-lines");
+const segmentsArb = fc.integer({ min: 3, max: 16 });
+const freqArb = fc.double({ min: 1, max: 6, noNaN: true });
+const lineWidthArb = fc.double({ min: 0.01, max: 0.15, noNaN: true });
+const scaleArb = fc.double({ min: 0.2, max: 0.48, noNaN: true });
+const rotationArb = fc.double({ min: 0, max: 360, noNaN: true });
+const tileShapeArb = fc.constantFrom("square", "hexagon");
+const tonesArb = fc.constantFrom("2", "3", "4", "5");
 
-// A point safely inside a tile — offset kept well away from tile edges so
-// floating-point rounding near a boundary can't flip which tile it lands in.
-function tilePoint(tileSize, col, row, offsetX, offsetY) {
+function tileCentroid(tileShape, tileSize, col, row) {
+   return tileShape === "hexagon"
+      ? hexagonCentroid((col + 0.5) * tileSize, (row + 0.5) * tileSize, tileSize)
+      : [(col + 0.5) * tileSize, (row + 0.5) * tileSize];
+}
+
+// A point safely inside a square tile — used for the square-only
+// periodicity test, which relies on floor(x / tileSize) tile boundaries
+// (a hex lattice has no such simple period in x alone).
+function squareTilePoint(tileSize, col, row, offsetX, offsetY) {
    const cx = (col + 0.5) * tileSize;
    const cy = (row + 0.5) * tileSize;
-   return { cx, cy, x: cx + offsetX, y: cy + offsetY };
+   return { x: cx + offsetX, y: cy + offsetY };
+}
+
+// Independent oracle re-deriving the silhouette + signed-distance line
+// test, mirroring islamic.js's own construction but built directly from
+// the lib/ primitives rather than importing islamic.js's internals.
+function oracle(lx, ly, tileSize, segments, frequency, lineWidth, tones, scale = 0.42, rotation = 0) {
+   const shades = toneSet(tones);
+   const radius = tileSize * scale;
+   const n = Math.max(3, Math.round(segments));
+   const circle = constructionCircle(0, 0, radius);
+   const snappedDeg = snapRotation(rotation, n);
+   // Base 90 degrees (tip at top) plus snapped rotation — see islamic.js.
+   const points = radialDivisions(circle, n, Math.PI / 2 + (snappedDeg * Math.PI) / 180);
+   const outline = starOutline(points, starSkip(n));
+
+   const edgeCount = outline.length / 2;
+   const edges = new Float32Array(edgeCount * 4);
+   for (let i = 0; i < edgeCount; i++) {
+      const j = (i + 1) % edgeCount;
+      edges[i * 4] = outline[i * 2];
+      edges[i * 4 + 1] = outline[i * 2 + 1];
+      edges[i * 4 + 2] = outline[j * 2];
+      edges[i * 4 + 3] = outline[j * 2 + 1];
+   }
+
+   const dist = Math.sqrt(nearestSegmentDistSq(lx, ly, edges));
+   const inside = pointInPolygon(lx, ly, outline);
+   const signedDist = inside ? -dist : dist;
+
+   const step = radius / frequency; // relative to radius — see islamic.js
+   const bandPos = signedDist / step;
+   const nearestBand = Math.round(bandPos);
+   const distToLine = Math.abs(bandPos - nearestBand) * step;
+   // Independent of step/frequency — see islamic.js's header comment.
+   const onLine = distToLine < lineWidth * radius;
+
+   if (!onLine) return shades[0];
+   return bandTone(shades, nearestBand);
 }
 
 describe("islamic: algorithm-specific invariants", () => {
-   it("returns the declared tone set in rosette mode", () => {
+   it("returns the declared tone set (both tile shapes, segments 3 and up, tones 2-5)", () => {
       fc.assert(
          fc.property(
             fc.double({ min: 0, max: 600, noNaN: true }),
             fc.double({ min: 0, max: 600, noNaN: true }),
             tileSizeArb, segmentsArb, freqArb,
-            fc.constantFrom("2", "3"),
-            (x, y, tileSize, segments, frequency, tones) => {
-               const v = islamic(x, y, { mode: "rosette", tileSize, segments, frequency, tones });
-               const expected = tones === "3" ? [1, 0, -1] : [1, -1];
-               expect(expected).toContain(v);
+            tonesArb,
+            tileShapeArb,
+            (x, y, tileSize, segments, frequency, tones, tileShape) => {
+               const v = islamic(x, y, { tileSize, segments, frequency, tones, tileShape });
+               expect(toneSet(tones)).toContain(v);
             }
          )
       );
    });
 
-   it("is exactly periodic across tile boundaries (Grid repeats the same local field)", () => {
+   it("every declared tone (2-5) is actually reachable, not just the first and last (regression: middle tones used to never be read)", () => {
+      // A prior version always returned shades[shades.length - 1] for any
+      // line pixel, so toneSet("3")'s middle value was computed and
+      // declared but never actually produced — "3" had no visible effect.
+      // Scanning a whole tile at a segments/frequency combo with several
+      // echo bands should find every declared tone somewhere, for every
+      // declared tone count from 2 to 5, not just 2 and the darkest.
+      // frequency = 6 (max): a small enough echo spacing that every
+      // echoTones index cycles into reach within one tile's scan area,
+      // even for tones = "5" (3 distinct echo tones to cycle through).
+      const tileSize = 100;
+      for (const tones of ["2", "3", "4", "5"]) {
+         const params = { tileSize, segments: 8, frequency: 6, tones };
+         const seen = new Set();
+         for (let y = 0; y < tileSize; y++) {
+            for (let x = 0; x < tileSize; x++) seen.add(islamic(x, y, params));
+         }
+         for (const shade of toneSet(tones)) {
+            expect(seen.has(shade), `tones="${tones}" never produced shade ${shade}`).toBe(true);
+         }
+      }
+   });
+
+   it("is exactly periodic across tile boundaries (square tiling)", () => {
       fc.assert(
          fc.property(
             fc.integer({ min: -3, max: 3 }), fc.integer({ min: -3, max: 3 }),
             fc.double({ min: -18, max: 18, noNaN: true }),
             fc.double({ min: -18, max: 18, noNaN: true }),
-            tileSizeArb, segmentsArb, freqArb, modeArb,
-            (col, row, offsetX, offsetY, tileSize, segments, frequency, mode) => {
-               const p = tilePoint(tileSize, col, row, offsetX, offsetY);
-               const params = { mode, tileSize, segments, frequency };
-               const here  = islamic(p.x, p.y, params);
+            tileSizeArb, segmentsArb, freqArb,
+            (col, row, offsetX, offsetY, tileSize, segments, frequency) => {
+               const p = squareTilePoint(tileSize, col, row, offsetX, offsetY);
+               const params = { tileSize, segments, frequency };
+               const here = islamic(p.x, p.y, params);
                const there = islamic(p.x + tileSize, p.y, params);
                expect(there).toBeCloseTo(here, 6);
             }
@@ -60,20 +154,22 @@ describe("islamic: algorithm-specific invariants", () => {
       );
    });
 
-   it("is rotationally symmetric under a 360/segments turn about the tile centre", () => {
+   it("is rotationally symmetric under a 360/segments turn about the tile centroid (both tile shapes)", () => {
+      // Each tile's medallion is self-contained (radius = scale * tileSize,
+      // capped below 0.5 so it stays well short of the tile's own half-
+      // width), so there's no
+      // neighbouring-tile interaction to break exact n-fold symmetry,
+      // regardless of which lattice places the centroid.
       fc.assert(
          fc.property(
             fc.integer({ min: -2, max: 2 }), fc.integer({ min: -2, max: 2 }),
-            fc.double({ min: 2, max: 15, noNaN: true }),  // radius from tile centre — kept
-            // well inside the smallest tested tile's construction circle (0.42*40 ≈ 16.8)
-            // so both rotated sample points stay in the same tile as the centre used below.
+            fc.double({ min: 2, max: 15, noNaN: true }),
             fc.double({ min: 0, max: 2 * Math.PI, noNaN: true }),
-            tileSizeArb, segmentsArb, freqArb, modeArb,
-            (col, row, r, theta, tileSize, segments, frequency, mode) => {
-               const cx = (col + 0.5) * tileSize;
-               const cy = (row + 0.5) * tileSize;
-               const step = (2 * Math.PI) / Math.round(segments);
-               const params = { mode, tileSize, segments, frequency };
+            tileSizeArb, segmentsArb, freqArb, tileShapeArb,
+            (col, row, r, theta, tileSize, segments, frequency, tileShape) => {
+               const [cx, cy] = tileCentroid(tileShape, tileSize, col, row);
+               const step = (2 * Math.PI) / Math.max(3, Math.round(segments));
+               const params = { tileSize, segments, frequency, tileShape };
 
                const p1 = islamic(cx + r * Math.cos(theta), cy + r * Math.sin(theta), params);
                const p2 = islamic(cx + r * Math.cos(theta + step), cy + r * Math.sin(theta + step), params);
@@ -83,31 +179,163 @@ describe("islamic: algorithm-specific invariants", () => {
       );
    });
 
-   it("star-lines mode is a Waveform applied to distance: agrees with sin(dist * frequency)", () => {
+   it("matches an independent oracle re-deriving the silhouette and signed-distance line test (square tiling)", () => {
       fc.assert(
          fc.property(
             fc.integer({ min: -2, max: 2 }), fc.integer({ min: -2, max: 2 }),
-            // kept within the smallest tested tile's half-width (tileSize >= 40)
-            // so the oracle below and islamic() agree on which tile the point is in
+            fc.double({ min: -18, max: 18, noNaN: true }),
+            fc.double({ min: -18, max: 18, noNaN: true }),
+            tileSizeArb, segmentsArb, freqArb, lineWidthArb,
+            tonesArb, scaleArb, rotationArb,
+            (col, row, offsetX, offsetY, tileSize, segments, frequency, lineWidth, tones, scale, rotation) => {
+               const p = squareTilePoint(tileSize, col, row, offsetX, offsetY);
+               const expected = oracle(offsetX, offsetY, tileSize, segments, frequency, lineWidth, tones, scale, rotation);
+               const v = islamic(p.x, p.y, { tileSize, segments, frequency, lineWidth, tones, scale, rotation });
+               expect(v).toBe(expected);
+            }
+         )
+      );
+   });
+
+   it("scale resizes the medallion (regression: it used to be a hardcoded 0.42 constant)", () => {
+      // The medallion's own boundary is where signedDist crosses 0, i.e.
+      // where islamic() switches between "inside" and "outside" banding —
+      // approximated here as the first on-line pixel walking outward from
+      // the tile centroid. That crossing distance should grow with scale.
+      const tileSize = 100;
+      function boundaryDistance(scale) {
+         const params = { tileSize, segments: 8, frequency: 3, lineWidth: 0.02, scale };
+         for (let r = 1; r < tileSize / 2; r++) {
+            if (islamic(tileSize / 2 + r, tileSize / 2, params) === -1) return r;
+         }
+         return null;
+      }
+      const small = boundaryDistance(0.2);
+      const large = boundaryDistance(0.48);
+      expect(small).not.toBeNull();
+      expect(large).not.toBeNull();
+      expect(large).toBeGreaterThan(small * 1.5);
+   });
+
+   it("lineWidth controls line thickness independently of frequency (regression: they used to be coupled)", () => {
+      // Before lineWidth existed, thickness was a fixed fraction of the
+      // echo spacing itself (step = radius / frequency), so dragging
+      // frequency silently changed thickness too. Verify the actual
+      // decoupling: at a fixed frequency, the measured on-line fraction
+      // of a scanline through the medallion's centre should grow with
+      // lineWidth; at a fixed lineWidth, it should stay roughly the same
+      // order of magnitude regardless of frequency (ring count changes,
+      // not per-ring thickness).
+      const tileSize = 100;
+      function onLineFraction(frequency, lineWidth) {
+         const params = { tileSize, segments: 8, frequency, lineWidth };
+         let onLineCount = 0;
+         for (let x = 0; x < tileSize; x++) {
+            if (islamic(x, 50, params) === -1) onLineCount++;
+         }
+         return onLineCount / tileSize;
+      }
+
+      const thin = onLineFraction(3, 0.02);
+      const thick = onLineFraction(3, 0.14);
+      expect(thick).toBeGreaterThan(thin * 2);
+   });
+
+   it("rotation = 0 reproduces the exact pre-rotation-param default", () => {
+      const tileSize = 100;
+      fc.assert(
+         fc.property(
+            fc.double({ min: 0, max: tileSize, noNaN: true }),
+            fc.double({ min: 0, max: tileSize, noNaN: true }),
+            segmentsArb, freqArb,
+            (x, y, segments, frequency) => {
+               const withoutParam = islamic(x, y, { tileSize, segments, frequency });
+               const withZero = islamic(x, y, { tileSize, segments, frequency, rotation: 0 });
+               expect(withZero).toBe(withoutParam);
+            }
+         )
+      );
+   });
+
+   it("rotating by an exact multiple of 360/segments is an identity (the shape's own rotational symmetry)", () => {
+      // Confirmed mathematically before implementing: a fully n-fold-
+      // symmetric point set maps onto itself under any multiple of its
+      // own 360/n rotation, so this is the reason `rotation` is snapped
+      // to 180/segments, not 360/segments (that snap would be a visible
+      // no-op control).
+      const tileSize = 100;
+      fc.assert(
+         fc.property(
+            fc.double({ min: 0, max: tileSize, noNaN: true }),
+            fc.double({ min: 0, max: tileSize, noNaN: true }),
+            segmentsArb, freqArb,
+            fc.integer({ min: 1, max: 3 }),
+            (x, y, segments, frequency, k) => {
+               const n = Math.max(3, Math.round(segments));
+               const params = { tileSize, segments, frequency };
+               const base = islamic(x, y, params);
+               const rotated = islamic(x, y, { ...params, rotation: k * (360 / n) });
+               expect(rotated).toBe(base);
+            }
+         )
+      );
+   });
+
+   it("rotating by 180/segments visibly changes the medallion (tip-up vs waist-up), except where the two look alike", () => {
+      // The one genuinely new position within a rotational period — see
+      // islamic.js's header comment. Scans a whole tile for at least one
+      // pixel that differs, rather than asserting it at a single sampled
+      // point (which could land in a spot the two orientations happen to
+      // agree, e.g. right at the shared centre).
+      const tileSize = 100;
+      for (const segments of [4, 5, 6, 7, 8]) {
+         const base = { tileSize, segments, frequency: 3, lineWidth: 0.03 };
+         const rotated = { ...base, rotation: 180 / segments };
+         let differs = false;
+         for (let y = 0; y < tileSize && !differs; y++) {
+            for (let x = 0; x < tileSize && !differs; x++) {
+               if (islamic(x, y, base) !== islamic(x, y, rotated)) differs = true;
+            }
+         }
+         expect(differs, `segments=${segments} looked identical after a 180/n rotation`).toBe(true);
+      }
+   });
+
+   it("snapRotation rounds to the nearest multiple of 180/segments", () => {
+      fc.assert(
+         fc.property(
+            fc.double({ min: -720, max: 720, noNaN: true }),
+            segmentsArb,
+            (rotationDeg, segments) => {
+               const n = Math.max(3, Math.round(segments));
+               const stepDeg = 180 / n;
+               const snapped = snapRotation(rotationDeg, segments);
+               const stepsFromZero = snapped / stepDeg;
+               expect(stepsFromZero).toBeCloseTo(Math.round(stepsFromZero), 9);
+               expect(Math.abs(snapped - rotationDeg)).toBeLessThanOrEqual(stepDeg / 2 + 1e-9);
+            }
+         )
+      );
+   });
+
+   it("hex tiling: pixels an exact hex lattice period apart agree", () => {
+      // hexagonCentroid's own lattice period, not a simple tileSize shift —
+      // see lib/latticeIndex.js's hexagonCentroid: translating by exactly
+      // one lattice basis vector maps every hex cell onto another hex cell
+      // of the same shape, so islamic() (a pure function of offset from the
+      // nearest centroid) must agree at the two points.
+      fc.assert(
+         fc.property(
             fc.double({ min: -18, max: 18, noNaN: true }),
             fc.double({ min: -18, max: 18, noNaN: true }),
             tileSizeArb, segmentsArb, freqArb,
-            (col, row, offsetX, offsetY, tileSize, segments, frequency) => {
-               const p = tilePoint(tileSize, col, row, offsetX, offsetY);
-               const n = Math.max(3, Math.round(segments));
-               const radius = tileSize * 0.42;
-
-               let minDistSq = Infinity;
-               for (let i = 0; i < n; i++) {
-                  const angle = (i * 2 * Math.PI) / n;
-                  const px = radius * Math.cos(angle), py = radius * Math.sin(angle);
-                  const dx = offsetX - px, dy = offsetY - py;
-                  minDistSq = Math.min(minDistSq, dx * dx + dy * dy);
-               }
-               const expected = Math.sin(Math.sqrt(minDistSq) * frequency);
-
-               const v = islamic(p.x, p.y, { mode: "star-lines", tileSize, segments, frequency });
-               expect(v).toBeCloseTo(expected, 5);
+            (offsetX, offsetY, tileSize, segments, frequency) => {
+               const x = 500 + offsetX, y = 500 + offsetY;
+               const params = { tileSize, segments, frequency, tileShape: "hexagon" };
+               const here = islamic(x, y, params);
+               // One full horizontal lattice period (see lib/latticeIndex.js).
+               const there = islamic(x + tileSize * Math.sqrt(3), y, params);
+               expect(there).toBeCloseTo(here, 5);
             }
          )
       );

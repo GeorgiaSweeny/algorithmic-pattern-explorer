@@ -99,10 +99,31 @@ Outstanding from this phase (not blocking, tracked for later):
 
 ## Jul 11-12: ReactFlow nodes + functional page (start)
 
-- [ ] Begin implementing the ReactFlow node graph, using the `lib/` primitives and
-      `docs/nodes/` docs as the source of node types/params
-- [ ] Begin turning the website mockup into a working page for the core (non-hybrid)
-      algorithms
+- [x] ReactFlow node graph implemented for all 7 generators — `src/app/` (new
+      `@xyflow/react` + Vite app), `src/app/src/workflows.js` builds each
+      pattern's `{nodes, edges}` from `docs/nodes/WORKFLOWS.md`'s documented
+      sequence and `patternRegistry.js`'s params, keyed off `NODE_LIBRARY`
+      (one entry per `docs/nodes/` node type); `WorkflowNode.jsx` renders each
+      node coloured by category with its param controls (slider/select/fixed,
+      matching the registry's param shapes). Covered by `workflows.test.js`.
+- [x] Registry/generator param-consistency guard added ahead of the wiring
+      work below, so the live canvas render (once built) can't silently drive
+      a control that no generator reads —
+      `src/generators/__tests__/registry.params-consistency.test.js`, documented
+      in `docs/GENERATOR_CONTRACT.md`. Caught a live bug: `recursive-svg.js`
+      never reads `mode`, so `recursive-grid` and `sierpinski` render
+      identically as vector patterns despite declaring different `mode`
+      values — **bug still open**, tracked as 2 known-failing tests (not yet
+      fixed; fix belongs with the Aug 2-6 wiring work since it's the vector
+      generator path the canvas render will exercise). Committed Jul 13,
+      technically inside the Jul 13-31 revision block (see Constraints) —
+      small enough (one test file + a doc note) not to worth reshuffling the
+      schedule over, but flagged here since the revision boundary is meant to
+      be firm.
+- [ ] Functional page not yet wired to a live canvas render — per `App.jsx`'s
+      own inline note, dragging a param slider updates only that node's local
+      state; it does not call back into a generator or redraw output. Turning
+      the mockup into a working page for the core algorithms is still open.
 - [ ] Continues into Aug 2-6
 - Compressed from 3 to 2 days by the one-day schedule shift (see Constraints) —
       the fixed Jul 13 revision start absorbed the delay.
@@ -118,6 +139,9 @@ Outstanding from this phase (not blocking, tracked for later):
 - [ ] Functional page: select a generator, view its node graph, adjust params, see
       the canvas update — MVP interaction loop; documentation/education polish is
       out of scope for this block
+- [ ] Fix `recursive-svg.js` ignoring `mode` (found Jul 13 by the registry
+      param-consistency test, still open) — belongs here rather than as a
+      standalone fix since it's on the vector-render path this block wires up
 - [ ] Highest overrun risk in the plan: first working build of the interactive
       frontend against the node model, not a refactor of existing code
 

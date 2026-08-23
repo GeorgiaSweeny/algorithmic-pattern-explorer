@@ -73,7 +73,11 @@ coordinate (stripes) versus a Distance Field output (rings).
 ## Used By
 
 - Wave / Concentric Rings (`wave.js`, both modes)
-- Islamic Geometric Patterns (`islamic.js`, `star-lines` mode)
+
+Islamic Geometric Patterns (`islamic.js`) used this node before its
+2026-08-20 rebuild (see `docs/ISLAMIC_PATTERN_CONSTRUCTION.md`) unified
+its two former modes into one construction that bands signed distance
+directly via Colour Mapping, with no Waveform step.
 
 ---
 

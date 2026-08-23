@@ -44,7 +44,15 @@ Scalar field (distance values)
 
 ### Distance Metric
 
-Euclidean, Manhattan, or custom metric.
+Euclidean, Manhattan, or custom metric. Also implemented is a line-feature
+metric (`nearestSegmentDistSq`, distance to the nearest line segment
+rather than the nearest point) plus a sign (`pointInPolygon`, both
+`lib/distanceField.js`), used together by `islamic.js` (2026-08-20
+rebuild) to get *signed* distance to a star-polygon silhouette's own
+boundary edges (`lib/starPolygon.js`'s `starOutline`) — negative inside,
+positive outside — which Colour Mapping then bands into concentric rings
+anchored at the true rosette edge. See `docs/nodes/WORKFLOWS.md` §7 and
+`docs/ISLAMIC_PATTERN_CONSTRUCTION.md`.
 
 ### Falloff
 

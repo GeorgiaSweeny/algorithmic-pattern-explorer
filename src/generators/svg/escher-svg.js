@@ -28,21 +28,20 @@ ESCHER TYPE I — SVG RENDERER
 * API: escherSvg(width, height, params) → SVG string
 */
 
+import { svgFillsFor } from "../lib/colourMapping.js";
+
 const SQ3 = Math.sqrt(3);
 const N   = 48; // sample points per edge
 
-// fill[0] = background, fill[1] = mid tone, fill[2] = dark tone
-const FILLS = {
-   "2": ["#fff", "#000"],
-   "3": ["#fff", "#888", "#000"],
-};
-
 export function escherSvg(width, height, params) {
-   const { tileSize = 60, bumpAmp = 10, bumpType = "wave",
-           baseShape = "square", tones = "2" } = params;
+   const {
+      tileSize = 60, bumpAmp = 10, bumpType = "wave",
+      baseShape = "square", tones = "2",
+      colour1, colour2, colour3, colour4, colour5,
+   } = params;
    const S    = tileSize;
    const A    = Math.min(bumpAmp, S * 0.38);
-   const fill = FILLS[tones] ?? FILLS["2"];
+   const fill = svgFillsFor(tones, [colour1, colour2, colour3, colour4, colour5]);
 
    const parts = baseShape === "hexagon"
       ? _hexParts(width, height, S, A, bumpType, fill)
@@ -92,8 +91,9 @@ function _squareTile(col, row, S, A, bumpType, fill) {
 // Outward normal for edge k: angle = (k+1)·π/3
 //
 // Hex 2-tone: ((q+r)%2+2)%2 → 0=background, 1=dark
-// Hex 3-tone: ((2q+r)%3+3)%3 → 0=background, 1=mid, 2=dark
-// (2q+r)%3 is the standard proper 3-colouring of the honeycomb lattice.
+// Hex n-tone (n >= 3): ((2q+r)%n+n)%n — the standard proper 3-colouring of
+// the honeycomb lattice, generalised (see lib/latticeIndex.js's
+// hexagonIndex for the same generalisation and its verification).
 
 function _hexParts(width, height, S, A, bumpType, fill) {
    const rMax = Math.ceil(height / (1.5 * S)) + 3;
@@ -102,9 +102,10 @@ function _hexParts(width, height, S, A, bumpType, fill) {
 
    for (let r = -2; r <= rMax; r++) {
       for (let q = -qMax; q <= qMax; q++) {
-         const idx = fill.length === 3
-            ? ((( 2 * q + r) % 3) + 3) % 3
-            : (((     q + r) % 2) + 2) % 2;
+         const n = fill.length;
+         const idx = n >= 3
+            ? (((2 * q + r) % n) + n) % n
+            : (((    q + r) % 2) + 2) % 2;
          if (idx === 0) continue;
          out.push(_hexTile(q, r, S, A, bumpType, fill[idx]));
       }

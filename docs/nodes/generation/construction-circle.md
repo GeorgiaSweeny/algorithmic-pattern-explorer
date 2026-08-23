@@ -44,7 +44,18 @@ Circular construction guide geometry.
 
 ### Radius
 
-Size of the construction circle.
+Size of the construction circle, as `scale × tileSize` — `scale` is a
+free, user-adjustable parameter (added 2026-08-20, registry range
+`[0.2, 0.48]`, default `0.42`) in `islamic.js`/`islamic-svg.js`. Was
+originally a hardcoded `0.42 × tileSize` constant with no exposed
+control; turning it into a parameter was filling in what this node was
+already conceptually for (define the radius), not adding a new
+capability — see `docs/ISLAMIC_PATTERN_CONSTRUCTION.md`'s `scale`
+section. Capped below `0.5 × tileSize` so the medallion can't exceed a
+square tile's own half-width and stop being a self-contained motif — a
+rosette is one bounded star+petal shape, not an infinite lattice of
+lines, so there's no need for the geometry to reach past its own tile,
+and no neighbour-tile search anywhere in this generator.
 
 ### Centre
 
@@ -76,6 +87,6 @@ Increase segment count to observe higher symmetry order.
 
 ## Related Nodes
 
-- Radial Divisions
-- Rotate
-- Mirror
+- Radial Divisions (also owns the `rotation` parameter — see its own doc;
+  there is no separate Rotate/Mirror node in this codebase's
+  `NODE_LIBRARY`, `src/app/src/workflows.js`)

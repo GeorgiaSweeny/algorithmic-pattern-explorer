@@ -10,6 +10,21 @@ VORONOI — ALGORITHM-SPECIFIC PROPERTIES
 * the nearest-seed search and the index-to-tone mapping do what voronoi.js's
 * comments say they do, verified against an independent re-implementation of the
 * seed generation (oracleSeeds below) rather than trusting the same code twice.
+*
+* The mathematical object being tested is a Voronoi diagram in its standard
+* textbook sense: Aurenhammer, F. (1991). "Voronoi Diagrams — A Survey of a
+* Fundamental Geometric Data Structure." ACM Computing Surveys, 23(3), 345-405,
+* Definition 1.1 defines each site's region as {x : dist(x, p_i) <= dist(x, p_j)
+* for all j != i} — every point at least as close to its own site as to any
+* other. "returns the tone of the actual nearest seed" below already checks
+* this via an independent oracle; "no other seed is strictly closer" makes the
+* same defining inequality the explicit assertion, rather than leaving it
+* implicit in an index comparison. Okabe, A., Boots, B., Sugihara, K., & Chiu,
+* S.N. (2000). *Spatial Tessellations: Concepts and Applications of Voronoi
+* Diagrams* (2nd ed.). Wiley — the standard applied-geometry text for the same
+* construction, already cited for this generator's own hybrid
+* (`docs/VORONOI_ISLAMIC_HYBRID_PLAN.md` §8) — is the applied companion to
+* Aurenhammer's more formal survey.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
@@ -96,6 +111,32 @@ describe("voronoi: algorithm-specific invariants", () => {
                const v3 = voronoi(x, y, { numCells, seed, tones: "3" });
                expect(v2).toBe(TONES["2"][nearest % 2]);
                expect(v3).toBe(TONES["3"][nearest % 3]);
+            }
+         )
+      );
+   });
+
+   it("satisfies the Voronoi region's defining inequality directly: the tone-" +
+      "producing seed is at least as close as every other seed (Aurenhammer " +
+      "1991, Definition 1.1) — not just equal to an oracle's nearest index", () => {
+      fc.assert(
+         fc.property(
+            fc.double({ min: 0, max: CANVAS.WIDTH, noNaN: true }),
+            fc.double({ min: 0, max: CANVAS.HEIGHT, noNaN: true }),
+            fc.integer({ min: 2, max: 80 }),
+            fc.integer({ min: 0, max: 999999 }),
+            (x, y, numCells, seed) => {
+               const pts = oracleSeeds(numCells, seed);
+               const nearest = oracleNearestIndex(x, y, pts);
+               const nx = pts[nearest][0], ny = pts[nearest][1];
+               const distToNearestSq = (x - nx) ** 2 + (y - ny) ** 2;
+
+               const v2 = voronoi(x, y, { numCells, seed, tones: "2" });
+               expect(v2).toBe(TONES["2"][nearest % 2]);
+               for (let i = 0; i < pts.length; i++) {
+                  const distSq = (x - pts[i][0]) ** 2 + (y - pts[i][1]) ** 2;
+                  expect(distToNearestSq).toBeLessThanOrEqual(distSq + 1e-9);
+               }
             }
          )
       );
