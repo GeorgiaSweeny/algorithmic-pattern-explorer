@@ -1,0 +1,30 @@
+.concept-check {
+   position: fixed;
+   bottom: 64px;
+   right: 20px;
+   max-width: 340px;
+   background: #111827;
+   color: #f9fafb;
+   border-radius: 8px;
+   padding: 12px 14px;
+   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+   z-index: 900;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   font-size: 13px;
+}
+
+.concept-check-text strong {
+   color: #93c5fd;
+}
+
+.concept-check-actions {
+   display: flex;
+   gap: 8px;
+}
+
+.concept-check-actions .btn {
+   font-size: 12px;
+   padding: 4px 10px;
+}

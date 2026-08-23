@@ -7,6 +7,10 @@ import { buildWorkflow } from "./workflows.js";
 import WorkflowNode from "./nodeTypes/WorkflowNode.jsx";
 import PatternCanvas from "./PatternCanvas.jsx";
 import { exportSvg, exportPng } from "./export.js";
+import { NODE_DOCS } from "./nodeDocs.js";
+import EvaluationOverlay from "./evaluation/EvaluationOverlay.jsx";
+import ConceptCheckPrompt from "./evaluation/ConceptCheckPrompt.jsx";
+import { recordConceptCheck, hasPromptedConcept, markConceptPrompted } from "./evaluation/evaluationStorage.js";
 import "./App.css";
 
 const nodeTypes = { workflow: WorkflowNode };
@@ -49,6 +53,8 @@ export default function App() {
    const selectedEntry = REGISTRY.find((e) => e.id === selectedId);
    const [paramValues, setParamValues] = useState(() => defaultParams(selectedEntry));
    const [selectedIndex, setSelectedIndex] = useState(0);
+   const [showEvaluation, setShowEvaluation] = useState(false);
+   const [activeConceptPrompt, setActiveConceptPrompt] = useState(null); // { nodeType, concept } | null
 
    // Reset to the new pattern's defaults and first node whenever the selection changes.
    useEffect(() => {
@@ -88,6 +94,31 @@ export default function App() {
    const selectedNode = nodes[selectedIndex] ?? null;
    const isRenderStep = selectedNode?.data.nodeType === "render";
 
+   // In-app concept-check prompt (docs/plan-checklist.md's Aug-11/12
+   // evaluation deliverable): the first time a newly-selected node is
+   // tagged with a computational-thinking concept not yet checked in on
+   // this session, surface a lightweight, dismissible prompt. Reuses
+   // nodeDocs.js's existing NODE_DOCS concepts tagging rather than a
+   // second concept mapping. Runs once per node selection, not per
+   // param edit — selectedNode's nodeType is what it depends on.
+   useEffect(() => {
+      const nodeType = selectedNode?.data.nodeType;
+      const concepts = NODE_DOCS[nodeType]?.concepts ?? [];
+      const nextConcept = concepts.find((c) => !hasPromptedConcept(c));
+      if (nextConcept) {
+         markConceptPrompted(nextConcept);
+         setActiveConceptPrompt({ nodeType, concept: nextConcept });
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [selectedNode?.data.nodeType]);
+
+   function respondToConceptPrompt(response) {
+      if (activeConceptPrompt) {
+         recordConceptCheck(activeConceptPrompt.nodeType, activeConceptPrompt.concept, response);
+      }
+      setActiveConceptPrompt(null);
+   }
+
    function selectByNodeId(nodeId) {
       const idx = nodes.findIndex((n) => n.id === nodeId);
       if (idx !== -1) setSelectedIndex(idx);
@@ -98,6 +129,9 @@ export default function App() {
          <header className="menu-bar">
             <span className="menu-bar-title">Algorithmic Pattern Explorer</span>
             <div className="menu-bar-actions">
+               <button className="btn menu-bar-evaluation" onClick={() => setShowEvaluation(true)}>
+                  Evaluation
+               </button>
                <a
                   className="menu-bar-github"
                   href={GITHUB_REPO_URL}
@@ -118,6 +152,14 @@ export default function App() {
                </a>
             </div>
          </header>
+
+         {showEvaluation && <EvaluationOverlay onClose={() => setShowEvaluation(false)} />}
+         {activeConceptPrompt && (
+            <ConceptCheckPrompt
+               concept={activeConceptPrompt.concept}
+               onRespond={respondToConceptPrompt}
+            />
+         )}
 
          <div className="app-layout">
             <aside className="left-column">
