@@ -324,4 +324,81 @@ export const REGISTRY = [
       ],
    },
 
+   // ── Hybrid — stochastic/deterministic composition ─────────────────────────
+   // A single generator whose `amplitude` param sweeps continuously from
+   // fully deterministic (0, byte-identical to Sierpinski Carpet) toward
+   // noise-dominated — see docs/ALGORITHMIC_COMPOSITION_RESEARCH.md's
+   // secondary research question and recursiveNoise.js's header comment.
+   // Listed after every single-concept pattern (see this file's own header
+   // comment) since it only makes sense once Noise and Fractal are already
+   // understood separately.
+
+   {
+      id:           "perlin-sierpinski",
+      name:         "Perlin Sierpinski",
+      category:     "Hybrid",
+      generator:    "recursiveNoise",
+      spectrum:     0.5,
+      nativeFormat: "raster",
+      params: [
+         { param: "depth",     archetype: "Complexity", value: 4,   map: [1, 6]   },
+         { param: "amplitude", archetype: "Randomness",  value: 0,   map: [0, 0.5] },
+         // noise.js's own scale/octaves, passed straight through to the
+         // same noise() calls — same params, same registry ranges as
+         // noise.js's own entries, not a re-derived pair. Gives a second
+         // axis (warp texture) independent of amplitude (warp strength).
+         { param: "scale",     archetype: "Density",     value: 0.01, map: [0.001, 0.05] },
+         { param: "octaves",   archetype: "Detail",      value: 2,    map: [1, 8] },
+         ...twoColourParams(),
+         { param: "seed",      archetype: "Seed",        value: 1337 },
+      ],
+      actions: [{ label: "Randomize Seed", method: "randomize" }],
+   },
+
+   // ── Hybrid — Voronoi-seeded Islamic tiling ─────────────────────────────────
+   // Seed Points (stochastic) feeding straight into islamic.js's own
+   // silhouette/banding pipeline (deterministic) — see
+   // src/generators/voronoiIslamic.js and docs/VORONOI_ISLAMIC_HYBRID_PLAN.md.
+   // Params are exactly islamic.js's construction params plus voronoi.js's
+   // point-source params (numCells, seed) plus the shared raster
+   // colour1/colour2 gradient (this hybrid is raster-only, so it uses
+   // that convention rather than colour1..colour5 — see
+   // twoColourParams() above). Listed last, after Voronoi Islamic's own
+   // two ingredient patterns (Voronoi Cells, Islamic Rosette) — see this
+   // file's own header comment.
+
+   {
+      id:           "voronoi-islamic",
+      name:         "Voronoi Islamic",
+      category:     "Hybrid",
+      generator:    "voronoiIslamic",
+      spectrum:     0.55,
+      nativeFormat: "raster",
+      params: [
+         { param: "numCells",  archetype: "Density",    value: 15,   map: [5, 80]   },
+         { param: "segments",  archetype: "Complexity", value: 7,    map: [3, 16]   },
+         { param: "scale",     archetype: "Size",       value: 0.35, map: [0.2, 0.48] },
+         { param: "frequency", archetype: "Detail",     value: 2,    map: [1, 6]    },
+         { param: "lineWidth", archetype: "Threshold",  value: 0.05, map: [0.01, 0.15] },
+         { param: "tones",     control: "select", label: "Tones",
+           options: ["2", "3", "4", "5"], value: "2" },
+         // Reused from islamic.js's own construction unchanged (see
+         // voronoiIslamic.js's header comment, section 3.3: segments/
+         // rotation/scale are held uniform across cells) — snapped
+         // internally to 180/segments (islamic.js's snapRotation), same
+         // 0-360 slider convention as islamic-rosette's own rotation.
+         { param: "rotation",  archetype: "Rotation",   value: 0,   map: [0, 360] },
+         // Opt-in, default 0 (exact uniform-construction baseline — see
+         // voronoiIslamic.js's cellVariation): above 0, each cell's own
+         // segments/rotation independently diverge from the base values
+         // above, for a more organic, less repetitive result. Reuses the
+         // "Randomness" archetype perlin-sierpinski's amplitude already
+         // uses, not a new one.
+         { param: "variation", archetype: "Randomness", value: 0,   map: [0, 1] },
+         ...twoColourParams(),
+         { param: "seed",      archetype: "Seed",       value: 1337 },
+      ],
+      actions: [{ label: "Randomize Seed", method: "randomize" }],
+   },
+
 ];
