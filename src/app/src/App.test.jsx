@@ -42,7 +42,21 @@ describe("App: pattern selection", () => {
    });
 });
 
-describe("App: node selection", () => {
+describe("App: node selection and the Documentation Panel", () => {
+   it("selecting a workflow node updates the Documentation Panel's Operation field", () => {
+      const { container } = render(<App />);
+      // perlin-noise's own sequence (workflows.test.js's EXPECTED table) is
+      // workspace, seed, noise, colourMapping, render — Seed is unambiguous
+      // text elsewhere in the initial render. Selected explicitly by name
+      // rather than relying on it being REGISTRY[0]: the registry is
+      // ordered simplest-to-most-complex for the Generator Selection UI
+      // (docs/MOSCOW_PRIORITIES.md), not to suit this test.
+      selectPatternByName(REGISTRY.find((e) => e.id === "perlin-noise").name);
+      selectWorkflowNodeByLabel(container, "Seed");
+      const docPanel = container.querySelector(".doc-panel");
+      expect(within(docPanel).getByText("Seed")).toBeInTheDocument();
+   });
+
    it("only one node's param panel is expanded at a time", () => {
       const { container } = render(<App />);
       selectPatternByName(REGISTRY.find((e) => e.id === "perlin-noise").name);
