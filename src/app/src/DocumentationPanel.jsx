@@ -1,6 +1,7 @@
 import { NODE_LIBRARY } from "./workflows.js";
 import { NODE_DOCS, paramDoc } from "./nodeDocs.js";
 import PatternCanvas from "./PatternCanvas.jsx";
+import SpectrumBar from "./SpectrumBar.jsx";
 import "./DocumentationPanel.css";
 
 // Explanatory only — no editable controls here (docs/UI_DESIGN.md's
@@ -40,6 +41,13 @@ export default function DocumentationPanel({ selectedNode, generator, entry, par
             <span className="doc-label">Operation</span>
             <div className="doc-value">{title}</div>
          </div>
+
+         {entry?.spectrum != null && (
+            <div className="doc-block">
+               <span className="doc-label">Stochastic ↔ Deterministic</span>
+               <SpectrumBar spectrum={entry.spectrum} compact />
+            </div>
+         )}
 
          <div className="doc-block">
             <span className="doc-label">Learning Objective</span>
