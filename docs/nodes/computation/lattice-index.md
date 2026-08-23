@@ -41,7 +41,15 @@ lattice before assigning an index:
 
 In every case the index is then reduced (usually by a small modulus) so that
 no two adjacent tiles share a colour — a proper colouring of the tiling's
-adjacency graph, not an arbitrary banding.
+adjacency graph, not an arbitrary banding. Square and diamond's plain
+`(col + row) mod n` colouring is proper for any tone count `n`; hexagon,
+triangle and brick each need their own base formula (see the source for the
+per-shape derivation) but that formula, once found, also generalises to any
+`n >= 3` — only `n = 2` needs a distinct, simpler fallback for those three
+shapes (added 2026-08-21 when every registry pattern's tones range was
+extended to 2-5, matching Islamic Rosette's own range; verified by
+brute-force adjacency check for n = 3, 4, 5 before generalising, not just
+extended by assumption from the original n = 3 case).
 
 ---
 
