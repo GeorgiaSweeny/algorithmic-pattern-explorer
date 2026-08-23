@@ -6,6 +6,8 @@ import { CANVAS } from "../../config.js";
 import { buildWorkflow } from "./workflows.js";
 import WorkflowNode from "./nodeTypes/WorkflowNode.jsx";
 import PatternCanvas from "./PatternCanvas.jsx";
+import DocumentationPanel from "./DocumentationPanel.jsx";
+import NodeLibraryOverlay from "./NodeLibraryOverlay.jsx";
 import { exportSvg, exportPng } from "./export.js";
 import { NODE_DOCS } from "./nodeDocs.js";
 import EvaluationOverlay from "./evaluation/EvaluationOverlay.jsx";
@@ -54,6 +56,7 @@ export default function App() {
    const [paramValues, setParamValues] = useState(() => defaultParams(selectedEntry));
    const [selectedIndex, setSelectedIndex] = useState(0);
    const [showEvaluation, setShowEvaluation] = useState(false);
+   const [showNodeLibrary, setShowNodeLibrary] = useState(false);
    const [activeConceptPrompt, setActiveConceptPrompt] = useState(null); // { nodeType, concept } | null
 
    // Reset to the new pattern's defaults and first node whenever the selection changes.
@@ -129,6 +132,9 @@ export default function App() {
          <header className="menu-bar">
             <span className="menu-bar-title">Algorithmic Pattern Explorer</span>
             <div className="menu-bar-actions">
+               <button className="btn menu-bar-node-library" onClick={() => setShowNodeLibrary(true)}>
+                  Node Library
+               </button>
                <button className="btn menu-bar-evaluation" onClick={() => setShowEvaluation(true)}>
                   Evaluation
                </button>
@@ -153,6 +159,7 @@ export default function App() {
             </div>
          </header>
 
+         {showNodeLibrary && <NodeLibraryOverlay onClose={() => setShowNodeLibrary(false)} />}
          {showEvaluation && <EvaluationOverlay onClose={() => setShowEvaluation(false)} />}
          {activeConceptPrompt && (
             <ConceptCheckPrompt
@@ -207,6 +214,13 @@ export default function App() {
                   </ReactFlow>
                </section>
             </aside>
+
+            <DocumentationPanel
+               selectedNode={selectedNode}
+               generator={selectedEntry.generator}
+               entry={selectedEntry}
+               params={paramValues}
+            />
 
             <section className="layout-panel canvas-panel">
                <h2 className="panel-title">Pattern Canvas</h2>

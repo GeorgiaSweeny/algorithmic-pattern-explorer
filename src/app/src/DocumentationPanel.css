@@ -1,0 +1,103 @@
+.doc-panel {
+   overflow-y: auto;
+   min-width: 0;
+}
+
+.doc-empty {
+   font-size: 13px;
+   color: #9ca3af;
+}
+
+.doc-block {
+   margin-bottom: 18px;
+}
+
+.doc-label {
+   display: block;
+   font-size: 10px;
+   text-transform: uppercase;
+   letter-spacing: 0.06em;
+   color: #9ca3af;
+   margin-bottom: 4px;
+}
+
+.doc-value {
+   font-size: 15px;
+   font-weight: 600;
+   color: #111827;
+}
+
+.doc-text {
+   font-size: 13px;
+   color: #374151;
+   line-height: 1.5;
+   margin: 0;
+}
+
+.doc-objective {
+   font-style: italic;
+   color: #1d4ed8;
+}
+
+.doc-visual-example {
+   height: 160px;
+   border: 1px solid #e5e7eb;
+   border-radius: 6px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   overflow: hidden;
+   background: #fafafa;
+}
+
+.doc-visual-placeholder {
+   height: 100px;
+   border: 1px dashed #d1d5db;
+   border-radius: 6px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 12px;
+   color: #9ca3af;
+}
+
+.param-doc-list {
+   margin: 0;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+}
+
+.param-doc-item {
+   padding-left: 10px;
+   border-left: 2px solid #e5e7eb;
+}
+
+.param-doc-name {
+   font-size: 12px;
+   font-weight: 600;
+   color: #111827;
+   margin-bottom: 2px;
+}
+
+.param-doc-text {
+   margin: 0;
+   font-size: 12.5px;
+   color: #4b5563;
+   line-height: 1.45;
+}
+
+.concept-tags {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 6px;
+}
+
+.concept-tag {
+   font-size: 11px;
+   padding: 3px 9px;
+   border-radius: 999px;
+   background: #eff6ff;
+   color: #2563eb;
+   border: 1px solid #bfdbfe;
+}
