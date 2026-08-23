@@ -1,0 +1,55 @@
+/* ── Spectrum bar (stochastic ↔ deterministic) ───────────────────────────── */
+
+.spectrum-bar {
+   margin: 8px 0 4px;
+}
+
+.spectrum-labels {
+   display: flex;
+   justify-content: space-between;
+   font-size: 10px;
+   color: #9ca3af;
+   margin-bottom: 4px;
+}
+
+.spectrum-track {
+   position: relative;
+   height: 6px;
+   border-radius: 3px;
+   background: linear-gradient(to right, #7c3aed, #0891b2);
+}
+
+.spectrum-marker {
+   position: absolute;
+   top: 50%;
+   transform: translate(-50%, -50%);
+   width: 12px;
+   height: 12px;
+   border-radius: 50%;
+   background: #fff;
+   border: 2px solid #374151;
+   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+   transition: left 0.25s ease;
+}
+
+.spectrum-description {
+   font-size: 11px;
+   color: #6b7280;
+   margin-top: 5px;
+   text-align: center;
+   font-style: italic;
+}
+
+.spectrum-bar-compact .spectrum-track {
+   height: 5px;
+}
+
+.spectrum-bar-compact .spectrum-marker {
+   width: 10px;
+   height: 10px;
+}
+
+.spectrum-bar-compact .spectrum-description {
+   text-align: left;
+   margin-top: 4px;
+}

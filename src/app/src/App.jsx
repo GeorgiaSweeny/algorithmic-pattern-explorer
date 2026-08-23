@@ -7,6 +7,7 @@ import { buildWorkflow } from "./workflows.js";
 import WorkflowNode from "./nodeTypes/WorkflowNode.jsx";
 import PatternCanvas from "./PatternCanvas.jsx";
 import DocumentationPanel from "./DocumentationPanel.jsx";
+import SpectrumBar from "./SpectrumBar.jsx";
 import NodeLibraryOverlay from "./NodeLibraryOverlay.jsx";
 import { exportSvg, exportPng } from "./export.js";
 import { NODE_DOCS } from "./nodeDocs.js";
@@ -198,6 +199,7 @@ export default function App() {
                   <div className="workflow-subtitle">
                      <strong>{selectedEntry.name}</strong> — {nodes.length} nodes ({selectedEntry.generator}.js)
                   </div>
+                  <SpectrumBar spectrum={selectedEntry.spectrum} />
                   <ReactFlow
                      key={selectedId}
                      nodes={nodes}
