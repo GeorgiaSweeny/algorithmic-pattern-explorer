@@ -12,14 +12,24 @@ GRID — ALGORITHM-SPECIFIC PROPERTIES
 * One nuance the tests respect rather than paper over: grid.js's own comment
 * only claims hexagon's 3-tone colouring is "proper" — 2-tone hexagon is not
 * (hexagonal-tiling adjacency has chromatic number 3, like its dual triangular
-* lattice, so no 2-colouring of it can be proper). The hexagon test below checks
-* only the 3-tone claim, matching what the source actually asserts.
+* lattice, so no 2-colouring of it can be proper). The hexagon/triangle/brick
+* "proper" tests below check tones 3-5 (lib/latticeIndex.js's shared
+* (base-formula) mod numShades generalisation, added when tones was extended
+* to 2-5 project-wide — verified by brute-force adjacency check for n = 3, 4,
+* 5 before generalising, not just assumed by extending the n = 3 formula), and
+* a separate test documents the 2-tone case each of those three shapes can't
+* cover with the same formula.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
 import { grid } from "../grid.js";
+import { toneSet } from "../lib/colourMapping.js";
 
-const tonesArb = fc.constantFrom("2", "3");
+const tonesArb = fc.constantFrom("2", "3", "4", "5");
+// Tones counts where hexagon/triangle/brick's shared (base-formula) mod
+// numShades generalisation applies — numShades = 2 needs each shape's own
+// simpler fallback instead (see lib/latticeIndex.js).
+const properTonesArb = fc.constantFrom("3", "4", "5");
 const sizeArb = fc.double({ min: 10, max: 120, noNaN: true });
 // Domain matches the generator contract (docs/GENERATOR_CONTRACT.md): pixel
 // coordinates in [0, CANVAS.WIDTH] x [0, CANVAS.HEIGHT]. Values outside this range
@@ -71,7 +81,7 @@ describe("grid: algorithm-specific invariants", () => {
       const intSizeArb = fc.integer({ min: 10, max: 120 });
       fc.assert(
          fc.property(coordArb, coordArb, intSizeArb, tonesArb, (x, y, tileSize, tones) => {
-            const n = tones === "3" ? 3 : 2;
+            const n = Number(tones);
             const here = grid(x, y, { shape: "square", tileSize, tones });
             const shifted = grid(x + n * tileSize, y, { shape: "square", tileSize, tones });
             expect(shifted).toBe(here);
@@ -112,13 +122,12 @@ describe("grid: algorithm-specific invariants", () => {
       fc.assert(
          fc.property(coordArb, coordArb, sizeArb, tonesArb, (x, y, tileSize, tones) => {
             const v = grid(x, y, { shape: "hexagon", tileSize, tones });
-            const declared = tones === "3" ? [1, 0, -1] : [1, -1];
-            expect(declared).toContain(v);
+            expect(toneSet(tones)).toContain(v);
          })
       );
    });
 
-   it("hexagon: 3-tone colouring is proper (adjacent hexes always differ)", () => {
+   it("hexagon: colouring is proper for tones 3-5 (adjacent hexes always differ)", () => {
       // Cube/axial coordinates: inverting _hexagon's forward transform gives the
       // exact pixel centre of cell (q, r), landing well clear of any rounding
       // boundary. The six offsets are the standard axial hex-neighbour directions.
@@ -132,18 +141,19 @@ describe("grid: algorithm-specific invariants", () => {
             fc.integer({ min: -20, max: 20 }),
             fc.constantFrom(...hexNeighbours),
             sizeArb,
-            (q, r, [dq, dr], tileSize) => {
+            properTonesArb,
+            (q, r, [dq, dr], tileSize, tones) => {
                const [x1, y1] = hexCentre(q, r, tileSize);
                const [x2, y2] = hexCentre(q + dq, r + dr, tileSize);
-               const here  = grid(x1, y1, { shape: "hexagon", tileSize, tones: "3" });
-               const there = grid(x2, y2, { shape: "hexagon", tileSize, tones: "3" });
+               const here  = grid(x1, y1, { shape: "hexagon", tileSize, tones });
+               const there = grid(x2, y2, { shape: "hexagon", tileSize, tones });
                expect(there).not.toBe(here);
             }
          )
       );
    });
 
-   it("triangle: 3-tone colouring is proper for the three adjacencies grid.js documents", () => {
+   it("triangle: colouring is proper for tones 3-5, for the three adjacencies grid.js documents", () => {
       // U(si,ti) touches D(si,ti), D(si-1,ti) and D(si,ti-1) (grid.js's comment on
       // _triangle). Building one representative point safely inside each named
       // region (via the oblique-coordinate inverse x = size*(s+t/2), y = size*t*sqrt3/2)
@@ -156,16 +166,17 @@ describe("grid: algorithm-specific invariants", () => {
             fc.integer({ min: -20, max: 20 }),
             fc.integer({ min: -20, max: 20 }),
             sizeArb,
-            (si, ti, tileSize) => {
+            properTonesArb,
+            (si, ti, tileSize, tones) => {
                const [xUp, yUp]     = toXY(si + 0.2, ti + 0.2, tileSize);       // up, sf+tf=0.4
                const [xSame, ySame] = toXY(si + 0.75, ti + 0.75, tileSize);     // down, same cell
                const [xLeft, yLeft] = toXY(si - 1 + 0.75, ti + 0.75, tileSize); // down, cell (si-1,ti)
                const [xDown, yDown] = toXY(si + 0.75, ti - 1 + 0.75, tileSize); // down, cell (si,ti-1)
 
-               const up   = grid(xUp, yUp, { shape: "triangle", tileSize, tones: "3" });
-               const same = grid(xSame, ySame, { shape: "triangle", tileSize, tones: "3" });
-               const left = grid(xLeft, yLeft, { shape: "triangle", tileSize, tones: "3" });
-               const down = grid(xDown, yDown, { shape: "triangle", tileSize, tones: "3" });
+               const up   = grid(xUp, yUp, { shape: "triangle", tileSize, tones });
+               const same = grid(xSame, ySame, { shape: "triangle", tileSize, tones });
+               const left = grid(xLeft, yLeft, { shape: "triangle", tileSize, tones });
+               const down = grid(xDown, yDown, { shape: "triangle", tileSize, tones });
 
                expect(same).not.toBe(up);
                expect(left).not.toBe(up);
@@ -210,13 +221,13 @@ describe("grid: algorithm-specific invariants", () => {
       );
    });
 
-   it("brick: 3-tone colouring is proper for same-row and directly-below neighbours", () => {
+   it("brick: colouring is proper for tones 3-5, for same-row and directly-below neighbours", () => {
       // Bricks tile the plane with no gaps (row = floor(y/bh), col = floor((x+shift)/bw)
       // both partition contiguously), so (x+bw, y) in the same row and (x, y+bh) in the
       // row below are always physically touching regardless of the running-bond shift.
-      // grid.js's comment only claims properness for the fineCol (3-tone) scheme — 2-tone's
-      // plain (col+row)%2 touches the same "2 neighbours per side row" issue the comment
-      // describes and is not guaranteed proper vertically, so this checks 3-tone only.
+      // grid.js's comment only claims properness for the fineCol (numShades >= 3) scheme —
+      // 2-tone's plain (col+row)%2 touches the same "2 neighbours per side row" issue the
+      // comment describes and is not guaranteed proper vertically, so this checks 3-5 only.
       fc.assert(
          fc.property(
             fc.integer({ min: 0, max: 20 }),  // row
@@ -224,12 +235,12 @@ describe("grid: algorithm-specific invariants", () => {
             fc.double({ min: 0.1, max: 0.9, noNaN: true }), // fraction within brick, x
             fc.double({ min: 0.1, max: 0.9, noNaN: true }), // fraction within brick, y
             sizeArb,
-            (row, col, fx, fy, tileSize) => {
+            properTonesArb,
+            (row, col, fx, fy, tileSize, tones) => {
                const bw = tileSize * 2, bh = tileSize;
                const shift = (row % 2) * (bw / 2);
                const x = (col + fx) * bw - shift;
                const y = (row + fy) * bh;
-               const tones = "3";
 
                const here  = grid(x, y, { shape: "brick", tileSize, tones });
                const right = grid(x + bw, y, { shape: "brick", tileSize, tones });

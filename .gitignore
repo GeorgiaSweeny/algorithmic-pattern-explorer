@@ -7,3 +7,22 @@ tsconfig.base.json
 dissertation/
 proposal/
 src/generators/__benchmarks__/results.json
+src/exports/
+
+# Dated project-planning docs kept local, not part of the public repo
+# history (2026-08-23 decision) — plan-checklist.md/MOSCOW_PRIORITIES.md/
+# benchmark-results.md were untracked via `git rm --cached` at the same
+# time this was added, so their past committed versions remain in git
+# history but future edits stop being tracked.
+docs/plan-checklist.md
+docs/MOSCOW_PRIORITIES.md
+docs/benchmark-results.md
+docs/VORONOI_ISLAMIC_HYBRID_PLAN.md
+docs/EINSTEIN_APERIODIC_STRETCH.md
+docs/ISLAMIC_PATTERN_CONSTRUCTION.md
+docs/structure-metrics-results.md
+docs/ALGORITHMIC_COMPOSITION_RESEARCH.md
+
+# Build output and local tool config — never meant to be committed.
+src/app/dist/
+.claude/

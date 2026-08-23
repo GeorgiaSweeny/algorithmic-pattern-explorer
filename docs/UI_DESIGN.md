@@ -59,6 +59,63 @@ sections after it have been updated to reflect the points above.
 
 ---
 
+# Implementation Status
+
+This document describes the target design. The working implementation is the
+ReactFlow app at `src/app/` (distinct from the static, pre-React
+`src/ui-layout-mockup.html`/`.css`, which was a design exploration, not the
+delivered interface). As of 2026-08-18:
+
+**Implemented**, matching this document's structure and interaction model:
+
+* The four-region layout (menu bar; Generator Selection + Algorithm Workflow
+  stacked in the left column; Documentation Panel; Pattern Canvas; Status &
+  Controls bar) — `src/app/src/App.jsx`, `App.css`.
+* Single-node-at-a-time selection: clicking a node highlights it, opens its
+  parameter controls inline beneath it (only one panel open at a time), and
+  updates the Documentation Panel — `App.jsx`, `nodeTypes/WorkflowNode.jsx`.
+* The Documentation Panel's operation/explanation/purpose/concepts fields,
+  sourced from the same content as the per-node files under `docs/nodes/` —
+  `DocumentationPanel.jsx`, `nodeDocs.js`.
+* Stepping via Prev/Next and via direct node click, both driving the same
+  selection state, with a `Step X of N` indicator — `App.jsx`'s status bar.
+* Fixed-by-geometry parameters shown read-only with an explanatory note —
+  `nodeTypes/WorkflowNode.jsx`'s `param-fixed` case.
+* The workspace-boundary overlay and canvas/workspace dimension labels,
+  hidden specifically on the Render step — `App.jsx`'s `canvas-panel`.
+* Export (SVG/PNG) as a Render-node control rather than a canvas-level
+  button — `export.js`, wired into the Render node's parameter panel.
+* Changing a parameter immediately updates the rendered pattern, and — where
+  the parameter changes the algorithm's own structure (e.g. recursive's
+  `depth` controlling how many Subdivide nodes exist) — the workflow graph
+  itself, not just the canvas (`workflows.js`'s `buildWorkflow` takes live
+  param values, not just registry defaults).
+
+**Built 2026-08-21** (previously listed as deliberately deferred here):
+
+* **Per-node intermediate algorithm state on the canvas.** The canvas now
+  shows each stage's own intermediate output where `src/app/src/stagePreview.js`
+  defines a rule for it (all 9 generators, one generic mechanism — a
+  declarative `(generator, nodeType) → params override | dedicated preview`
+  table, not bespoke code per generator the way the discontinued mockup
+  only ever built this for Grid Tessellation), falling back to the real
+  final output for stages with no distinct, cheaply-producible
+  intermediate look. See `docs/plan-checklist.md`'s Aug 21 entry for the
+  full mechanism and how each generator's own stage was handled.
+* The Documentation Panel's "Visual Example" is a small live render of the
+  selected node's own current intermediate state (the same `PatternCanvas`
+  component, at thumbnail size, driven by the mechanism above) — no
+  longer a static placeholder.
+
+**Still deliberately deferred** (tracked in `docs/plan-checklist.md`'s
+priorities, not a gap in this pass):
+
+* An editable Workspace-dimensions control and canvas zoom/pan — both listed
+  as design capabilities in this document but not yet wired to a control;
+  `CANVAS.WIDTH`/`HEIGHT` are fixed constants (`src/config.js`).
+
+---
+
 # Design Objectives
 
 The interface has been designed around the following principles:

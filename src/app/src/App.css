@@ -1,0 +1,280 @@
+* {
+   box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+   height: 100%;
+   margin: 0;
+   font-family: system-ui, sans-serif;
+}
+
+.app {
+   display: flex;
+   flex-direction: column;
+   height: 100vh;
+}
+
+/* ── Menu bar ─────────────────────────────────────────────────────────── */
+
+.menu-bar {
+   flex: 0 0 auto;
+   height: 48px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   padding: 0 16px;
+   background: #111827;
+   border-bottom: 1px solid #1f2937;
+}
+
+.menu-bar-title {
+   color: #fff;
+   font-size: 14px;
+   font-weight: 600;
+}
+
+.menu-bar-actions {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+}
+
+.menu-bar-evaluation,
+.menu-bar-node-library {
+   background: #1f2937;
+   color: #f9fafb;
+   border: 1px solid #374151;
+}
+
+.menu-bar-evaluation:hover,
+.menu-bar-node-library:hover {
+   background: #374151;
+}
+
+.menu-bar-github {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: #f9fafb;
+   opacity: 0.85;
+}
+
+.menu-bar-github:hover {
+   opacity: 1;
+}
+
+/* ── Overall layout: left column / doc panel / canvas panel ─────────────── */
+
+.app-layout {
+   flex: 1;
+   display: grid;
+   grid-template-columns: 320px 340px 1fr;
+   min-height: 0;
+}
+
+.layout-panel {
+   border-right: 1px solid #e5e7eb;
+   overflow-y: auto;
+   padding: 16px;
+}
+
+.panel-title {
+   font-size: 11px;
+   text-transform: uppercase;
+   letter-spacing: 0.06em;
+   color: #6b7280;
+   font-weight: 600;
+   margin: 0 0 12px;
+}
+
+.panel-title-note {
+   text-transform: none;
+   font-weight: 400;
+   color: #9ca3af;
+}
+
+/* ── Left column: Generator Selection + Algorithm Workflow ──────────────── */
+
+.left-column {
+   display: flex;
+   flex-direction: column;
+   min-height: 0;
+   min-width: 0;
+   border-right: 1px solid #e5e7eb;
+}
+
+.generator-selection {
+   flex: 0 0 auto;
+   border-right: none;
+   border-bottom: 1px solid #e5e7eb;
+   max-height: 45%;
+}
+
+.algorithm-workflow {
+   flex: 1 1 auto;
+   border-right: none;
+   display: flex;
+   flex-direction: column;
+   min-height: 0;
+   padding-bottom: 0;
+}
+
+.workflow-subtitle {
+   font-size: 12px;
+   color: #6b7280;
+   margin-bottom: 8px;
+}
+
+.algorithm-workflow .react-flow {
+   flex: 1;
+   min-height: 300px;
+}
+
+.pattern-list {
+   list-style: none;
+   margin: 0;
+   padding: 0;
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+}
+
+.pattern-list button {
+   width: 100%;
+   text-align: left;
+   padding: 8px 10px;
+   border: 1px solid #e5e7eb;
+   border-radius: 6px;
+   background: #fff;
+   cursor: pointer;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   font-size: 13px;
+}
+
+.pattern-list button:hover {
+   border-color: #93c5fd;
+}
+
+.pattern-list button.selected {
+   border-color: #2563eb;
+   background: #eff6ff;
+}
+
+.pattern-category {
+   font-size: 10px;
+   color: #9ca3af;
+   text-transform: uppercase;
+}
+
+.pattern-group {
+   margin-bottom: 10px;
+}
+
+.pattern-group-title {
+   font-size: 10px;
+   font-weight: 700;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   color: #9ca3af;
+   margin: 0 0 4px 2px;
+}
+
+/* ── Right column: Pattern Canvas ────────────────────────────────────────── */
+
+.canvas-panel {
+   border-right: none;
+   display: flex;
+   flex-direction: column;
+   min-width: 0;
+}
+
+.canvas-size-info {
+   display: flex;
+   flex-direction: column;
+   gap: 2px;
+   font-size: 12px;
+   color: #6b7280;
+   margin-bottom: 8px;
+}
+
+.workspace-size-label {
+   color: #dc2626;
+   font-weight: 600;
+}
+
+.render-panel-body {
+   flex: 1;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   overflow: auto;
+   background: #f9fafb;
+   padding: 12px;
+   border-radius: 6px;
+}
+
+.render-panel-body-boxed {
+   outline: 2px dashed rgba(220, 38, 38, 0.4);
+   outline-offset: -2px;
+}
+
+.pattern-canvas {
+   max-width: 100%;
+   max-height: 100%;
+   width: auto;
+   height: auto;
+   box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.pattern-canvas-svg svg {
+   display: block;
+   max-width: 100%;
+   max-height: 100%;
+}
+
+/* ── Status & controls bar ───────────────────────────────────────────────── */
+
+.status-bar {
+   flex: 0 0 auto;
+   height: 56px;
+   display: flex;
+   align-items: center;
+   padding: 0 16px;
+   background: #111827;
+   border-top: 1px solid #1f2937;
+}
+
+.status-section {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+}
+
+.status-bar .btn {
+   padding: 5px 12px;
+   font-size: 12px;
+   border: 1px solid #4b5563;
+   border-radius: 4px;
+   background: transparent;
+   color: #e5e7eb;
+   cursor: pointer;
+}
+
+.status-bar .btn:hover:not(:disabled) {
+   border-color: #93c5fd;
+   color: #fff;
+}
+
+.status-bar .btn:disabled {
+   opacity: 0.4;
+   cursor: not-allowed;
+}
+
+.step-indicator {
+   font-size: 12px;
+   color: #9ca3af;
+}

@@ -9,30 +9,38 @@ Concentric rings: concentric filled circles drawn outside-in, one per pixel
                   of radius, colour sampled from sin(r·frequency). Visually
                   identical to the raster output.
 
-Both match the grayscale mapping in render.js: c = (sin+1) × 127.5
+Both match the grayscale mapping in render.js by default (c = (sin+1) ×
+127.5, i.e. white at sin=+1, black at sin=-1) — but, like every other
+tone-based pattern, `colour1` (light, default white) and `colour2` (dark,
+default black) are independently user-editable (added 2026-08-21): every
+stop/ring interpolates between those two colours via lib/colourMapping.js's
+mixHex rather than the sine value being converted to grey directly, so
+setting them to anything else recolours the whole gradient consistently.
 */
+import { mixHex } from "../lib/colourMapping.js";
 
 export function waveSvg(width, height, params) {
-   const { mode = "wave", frequency = 0.05 } = params;
+   const { mode = "wave", frequency = 0.05, colour1 = "#ffffff", colour2 = "#000000" } = params;
    return mode === "rings"
-      ? _rings(width, height, frequency)
-      : _stripes(width, height, frequency);
+      ? _rings(width, height, frequency, colour1, colour2)
+      : _stripes(width, height, frequency, colour1, colour2);
 }
 
 // ── Wave stripes ──────────────────────────────────────────────────────────────
-// sin(y·f): at y=0, sin=0 → #7f7f7f. One period = 2π/f px tall.
-// Gradient stops: gray → white → gray → black → gray over one period.
+// sin(y·f): at y=0, sin=0 → midpoint of colour1/colour2. One period = 2π/f px tall.
+// Gradient stops: mid → colour1 → mid → colour2 → mid over one period.
 
-function _stripes(W, H, f) {
+function _stripes(W, H, f, colour1, colour2) {
    const period = r(2 * Math.PI / f);
+   const mid = mixHex(colour1, colour2, 0.5);
 
    const gradient = [
       `<linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">`,
-      `<stop offset="0%"   stop-color="#7f7f7f"/>`,
-      `<stop offset="25%"  stop-color="#ffffff"/>`,
-      `<stop offset="50%"  stop-color="#7f7f7f"/>`,
-      `<stop offset="75%"  stop-color="#000000"/>`,
-      `<stop offset="100%" stop-color="#7f7f7f"/>`,
+      `<stop offset="0%"   stop-color="${mid}"/>`,
+      `<stop offset="25%"  stop-color="${colour1}"/>`,
+      `<stop offset="50%"  stop-color="${mid}"/>`,
+      `<stop offset="75%"  stop-color="${colour2}"/>`,
+      `<stop offset="100%" stop-color="${mid}"/>`,
       `</linearGradient>`,
       `<pattern id="wp" x="0" y="0" width="${W}" height="${period}" patternUnits="userSpaceOnUse">`,
       `<rect width="${W}" height="${period}" fill="url(#wg)"/>`,
@@ -43,27 +51,23 @@ function _stripes(W, H, f) {
 }
 
 // ── Concentric rings ──────────────────────────────────────────────────────────
-// Draws filled circles outside-in. Each circle is coloured by sin(r·f).
+// Draws filled circles outside-in. Each circle is coloured by sin(r·f),
+// interpolated between colour1 (sin=+1) and colour2 (sin=-1).
 
-function _rings(W, H, f) {
+function _rings(W, H, f, colour1, colour2) {
    const cx   = W / 2;
    const cy   = H / 2;
    const maxR = Math.ceil(Math.sqrt(cx * cx + cy * cy));
 
    const parts = [];
    for (let rad = maxR; rad >= 0; rad--) {
-      const c   = Math.round((Math.sin(rad * f) + 1) * 127.5);
-      parts.push(`<circle cx="${cx}" cy="${cy}" r="${rad}" fill="${_gray(c)}"/>`);
+      const t = (1 - Math.sin(rad * f)) / 2; // 0 -> colour1, 1 -> colour2
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${rad}" fill="${mixHex(colour1, colour2, t)}"/>`);
    }
 
    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="hidden">${parts.join("")}</svg>`;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function _gray(c) {
-   const h = c.toString(16).padStart(2, "0");
-   return `#${h}${h}${h}`;
-}
 
 function r(n) { return Math.round(n * 100) / 100; }
