@@ -5,13 +5,16 @@ GENERATOR BENCHMARK SUITE
 * Measures wall-clock time to evaluate each generator over an N x N sample grid
 * spanning the canvas, at increasing N (render resolution), and separately
 * measures sensitivity to each generator's key per-pixel cost driver (Perlin
-* octaves, Voronoi cell count, recursion depth, Islamic segment count). All
-* seven generators are per-pixel pure functions, so grid-size scaling should
+* octaves, Voronoi cell count, recursion depth, Islamic segment count, and —
+* since Aug 7-9 — the hybrid recursiveNoise generator's amplitude). All eight
+* generators are per-pixel pure functions, so grid-size scaling should
 * empirically confirm O(N^2) for every one of them; the parameter sweep is
 * what actually distinguishes generators with O(1) per-pixel work (grid, wave,
 * escher) from ones with per-pixel work that scales with a parameter (noise:
 * O(octaves), voronoi: O(numCells) and islamic: O(segments), both from
-* distanceField.js's brute-force nearest-point search, recursive: O(depth)).
+* distanceField.js's brute-force nearest-point search, recursive: O(depth),
+* recursiveNoise: O(depth) plus two Perlin noise() calls per amplitude!=0
+* sample).
 *
 * Run with: npm run bench   (from src/)
 * Writes raw results to __benchmarks__/results.json for the dissertation plots.
@@ -101,7 +104,9 @@ const REPRESENTATIVE_PARAMS = {
    voronoi:   { numCells: 40, seed: 1337, tones: "2" },
    recursive: { mode: "sierpinski", depth: 4, subdivisions: 3 },
    escher:    { tileSize: 60, bumpAmp: 3, bumpType: "wave" },
-   islamic:   { mode: "rosette", tileSize: 100, segments: 8, frequency: 0.15, tones: "2" },
+   islamic:   { tileSize: 100, segments: 8, frequency: 3, tones: "2" },
+   recursiveNoise: { depth: 4, amplitude: 0.25, seed: 1337 },
+   voronoiIslamic: { numCells: 20, segments: 8, scale: 0.42, frequency: 3, tones: "2", seed: 1337 },
 };
 
 // Each entry sweeps the parameter believed to drive per-pixel cost, at a fixed
@@ -116,6 +121,8 @@ const PARAM_SWEEPS = {
    voronoi:   { param: "numCells", values: [10, 20, 40, 80, 160, 320, 1280, 5120], gridSize: 150 },
    recursive: { param: "depth",    values: [1, 2, 3, 4, 6, 12, 24, 48], gridSize: 150 },
    islamic:   { param: "segments", values: [4, 8, 16, 32, 64, 128], gridSize: 150 },
+   recursiveNoise: { param: "amplitude", values: [0, 0.1, 0.25, 0.5, 1.0, 2.0], gridSize: 150 },
+   voronoiIslamic: { param: "numCells", values: [5, 10, 20, 40, 80, 160], gridSize: 150 },
 };
 
 // ---- run --------------------------------------------------------------------

@@ -82,6 +82,10 @@ Increase segment count to observe higher symmetry order.
 ## Used By
 
 - Islamic geometric pattern system
+- Voronoi-Seeded Islamic Tiling (`voronoiIslamic.js`, added 2026-08-21) —
+  same node, but its radius is scaled per-cell to each Voronoi seed's own
+  nearest-neighbour distance rather than a fixed `tileSize`; see
+  `docs/nodes/WORKFLOWS.md` §8
 
 ---
 
