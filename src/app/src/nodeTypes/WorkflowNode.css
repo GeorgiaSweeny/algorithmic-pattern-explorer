@@ -9,6 +9,10 @@
    overflow: hidden;
 }
 
+.workflow-node.selected {
+   box-shadow: 0 0 0 2px #2563eb, 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 .workflow-node-header {
    color: #fff;
    font-weight: 600;
@@ -56,7 +60,8 @@
    text-align: right;
 }
 
-.param-fixed {
+.param-fixed-row {
+   display: flex;
    flex-direction: row;
    justify-content: space-between;
    align-items: center;
@@ -67,4 +72,30 @@
    background: #f3f4f6;
    padding: 1px 6px;
    border-radius: 4px;
+}
+
+.param-fixed-note {
+   font-size: 10px;
+   color: #9ca3af;
+   margin-top: 2px;
+}
+
+.param-export {
+   flex-direction: row;
+   gap: 6px;
+}
+
+.param-export button {
+   flex: 1;
+   font-size: 11px;
+   padding: 4px 6px;
+   border: 1px solid #d1d5db;
+   border-radius: 4px;
+   background: #f9fafb;
+   cursor: pointer;
+}
+
+.param-export button:hover {
+   background: #f3f4f6;
+   border-color: #9ca3af;
 }

@@ -38,48 +38,88 @@ const STEP_DEFS = {
       "colourMapping",
       "render",
    ],
-   islamic: (params) => {
-      const base = ["workspace", "grid", "constructionCircle", "radialDivisions", "distanceField"];
-      return params.mode === "star-lines"
-         ? [...base, "waveform", "colourMapping", "render"]
-         : [...base, "colourMapping", "render"];
-   },
+   islamic: () => [
+      "workspace", "grid", "constructionCircle", "radialDivisions",
+      "distanceField", "colourMapping", "render",
+   ],
+   // Hybrid: Voronoi's own opening two nodes (Seed, Seed Points) feeding
+   // directly into islamic.js's existing tail (Construction Circle onward,
+   // Grid dropped since cell membership comes from Distance Field's
+   // nearestPoint search, not a lattice) — see
+   // docs/VORONOI_ISLAMIC_HYBRID_PLAN.md section 4's predicted structure.
+   voronoiIslamic: () => [
+      "workspace", "seed", "seedPoints", "constructionCircle", "radialDivisions",
+      "distanceField", "colourMapping", "render",
+   ],
+   // Hybrid: each level's own Noise sample warps that level's point before
+   // Subdivide runs (see recursiveNoise.js's header comment) — shown as a
+   // Noise/Subdivide pair per level, repeated `depth` times, rather than
+   // recursive.js's bare Subdivide chain, since the composition genuinely
+   // differs (a Fork over Noise feeds each Subdivide step, not just the
+   // step itself repeated).
+   recursiveNoise: (params) => [
+      "workspace",
+      "baseGeometry",
+      ...Array.from({ length: Math.max(1, Math.round(params.depth ?? 4)) }, () => ["noise", "subdivide"]).flat(),
+      "colourMapping",
+      "render",
+   ],
 };
 
 // Maps a registry param key to the node type it belongs to. Cross-checked
-// against each generator's source (src/generators/*.js) — e.g. islamic.js's
-// `frequency` feeds Colour Mapping's band math in "rosette" mode but feeds
-// Waveform's sineWave() directly in "star-lines" mode.
+// against each generator's source (src/generators/*.js).
 const PARAM_NODE_MAP = {
-   noise: (key) => (key === "seed" ? "seed" : "noise"),
-   voronoi: (key) => (key === "seed" ? "seed" : key === "tones" ? "colourMapping" : "seedPoints"),
+   noise: (key) => (key === "seed" ? "seed" : /^colour\d$/.test(key) ? "colourMapping" : "noise"),
+   voronoi: (key) =>
+      key === "seed" ? "seed"
+      : key === "tones" || /^colour\d$/.test(key) ? "colourMapping"
+      : "seedPoints",
    escher: (key) =>
       key === "bumpType" || key === "bumpAmp"
          ? "edgeDeformation"
-         : key === "tones"
+         : key === "tones" || /^colour\d$/.test(key)
          ? "colourMapping"
          : "baseGeometry",
-   grid: (key) => (key === "tones" ? "colourMapping" : "baseGeometry"),
-   wave: () => "waveform",
-   recursive: () => "subdivide",
-   islamic: (key, params) => {
-      if (key === "segments") return "radialDivisions";
-      if (key === "frequency") return params.mode === "star-lines" ? "waveform" : "colourMapping";
-      if (key === "tones") return "colourMapping";
-      return "grid"; // tileSize, mode
+   grid: (key) => (key === "tones" || /^colour\d$/.test(key) ? "colourMapping" : "baseGeometry"),
+   wave: (key) => (/^colour\d$/.test(key) ? "colourMapping" : "waveform"),
+   recursive: (key) => (/^colour\d$/.test(key) ? "colourMapping" : "subdivide"),
+   islamic: (key) => {
+      if (key === "segments" || key === "rotation") return "radialDivisions";
+      if (key === "frequency" || key === "tones" || key === "lineWidth" || /^colour\d$/.test(key)) {
+         return "colourMapping";
+      }
+      if (key === "scale") return "constructionCircle";
+      return "grid"; // tileSize, tileShape
+   },
+   recursiveNoise: (key) =>
+      key === "depth" ? "subdivide" : /^colour\d$/.test(key) ? "colourMapping" : "noise", // amplitude, seed
+   voronoiIslamic: (key) => {
+      if (key === "seed") return "seed";
+      if (key === "numCells") return "seedPoints";
+      if (key === "segments" || key === "rotation" || key === "variation") return "radialDivisions";
+      if (key === "scale") return "constructionCircle";
+      return "colourMapping"; // frequency, lineWidth, tones
    },
 };
 
 /**
  * Builds a ReactFlow-shaped {nodes, edges} graph for one patternRegistry.js
  * entry, following the linear sequence documented in docs/nodes/WORKFLOWS.md.
- * Pure and deterministic: same registryId always produces the same graph.
+ * Pure and deterministic: same (registryId, liveParams) always produces the
+ * same graph. `liveParams` overrides the registry's static defaults — needed
+ * because some params change the graph's own shape (e.g. recursive's `depth`
+ * controls how many Subdivide nodes appear, wave's `mode` toggles Distance
+ * Field in/out), so the graph must react to the same live state the canvas
+ * render does (docs/UI_DESIGN.md's Synchronised Interaction section).
  */
-export function buildWorkflow(registryId) {
+export function buildWorkflow(registryId, liveParams = {}) {
    const entry = REGISTRY.find((e) => e.id === registryId);
    if (!entry) throw new Error(`Unknown pattern id: ${registryId}`);
 
-   const params = Object.fromEntries(entry.params.map((p) => [p.param, p.value]));
+   const params = {
+      ...Object.fromEntries(entry.params.map((p) => [p.param, p.value])),
+      ...liveParams,
+   };
    const steps = STEP_DEFS[entry.generator](params);
    const mapParam = PARAM_NODE_MAP[entry.generator];
 
@@ -90,7 +130,9 @@ export function buildWorkflow(registryId) {
    const nodes = steps.map((type, index) => {
       typeSeen[type] = (typeSeen[type] ?? 0) + 1;
       const repeats = typeTotals[type];
-      const nodeParams = entry.params.filter((p) => mapParam(p.param, params) === type);
+      const nodeParams = entry.params.filter(
+         (p) => mapParam(p.param, params) === type && (!p.visibleIf || p.visibleIf(params))
+      );
       return {
          id: `${type}-${index}`,
          type: "workflow",
@@ -99,6 +141,14 @@ export function buildWorkflow(registryId) {
             nodeType: type,
             label: NODE_LIBRARY[type].title + (repeats > 1 ? ` (${typeSeen[type]}/${repeats})` : ""),
             params: nodeParams,
+            // occurrence/totalOccurrences (added 2026-08-21): the same
+            // typeSeen/repeats counters already computed for the "(1/2)"
+            // label, exposed as data too — stagePreview.js's depth-
+            // truncation preview for recursive.js/recursiveNoise.js needs
+            // to know *which* repeated Subdivide step this is, not just
+            // that it's a Subdivide step.
+            occurrence: typeSeen[type],
+            totalOccurrences: repeats,
          },
       };
    });

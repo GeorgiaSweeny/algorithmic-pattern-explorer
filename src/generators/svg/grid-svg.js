@@ -8,18 +8,16 @@ primitives (whole cells) instead of a per-pixel scalar index.
 
 API:  gridSvg(width, height, params) → SVG string
 */
+import { svgFillsFor } from "../lib/colourMapping.js";
 
 const SQ3 = Math.sqrt(3);
 
-// fill[0] = background, fill[last] = dark tone, mid tone(s) in between.
-const FILLS = {
-   "2": ["#fff", "#000"],
-   "3": ["#fff", "#888", "#000"],
-};
-
 export function gridSvg(width, height, params) {
-   const { shape = "square", tileSize: s = 40, tones = "2" } = params;
-   const fill = FILLS[tones] ?? FILLS["2"];
+   const {
+      shape = "square", tileSize: s = 40, tones = "2",
+      colour1, colour2, colour3, colour4, colour5,
+   } = params;
+   const fill = svgFillsFor(tones, [colour1, colour2, colour3, colour4, colour5]);
 
    const parts = [];
 
@@ -53,22 +51,24 @@ function _square(parts, W, H, s, fill) {
 // ── Brick ─────────────────────────────────────────────────────────────────────
 // Mirrors brickIndex in lib/latticeIndex.js: 2:1 brick units, row offset shifts x
 // by half a brick width on odd rows. Each brick touches 2 neighbours per side row, so
-// plain (col+row) mod 3 puts same-tone bricks in contact; doubled-resolution
-// fineCol = 2*col - (row%2) restores a proper 3-colouring (see lib/latticeIndex.js).
+// plain (col+row) mod n puts same-tone bricks in contact; doubled-resolution
+// fineCol = 2*col - (row%2) restores a proper n-colouring for any tones count >= 3
+// (see lib/latticeIndex.js's brickIndex for the generalisation and its
+// brute-force verification — 2-tone keeps its own simpler split).
 
 function _brick(parts, W, H, s, fill) {
    const bw   = s * 2;
    const bh   = s;
    const rows = Math.ceil(H / bh) + 1;
-   const mod3 = fill.length === 3;
+   const proper = fill.length >= 3;
    parts.push(_rect(0, 0, W, H, fill[0]));
    for (let row = 0; row < rows; row++) {
       const shift = (row % 2) * (bw / 2);
       const colStart = -1;
       const colEnd   = Math.ceil((W + shift) / bw) + 1;
       for (let col = colStart; col < colEnd; col++) {
-         const idx = mod3
-            ? _mod(2 * col - (row % 2), 3)
+         const idx = proper
+            ? _mod(2 * col - (row % 2), fill.length)
             : _mod(col + row, 2);
          if (idx === 0) continue;
          parts.push(_rect(col * bw - shift, row * bh, bw, bh, fill[idx]));
@@ -106,7 +106,8 @@ function _diamond(parts, W, H, s, fill) {
 // ── Hexagon ───────────────────────────────────────────────────────────────────
 // Pointy-top hexagons in axial coordinates (q, r).
 // Pixel center: x = s*(√3*q + √3/2*r),  y = s*(3/2*r)
-// Hex 2-tone: (q+r) mod 2. Hex 3-tone: (2q+r) mod 3 — standard proper 3-colouring.
+// Hex 2-tone: (q+r) mod 2. Hex n-tone (n >= 3): (2q+r) mod n — the standard
+// proper 3-colouring, generalised (see lib/latticeIndex.js's hexagonIndex).
 
 function _hexagon(parts, W, H, s, fill) {
    const rMax = Math.ceil(H / (1.5 * s)) + 2;
@@ -116,8 +117,8 @@ function _hexagon(parts, W, H, s, fill) {
 
    for (let r = -2; r <= rMax; r++) {
       for (let q = -qMax; q <= qMax; q++) {
-         const idx = fill.length === 3
-            ? _mod(2 * q + r, 3)
+         const idx = fill.length >= 3
+            ? _mod(2 * q + r, fill.length)
             : _mod(q + r, 2);
          if (idx === 0) continue;
          const cx = s * (SQ3 * q + SQ3 / 2 * r);
@@ -145,21 +146,22 @@ function _hexPoly(cx, cy, s, fillColor) {
 // Oblique → pixel:  x = os*s + ot*s/2,  y = ot*s*√3/2
 // 2-tone: up=background, down=dark (orientation split only, both suffice for a
 // proper colouring since up/down triangles are never mutually adjacent).
-// 3-tone: U(os,ot) touches D(os,ot), D(os-1,ot), D(os,ot-1) — colouring both
-// by (os+ot) mod 3, offset by a constant between up/down, satisfies all three
-// simultaneously and varies across both axes (see lib/latticeIndex.js).
+// n-tone (n >= 3): U(os,ot) touches D(os,ot), D(os-1,ot), D(os,ot-1) —
+// colouring both by (os+ot) mod n, offset by a constant between up/down,
+// satisfies all three simultaneously and varies across both axes, for any
+// n >= 3 (see lib/latticeIndex.js's triangleIndex for the generalisation).
 
 function _triangle(parts, W, H, s, fill) {
    const otMax = Math.ceil(2 * H / (SQ3 * s)) + 2;
    const osMax = Math.ceil(W / s) + otMax + 2;
-   const mod3  = fill.length === 3;
+   const proper = fill.length >= 3;
 
    parts.push(_rect(0, 0, W, H, fill[0]));
 
    for (let ot = -1; ot <= otMax; ot++) {
       for (let os = -otMax - 1; os <= osMax; os++) {
-         const idxUp   = mod3 ? _mod(os + ot,     3) : 0;
-         const idxDown = mod3 ? _mod(os + ot - 1, 3) : 1;
+         const idxUp   = proper ? _mod(os + ot,     fill.length) : 0;
+         const idxDown = proper ? _mod(os + ot - 1, fill.length) : 1;
 
          if (idxUp !== 0) {
             _pushTri(parts, [_triPx(os, ot, s), _triPx(os + 1, ot, s), _triPx(os, ot + 1, s)],

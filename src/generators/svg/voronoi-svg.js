@@ -10,18 +10,16 @@ every other seed.
 Seed generation uses the same xorshift32 RNG and layout as voronoi.js so
 SVG and raster outputs match exactly.
 */
-
-// fill[0] = background, fill[last] = dark tone, mid tone(s) in between.
-const FILLS = {
-   "2": ["#fff", "#000"],
-   "3": ["#fff", "#888", "#000"],
-};
+import { svgFillsFor } from "../lib/colourMapping.js";
 
 export function voronoiSvg(width, height, params) {
-   const { numCells = 20, seed = 1337, tones = "2" } = params;
+   const {
+      numCells = 20, seed = 1337, tones = "2",
+      colour1, colour2, colour3, colour4, colour5,
+   } = params;
    const seeds = _generateSeeds(numCells, seed, width, height);
    const n     = seeds.length / 2;
-   const fill  = FILLS[tones] ?? FILLS["2"];
+   const fill  = svgFillsFor(tones, [colour1, colour2, colour3, colour4, colour5]);
 
    const parts = [];
 
