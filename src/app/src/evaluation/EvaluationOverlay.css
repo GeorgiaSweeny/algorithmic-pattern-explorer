@@ -1,0 +1,75 @@
+.eval-overlay {
+   position: fixed;
+   inset: 0;
+   background: rgba(17, 24, 39, 0.6);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 1000;
+}
+
+.eval-panel {
+   position: relative;
+   background: #fff;
+   border-radius: 10px;
+   padding: 28px 32px;
+   width: min(640px, 92vw);
+   max-height: 86vh;
+   overflow-y: auto;
+   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.eval-close {
+   position: absolute;
+   top: 12px;
+   right: 14px;
+   border: none;
+   background: none;
+   font-size: 22px;
+   line-height: 1;
+   cursor: pointer;
+   color: #6b7280;
+}
+
+.eval-close:hover {
+   color: #111827;
+}
+
+.eval-intro h2,
+.eval-summary h2 {
+   margin-top: 0;
+}
+
+.eval-actions {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 10px;
+   margin-top: 18px;
+}
+
+.eval-quiz-note {
+   font-size: 13px;
+   color: #6b7280;
+}
+
+.eval-question {
+   border: none;
+   border-top: 1px solid #e5e7eb;
+   padding: 14px 0;
+   margin: 0;
+}
+
+.eval-question legend {
+   font-weight: 600;
+   font-size: 14px;
+   padding: 0 0 8px;
+}
+
+.eval-option {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 13.5px;
+   padding: 4px 0;
+   cursor: pointer;
+}
