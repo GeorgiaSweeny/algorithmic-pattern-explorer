@@ -17,6 +17,17 @@ export class UIBuilder {
          if (paramDef.archetype) {
             const { el, sync } = this._buildSlider(paramDef, binder, regen);
             if (el) { frag.appendChild(el); syncFns.push(sync); }
+         } else if (paramDef.control === "color") {
+            // visibleIf (colour3/4/5 only relevant once `tones` declares
+            // that many) isn't applied here: this UI builds its whole
+            // param panel once per pattern load (see ui.js's loadPattern)
+            // rather than on every value change the way the React app's
+            // does, so a control hidden by a stale visibleIf reading could
+            // outlive the value that hid it. Showing all 5 unconditionally
+            // is a known simplification for this (legacy, script-less)
+            // vanilla UI rather than restructuring its rebuild flow.
+            const el = this._buildColor(paramDef, binder, regen);
+            if (el) frag.appendChild(el);
          } else if (paramDef.control) {
             const el = this._buildSelect(paramDef, binder, regen);
             if (el) frag.appendChild(el);
@@ -95,6 +106,24 @@ export class UIBuilder {
       });
 
       row.append(label, select);
+      return row;
+   }
+
+   _buildColor(paramDef, binder, regen) {
+      const row   = el("div", "param-row");
+      const label = el("label", "param-label d-block mb-1");
+      label.textContent = paramDef.label ?? paramDef.param;
+
+      const input = document.createElement("input");
+      input.type  = "color";
+      input.value = paramDef.value;
+
+      input.addEventListener("input", () => {
+         binder.set(paramDef.param, input.value);
+         regen();
+      });
+
+      row.append(label, input);
       return row;
    }
 
