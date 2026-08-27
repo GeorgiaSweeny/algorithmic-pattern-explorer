@@ -2,6 +2,8 @@
 
 > An MSc dissertation project investigating the compositional structure of generative pattern algorithms, demonstrated through an interactive educational interface.
 
+**Click to run [Algorithmic Pattern Explorer](https://georgiasweeny.github.io/algorithmic-pattern-explorer/) app**
+
 ---
 
 ## Overview
