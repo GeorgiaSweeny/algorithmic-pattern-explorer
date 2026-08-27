@@ -38,16 +38,26 @@ function append(record) {
 
 export function recordQuizPass(phase, questions, answers) {
    // phase: "pre" | "post". answers: { [questionId]: selectedOptionIndex }.
-   const score = questions.reduce(
-      (total, q) => total + (answers[q.id] === q.correctIndex ? 1 : 0),
-      0
-   );
+   // Per-item breakdown (not just the total) so a per-concept pre/post
+   // comparison can be built straight from the exported JSON, without
+   // re-joining against quizContent.js's correctIndex by hand.
+   const items = questions.map((q) => {
+      const selectedIndex = answers[q.id];
+      return {
+         id: q.id,
+         concept: q.concept,
+         selectedIndex,
+         correctIndex: q.correctIndex,
+         correct: selectedIndex === q.correctIndex,
+      };
+   });
+   const score = items.reduce((total, item) => total + (item.correct ? 1 : 0), 0);
    append({
       type: "quiz",
       phase,
       score,
       total: questions.length,
-      answers,
+      items,
    });
    return score;
 }

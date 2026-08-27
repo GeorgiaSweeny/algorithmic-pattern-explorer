@@ -1,5 +1,12 @@
 # Partition
 
+**Status**: documented concept, not implemented as its own `lib/` module.
+`voronoi.js` achieves the same nearest-point partitioning directly via
+`distanceField.js`'s `nearestPoint`, and `lattice-index.md` documents why
+tiling generators aren't Partition in disguise (a plane tiling has no
+finite point set to search against) — this node stays here as the
+conceptual entry the doc structure expects, not a live code reference.
+
 ## Summary
 
 Divides space into distinct regions based on spatial rules such as nearest point or distance threshold.

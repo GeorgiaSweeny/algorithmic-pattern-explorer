@@ -4,11 +4,11 @@ UI
 ========================================
 */
 
-import { REGISTRY }       from "./patternRegistry.js";
+import { REGISTRY }       from "../patternRegistry.js";
 import { PatternBinder }  from "./PatternBinder.js";
 import { UIBuilder }      from "./UIBuilder.js";
-import { SVG_GENERATORS } from "./generators/svg/index.js";
-import { CANVAS }         from "./config.js";
+import { SVG_GENERATORS } from "../generators/svg/index.js";
+import { CANVAS }         from "../config.js";
 
 let _p5Redraw = null;   // raw p5 redraw fn — used only for raster patterns
 let _pattern  = null;

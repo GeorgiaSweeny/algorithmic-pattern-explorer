@@ -1,7 +1,6 @@
 import { NODE_LIBRARY } from "./workflows.js";
 import { NODE_DOCS, paramDoc } from "./nodeDocs.js";
-import PatternCanvas from "./PatternCanvas.jsx";
-import SpectrumBar from "./SpectrumBar.jsx";
+import NodeIllustration, { hasIllustration } from "./nodeIllustrations.jsx";
 import "./DocumentationPanel.css";
 
 // Explanatory only — no editable controls here (docs/UI_DESIGN.md's
@@ -10,20 +9,29 @@ import "./DocumentationPanel.css";
 // explanation / purpose / computational thinking concepts / per-parameter
 // effect descriptions).
 //
-// "Visual Example" (added 2026-08-21, previously a static "Illustration
-// placeholder" div) is a small live render of the selected node's own
-// current intermediate state — the exact same PatternCanvas component the
-// main canvas uses, at thumbnail size, driven by stagePreview.js via
-// PatternCanvas's own `node` prop. Not 15 hand-authored illustrations:
-// once a node's stage has a preview rule (see stagePreview.js), this
-// panel and the main canvas show the identical thing, just at different
-// sizes — one mechanism, two consumers.
-export default function DocumentationPanel({ selectedNode, generator, entry, params: paramValues }) {
+// Node-level explanation only — pattern-level ("what is this generator, and
+// why does it matter") explanation lives in its own PatternDocumentation.jsx
+// panel in the left column instead. The two used to be combined in this
+// panel's empty state, which read as confusing: a learner couldn't tell
+// whether a given block of text was about the whole pattern or just the
+// currently-selected stage.
+//
+// "Visual Example" is a small generic diagram of what this node TYPE does
+// (nodeIllustrations.jsx) — not a render of the currently-selected
+// pattern. An earlier version reused PatternCanvas at thumbnail size here,
+// the same image the main canvas already shows just smaller; once you'd
+// seen the main canvas that told you nothing new, and it explained
+// whichever pattern happened to be selected rather than the operation
+// itself. A hand-drawn abstract diagram (dashed reference shape next to a
+// solid accent shape showing the result — the same visual language for
+// every node type) explains the concept independent of which pattern
+// you're looking at.
+export default function DocumentationPanel({ selectedNode, generator }) {
    if (!selectedNode) {
       return (
          <section className="doc-panel">
             <h2 className="panel-title">Documentation Panel</h2>
-            <p className="doc-empty">Select a node from the Algorithm Workflow to see its explanation.</p>
+            <p className="doc-empty">Select a node from the Algorithm Workflow below to see its explanation.</p>
          </section>
       );
    }
@@ -42,13 +50,6 @@ export default function DocumentationPanel({ selectedNode, generator, entry, par
             <div className="doc-value">{title}</div>
          </div>
 
-         {entry?.spectrum != null && (
-            <div className="doc-block">
-               <span className="doc-label">Stochastic ↔ Deterministic</span>
-               <SpectrumBar spectrum={entry.spectrum} compact />
-            </div>
-         )}
-
          <div className="doc-block">
             <span className="doc-label">Learning Objective</span>
             <p className="doc-text doc-objective">{doc?.objective}</p>
@@ -57,10 +58,10 @@ export default function DocumentationPanel({ selectedNode, generator, entry, par
          <div className="doc-block">
             <span className="doc-label">Visual Example</span>
             <div className="doc-visual-example">
-               {entry ? (
-                  <PatternCanvas entry={entry} params={paramValues} node={selectedNode} />
+               {hasIllustration(nodeType) ? (
+                  <NodeIllustration nodeType={nodeType} />
                ) : (
-                  <div className="doc-visual-placeholder">No pattern selected</div>
+                  <div className="doc-visual-placeholder">No diagram yet for this node type</div>
                )}
             </div>
          </div>

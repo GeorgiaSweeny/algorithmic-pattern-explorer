@@ -3,7 +3,7 @@
 This document is the bridge between the node library (`docs/nodes/`), the
 primitive library (`src/generators/lib/`), and the generators actually
 registered in `src/patternRegistry.js` — the original seven (§1-7) plus two
-later hybrids (§8-9, added 2026-08-21). For each generator it states the
+later hybrids (§8-9). For each generator it states the
 linear node sequence the ReactFlow workflow view (`docs/UI_DESIGN.md`) should
 render, cross-checked against what the generator's source code actually
 computes — not the aspirational description in `README.md` or
@@ -214,8 +214,9 @@ geometry, not an approximation.
 
 ### Design decision: scoped down from the reference research, on purpose
 
-`docs/references/Maths to Magic and Visual Wizardry...pdf` (this project's
-own prior R&D — a Houdini digital asset) builds Islamic geometric patterns
+*"Maths to Magic and Visual Wizardry"* (this project's own prior R&D — a
+Houdini digital asset, github.com/GeorgiaSweeny/Pattern_Generator_HDA)
+builds Islamic geometric patterns
 by: translating an initial shape off-centre (Rule 1), rotating and
 boolean-duplicating it *n* times around a construction circle (Rules 2–4),
 mapping the resulting motif onto a tessellated grid of tiles, and optionally
@@ -254,7 +255,7 @@ deterministic one (Islamic) — differing only in which node feeds it points.
 - **Grid**: locates which tile `(x, y)` falls in and that tile's own
   centroid — the same conceptual node `docs/nodes/core/grid.md` already
   lists Islamic Geometric Patterns under "Used By" for. `tileShape`
-  (added 2026-08-20) picks `square` (a `floor(x / tileSize)` lattice,
+  picks `square` (a `floor(x / tileSize)` lattice,
   centroid at the tile's own centre) or `hexagon` (reusing `grid.js`'s
   existing pointy-top hex-lattice math, `lib/latticeIndex.js`'s
   `hexagonCentroid` — the same cube-coordinate cell rounding
@@ -277,7 +278,7 @@ deterministic one (Islamic) — differing only in which node feeds it points.
   already existed, written in anticipation of this generator.
 - **Radial Divisions** (same module): divides that circle into `segments`
   equally spaced *tip* points — the *n* in *n*-fold symmetry — starting at
-  90 degrees plus `rotation` (its own param, added 2026-08-21, snapped to
+  90 degrees plus `rotation` (its own param, snapped to
   the nearest multiple of `180 / segments` via `islamic.js`'s
   `snapRotation`), rather than the module's own default of 0 degrees.
   `rotation` isn't snapped to `360 / segments`: this shape has exact
@@ -322,7 +323,7 @@ deterministic one (Islamic) — differing only in which node feeds it points.
   many rings into a smaller medallion at the registry's declared `tileSize`
   extremes) sits within `lineWidth * radius` of a whole number, giving
   concentric echo lines anchored at the true rosette edge. `lineWidth`
-  (its own param, added 2026-08-20) is deliberately independent of
+  (its own param) is deliberately independent of
   `frequency`: an earlier version derived thickness from `frequency`
   itself (a fixed fraction of the echo spacing), coupling the two so
   that dragging `frequency` visibly changed line thickness too, with no
@@ -334,17 +335,16 @@ deterministic one (Islamic) — differing only in which node feeds it points.
   bands between echoes with
   alternating tones instead; that read as a dense op-art texture for
   most `segments` below 8, not an Islamic geometric pattern — real ones
-  are thin line-work on a plain ground, not solid fills. Reworked
-  2026-08-20; see `docs/ISLAMIC_PATTERN_CONSTRUCTION.md`. Band 0 (the
+  are thin line-work on a plain ground, not solid fills. Reworked; see `docs/ISLAMIC_PATTERN_CONSTRUCTION.md`. Band 0 (the
   medallion's own boundary) always uses the darkest declared tone; every
   other echo cycles through whichever tones are left, via
   `lib/colourMapping.js`'s shared `bandTone(shades, bandIndex)` — fixing
-  a bug (same day) where the declared middle tone was computed by
+  a bug where the declared middle tone was computed by
   `toneSet` but never actually read, so `tones = "3"` had no visible
   effect, and generalising past a fixed two-way primary/accent split so
   `tones` "4" and "5" (`toneSet()` now generates any count 2-5 by
   formula, not just "2"/"3") read as an actual gradient of rings.
-  `colour1`..`colour5` (added 2026-08-20, `control: "color"` — a native
+  `colour1`..`colour5` (`control: "color"` — a native
   colour-wheel picker in both UIs) let a user override any of those
   slots individually — `islamic-svg.js` (the renderer actually shown for
   this pattern) uses them verbatim instead of a computed greyscale value,
@@ -461,9 +461,20 @@ Extracted as `lib/repeat.js` (`repeat`) — `recursive.js` now calls it
 directly, with each mode supplying its own step function. `lib.repeat.test.js`
 tests the repeat combinator independently of Subdivide entirely.
 
+**Gap, now closed**: `depth` was routed
+(`src/app/src/workflows.js`'s `PARAM_NODE_MAP`) to every one of the
+`depth`-many repeated Subdivide nodes above, not just one — editing it
+from any of them changed the whole node count, reading as a broken
+control rather than a real per-node one. Same fix as §9's
+(`recursiveNoise.js`) own `depth` param, since both share this repeated-
+Subdivide structure: `depth` now declares `firstOccurrenceOnly: true`
+(`src/patternRegistry.js`) and only renders as an editable slider on the
+first Subdivide node; subsequent ones show a short explanatory note
+instead (`WorkflowNode.jsx`).
+
 ---
 
-## 8. Voronoi-Seeded Islamic Tiling (`voronoiIslamic.js`) — hybrid, built 2026-08-21
+## 8. Voronoi-Seeded Islamic Tiling (`voronoiIslamic.js`) — hybrid
 
 ```
 Workspace → Seed → Seed Points → Construction Circle → Radial Divisions → Distance Field → Colour Mapping → Render
@@ -520,7 +531,7 @@ to draw each cell's own clip polygon individually (reusing
 goal (`docs/VORONOI_ISLAMIC_HYBRID_PLAN.md` §3.5/M5), not required to
 answer the compositional question this hybrid was built to test.
 
-**`variation` (added 2026-08-21, opt-in, default 0)** lets each cell's own
+**`variation` (opt-in, default 0)** lets each cell's own
 `segments`/`rotation` diverge from the base values, rather than every
 medallion using an identical star shape. At `0` (the value every test and
 finding above was checked against) it's an exact no-op — `voronoiIslamic.js`'s
@@ -531,7 +542,7 @@ the Radial Divisions node alongside `segments`/`rotation`, since it's the
 same "how many points, at what angle" concern, just varied per cell
 rather than fixed once for the whole pattern.
 
-**Second follow-up, 2026-08-21**: direct feedback after using it —
+**Second follow-up**: direct feedback after using it —
 self-contained cells with no visible connection between them read as
 scattered medallions, not an Islamic *tiling*. Added a second, independent
 line test for the Voronoi cell boundary itself: `lib/distanceField.js`'s
@@ -549,7 +560,7 @@ uses, not a new node in the diagram above.
 
 ---
 
-## 9. Perlin Sierpinski (`recursiveNoise.js`) — hybrid, built 2026-08-19
+## 9. Perlin Sierpinski (`recursiveNoise.js`) — hybrid
 
 ```
 Workspace → Base Geometry → (Noise → Subdivide) × depth → Colour Mapping → Render
@@ -574,15 +585,15 @@ falsifiable deterministic baseline the hybrid's own composition claim
 rests on: at `amplitude = 0` there's no Fork to speak of, only at `> 0`
 does the warp actually apply.
 
-**Follow-up, 2026-08-21**: the flat `amplitude` applied identically at
+**Follow-up**: the flat `amplitude` applied identically at
 every level (reported as making the whole carpet look merely shifted, not
 depth itself having character) is now a linear ramp,
-`_levelAmplitude(amplitude, i, depth)` — `0` at the first level (`i = 0`),
-the full declared `amplitude` at the last. `repeat.js`'s own `step(value,
-i)` signature already passed each iteration's index `i` for free; this
-generator previously discarded it. Still zero new primitives, but a
-richer *shape* than before: each repeated Noise/Subdivide pair in the
-diagram above now applies a different warp strength, not the same one
+`_levelAmplitude(amplitude, i, depth)` — originally `0` at the first level
+(`i = 0`), the full declared `amplitude` at the last. `repeat.js`'s own
+`step(value, i)` signature already passed each iteration's index `i` for
+free; this generator previously discarded it. Still zero new primitives,
+but a richer *shape* than before: each repeated Noise/Subdivide pair in
+the diagram above now applies a different warp strength, not the same one
 every time — every other `lib/repeat.js` caller in the codebase
 (`recursive.js`, and this generator's own unwarped Subdivide scaffold)
 still applies an identical step at every iteration, so this is a
@@ -590,7 +601,31 @@ genuinely new variant of Repeat, not just a parameter tweak. `amplitude =
 0` stays an exact identity with `recursive.js`'s own output regardless,
 since the ramp itself scales to zero at that boundary.
 
-**`scale`/`octaves` (added 2026-08-21)** are `noise.js`'s own `scale`/
+**Follow-up, 2026-08-24**: the exact-`0` floor above meant the *first*
+Noise node in this diagram never visibly did anything in the ReactFlow
+workflow view, regardless of `amplitude` — correct as designed, but read
+as broken rather than intentionally subtle when actually using the app
+(`docs/plan-checklist.md`'s Aug-24 entry). `_levelAmplitude` now ramps
+from `LEVEL_AMPLITUDE_FLOOR` (30% of `amplitude`) up to the full value,
+so every Noise node has some visible effect while later ones still warp
+more. `amplitude = 0` is unaffected (the ramp still scales to exactly `0`
+there regardless of the floor fraction) — only the shape of the ramp at
+nonzero `amplitude` changed. `docs/structure-metrics-results.md`'s
+`amplitude` sweep was re-run against the new ramp for the same reason.
+
+**Same follow-up, separately**: the `depth` param was previously routed
+(`src/app/src/workflows.js`'s `PARAM_NODE_MAP`) to *every* Subdivide node
+in the repeated chain above, not just one — editing it from any of them
+changed the whole node count, which read as a broken control rather than
+a real per-node one. `depth` (here and in `recursive.js`'s own Subdivide
+chain, §7) now declares `firstOccurrenceOnly: true`
+(`src/patternRegistry.js`) and only renders as an editable slider on the
+*first* Subdivide node; every subsequent one shows a short explanatory
+note instead (`WorkflowNode.jsx`). Not a new node or primitive — a
+routing/presentation fix in the workflow-graph layer, not the generator
+math.
+
+**`scale`/`octaves`** are `noise.js`'s own `scale`/
 `octaves` params, passed straight through to the same `noise()` calls
 this generator already imports — not a re-derived pair with different
 units. Previously hardcoded module constants, explicitly "fixed" to keep
@@ -599,7 +634,7 @@ single-variable story against `amplitude` alone; exposing them doesn't
 disturb that sweep, since it keeps using the same values that used to be
 hardcoded. Gives a second axis (the warp field's own coarseness/detail)
 independent of `amplitude` (how strongly it's applied) — see
-`docs/plan-checklist.md`'s Aug 21 entry for the visual confirmation.
+`docs/plan-checklist.md`'s for the visual confirmation.
 
 `nativeFormat: "raster"` (like `voronoiIslamic.js`, the other hybrid) —
 `recursive-svg.js`'s enumeration approach doesn't have an equivalent for a

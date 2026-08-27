@@ -3,10 +3,6 @@ import { render, screen } from "@testing-library/react";
 import DocumentationPanel from "./DocumentationPanel.jsx";
 import { REGISTRY } from "../../patternRegistry.js";
 
-// A vector-format pattern (voronoi-cells) so the embedded PatternCanvas
-// thumbnail takes the SVG-string branch, not the raster canvas branch —
-// avoids depending on the canvas-context stub in test-setup.js for tests
-// that aren't specifically about raster rendering.
 const voronoiEntry = REGISTRY.find((e) => e.id === "voronoi-cells");
 
 function fakeNode(nodeType, params = []) {
@@ -25,7 +21,6 @@ describe("DocumentationPanel", () => {
             selectedNode={fakeNode("seed")}
             generator="voronoi"
             entry={voronoiEntry}
-            params={{ numCells: 20, seed: 1337, tones: "2" }}
          />
       );
       expect(screen.getByText("Seed")).toBeInTheDocument();
@@ -41,7 +36,6 @@ describe("DocumentationPanel", () => {
             ])}
             generator="voronoi"
             entry={voronoiEntry}
-            params={{ numCells: 20, seed: 1337, tones: "2" }}
          />
       );
       expect(screen.getByText("Number of Points")).toBeInTheDocument();
@@ -53,7 +47,6 @@ describe("DocumentationPanel", () => {
             selectedNode={fakeNode("workspace", [])}
             generator="voronoi"
             entry={voronoiEntry}
-            params={{}}
          />
       );
       expect(screen.queryByText("Parameters")).not.toBeInTheDocument();
@@ -65,10 +58,33 @@ describe("DocumentationPanel", () => {
             selectedNode={fakeNode("seed")}
             generator="voronoi"
             entry={voronoiEntry}
-            params={{ numCells: 20, seed: 1337, tones: "2" }}
          />
       );
       expect(screen.getByText("Randomness")).toBeInTheDocument();
       expect(screen.getByText("Determinism")).toBeInTheDocument();
+   });
+
+   it("shows a generic diagram of the node's operation, not a render of the selected pattern", () => {
+      const { container } = render(
+         <DocumentationPanel
+            selectedNode={fakeNode("seed")}
+            generator="voronoi"
+            entry={voronoiEntry}
+         />
+      );
+      // nodeIllustrations.jsx's diagram, not PatternCanvas's <canvas>/<svg>.
+      expect(container.querySelector("svg.node-illustration")).toBeInTheDocument();
+      expect(container.querySelector("canvas")).not.toBeInTheDocument();
+   });
+
+   it("falls back to placeholder text for a node type with no diagram yet", () => {
+      render(
+         <DocumentationPanel
+            selectedNode={fakeNode("not-a-real-node-type")}
+            generator="voronoi"
+            entry={voronoiEntry}
+         />
+      );
+      expect(screen.getByText(/no diagram yet/i)).toBeInTheDocument();
    });
 });

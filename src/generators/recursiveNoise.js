@@ -46,32 +46,46 @@ RECURSIVE NOISE — PERLIN-PERTURBED SIERPINSKI CARPET (HYBRID)
 * flagged directly as feeling redundant with plain domain-warping.
 * `repeat.js`'s step function already receives its own iteration index
 * `i` for free (`step(value, i)`), previously discarded here; a linear
-* ramp from `0` at `i = 0` (the central square/largest scale stays crisp
-* and unwarped) up to the full `amplitude` at the final level needs no
-* new parameter — `amplitude` still means "how strong is the warp, at its
-* strongest point." This is a genuine behaviour change, not an additive
-* opt-in: output at nonzero `amplitude` differs from the old flat
-* version at every level but the last. `amplitude = 0` stays an exact
-* identity regardless (the ramp still multiplies to `0` everywhere), so
-* the falsifiable byte-identical-to-recursive.js baseline is unaffected.
-* Compositionally, this makes the Repeat step's own behaviour vary with
-* iteration index, not just its input — a richer variant of Repeat than
-* "the identical step every time," which is what every other use of
-* `lib/repeat.js` in this codebase (`recursive.js` and this file's own
-* Sierpinski scaffold) still is.
+* ramp needs no new parameter — `amplitude` still means "how strong is
+* the warp, at its strongest point." Compositionally, this makes the
+* Repeat step's own behaviour vary with iteration index, not just its
+* input — a richer variant of Repeat than "the identical step every
+* time," which is what every other use of `lib/repeat.js` in this
+* codebase (`recursive.js` and this file's own Sierpinski scaffold)
+* still is.
+*
+* Follow-up (2026-08-24): the original ramp went from exactly `0` at
+* `i = 0` up to full `amplitude` at the final level, so the coarsest
+* level's own Noise step never visibly did anything regardless of
+* `amplitude` — correct as designed, but confusing in the node-graph UI,
+* where the first Noise node then looked broken rather than
+* intentionally subtle (docs/plan-checklist.md's Aug-24 entry). Replaced
+* with a ramp from `LEVEL_AMPLITUDE_FLOOR` (30% of `amplitude`) up to
+* 100%, so every level's Noise step has some visible effect, while later
+* levels still warp more than earlier ones. `amplitude = 0` still stays
+* an exact identity everywhere (the ramp still multiplies to `0`
+* regardless of the floor fraction), so the falsifiable
+* byte-identical-to-recursive.js baseline is unaffected — only the
+* nonzero-amplitude shape of the ramp changed.
 */
 import { CANVAS } from "../config.js";
 import { subdivideCell } from "./lib/subdivide.js";
 import { repeat } from "./lib/repeat.js";
 import { noise } from "./noise.js";
 
-// Linear ramp: 0 at the first level (i = 0), full `amplitude` at the last
-// (i = depth - 1). depth <= 1 has no room for a ramp (a single level, or
-// none) — falls back to 0, matching "the shallowest level is unwarped".
+// Linear ramp: LEVEL_AMPLITUDE_FLOOR fraction of `amplitude` at the first
+// level (i = 0), full `amplitude` at the last (i = depth - 1) — every level
+// gets some warp, later levels get more (see this file's header comment,
+// 2026-08-24 follow-up, for why the floor exists). depth <= 1 has no room
+// for a ramp (a single level, or none) — falls back to 0 regardless of the
+// floor, matching "amplitude = 0 is always an exact identity."
 // Factored out (not inlined) so it's independently unit-testable.
+export const LEVEL_AMPLITUDE_FLOOR = 0.3;
+
 export function _levelAmplitude(amplitude, i, depth) {
-   if (depth <= 1) return 0;
-   return amplitude * (i / (depth - 1));
+   if (depth <= 1 || amplitude === 0) return 0;
+   const t = i / (depth - 1);
+   return amplitude * (LEVEL_AMPLITUDE_FLOOR + (1 - LEVEL_AMPLITUDE_FLOOR) * t);
 }
 
 export function recursiveNoise(x, y, params) {

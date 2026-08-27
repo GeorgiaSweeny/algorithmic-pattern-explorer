@@ -3,7 +3,7 @@
 SKETCH (P5 CANVAS)
 ========================================
 */
-import { CANVAS }                              from "./config.js";
+import { CANVAS }                              from "../config.js";
 import { createPattern }                       from "./patternGen.js";
 import { initUI, getActiveGenName, getActiveBinder } from "./ui.js";
 

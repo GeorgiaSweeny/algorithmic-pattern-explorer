@@ -12,8 +12,15 @@ import { REGISTRY } from "../../patternRegistry.js";
 * re-implementation of it.
 */
 
-function selectPatternByName(name) {
-   fireEvent.click(screen.getByText(name));
+function selectPatternByName(container, name) {
+   // Generator Selection starts collapsed (App.jsx's generatorPanelExpanded),
+   // showing only the currently-selected pattern's own name — expand it
+   // first via "Change Pattern", then click the target name scoped to the
+   // list itself, since the same pattern's name can also appear in
+   // PatternDocumentation's "Pattern" field at the same time.
+   fireEvent.click(within(container.querySelector(".generator-selection")).getByText("Change Pattern"));
+   const list = container.querySelector(".generator-selection");
+   fireEvent.click(within(list).getByText(name));
 }
 
 function selectWorkflowNodeByLabel(container, label) {
@@ -27,18 +34,18 @@ function selectWorkflowNodeByLabel(container, label) {
 }
 
 describe("App: pattern selection", () => {
-   it("defaults to the first registry entry and shows it in the workflow subtitle", () => {
+   it("defaults to the first registry entry and shows it in the collapsed Generator Selection row", () => {
       const { container } = render(<App />);
-      const subtitle = container.querySelector(".workflow-subtitle");
-      expect(within(subtitle).getByText(REGISTRY[0].name)).toBeInTheDocument();
+      const row = container.querySelector(".generator-selection-collapsed-row");
+      expect(within(row).getByText(REGISTRY[0].name)).toBeInTheDocument();
    });
 
-   it("switching pattern updates the workflow subtitle to the new pattern's name", () => {
+   it("switching pattern updates the collapsed Generator Selection row to the new pattern's name", () => {
       const other = REGISTRY.find((e) => e.id !== REGISTRY[0].id);
       const { container } = render(<App />);
-      selectPatternByName(other.name);
-      const subtitle = container.querySelector(".workflow-subtitle");
-      expect(within(subtitle).getByText(other.name)).toBeInTheDocument();
+      selectPatternByName(container, other.name);
+      const row = container.querySelector(".generator-selection-collapsed-row");
+      expect(within(row).getByText(other.name)).toBeInTheDocument();
    });
 });
 
@@ -51,7 +58,7 @@ describe("App: node selection and the Documentation Panel", () => {
       // rather than relying on it being REGISTRY[0]: the registry is
       // ordered simplest-to-most-complex for the Generator Selection UI
       // (docs/MOSCOW_PRIORITIES.md), not to suit this test.
-      selectPatternByName(REGISTRY.find((e) => e.id === "perlin-noise").name);
+      selectPatternByName(container, REGISTRY.find((e) => e.id === "perlin-noise").name);
       selectWorkflowNodeByLabel(container, "Seed");
       const docPanel = container.querySelector(".doc-panel");
       expect(within(docPanel).getByText("Seed")).toBeInTheDocument();
@@ -59,7 +66,7 @@ describe("App: node selection and the Documentation Panel", () => {
 
    it("only one node's param panel is expanded at a time", () => {
       const { container } = render(<App />);
-      selectPatternByName(REGISTRY.find((e) => e.id === "perlin-noise").name);
+      selectPatternByName(container, REGISTRY.find((e) => e.id === "perlin-noise").name);
       selectWorkflowNodeByLabel(container, "Noise");
       // Noise's own "scale" param archetype is Density — should appear once.
       expect(within(container).getAllByText(/Density/).length).toBe(1);
@@ -69,7 +76,7 @@ describe("App: node selection and the Documentation Panel", () => {
 describe("App: Reset to Defaults", () => {
    it("resets a changed parameter back to the pattern's registry default", () => {
       const { container } = render(<App />);
-      selectPatternByName(REGISTRY.find((e) => e.id === "perlin-noise").name);
+      selectPatternByName(container, REGISTRY.find((e) => e.id === "perlin-noise").name);
       selectWorkflowNodeByLabel(container, "Noise");
 
       // input[type="range"] directly, not getByRole("slider") — this
@@ -86,15 +93,24 @@ describe("App: Reset to Defaults", () => {
    });
 });
 
-describe("App: Evaluation overlay", () => {
-   it("opens from the menu bar and closes via its own close control", () => {
+describe("App: Evaluation menu / Test overlay", () => {
+   it("opens the Evaluation dropdown, launches Test from it, and closes via its own close control", () => {
       render(<App />);
-      expect(screen.queryByText("Evaluation", { selector: "h2" })).not.toBeInTheDocument();
+      expect(screen.queryByText("Test", { selector: "h2" })).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
-      expect(screen.getByText("Evaluation", { selector: "h2" })).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Test", { selector: "button" }));
+      expect(screen.getByText("Test", { selector: "h2" })).toBeInTheDocument();
 
       fireEvent.click(screen.getByLabelText("Close evaluation"));
-      expect(screen.queryByText("Evaluation", { selector: "h2" })).not.toBeInTheDocument();
+      expect(screen.queryByText("Test", { selector: "h2" })).not.toBeInTheDocument();
+   });
+
+   it("dropdown lists Test, Dry Run, and Study Results", () => {
+      render(<App />);
+      fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
+      expect(screen.getByText("Test", { selector: "button" })).toBeInTheDocument();
+      expect(screen.getByText("Dry Run")).toBeInTheDocument();
+      expect(screen.getByText("Study Results")).toBeInTheDocument();
    });
 });

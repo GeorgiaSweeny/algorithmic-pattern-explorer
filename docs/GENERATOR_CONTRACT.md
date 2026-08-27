@@ -94,7 +94,7 @@ introducing a new one — the workflow view a learner sees is unchanged; what
 changed is that those nodes' documented behaviour is now backed by tested,
 reusable code instead of logic inlined in one generator file.
 
-`recursiveNoise.js` (the Aug 7-9 hybrid, 2026-08-19 — see
+`recursiveNoise.js` (the Aug 7-9 hybrid — see
 `docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`'s composition table) is a
 different kind of reuse from the table above: it imports `noise()` directly
 from `noise.js` — a generator reusing another generator's exported pure
@@ -104,7 +104,7 @@ above needed to change to allow it; `recursiveNoise.js` is registered in
 `GENERATORS` like any other entry and gets the generic contract suite for
 free, same as every other pattern.
 
-`voronoiIslamic.js` (the second hybrid, 2026-08-21 — see
+`voronoiIslamic.js` (the second hybrid — see
 `docs/VORONOI_ISLAMIC_HYBRID_PLAN.md` and `docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`'s
 composition table) is reuse of a different shape again: rather than
 importing another generator's exported function, it imports `islamic.js`'s

@@ -4,9 +4,9 @@ PATTERN GENERATOR
 ========================================
 */
 
-import { CANVAS }     from "./config.js";
-import { mapColour }  from "./render.js";
-import { GENERATORS } from "./generators/index.js";
+import { CANVAS }     from "../config.js";
+import { mapColour }  from "../render.js";
+import { GENERATORS } from "../generators/index.js";
 
 export function createPattern(genName, params) {
    const fn = GENERATORS[genName];

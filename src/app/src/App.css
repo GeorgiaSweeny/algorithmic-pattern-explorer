@@ -2,6 +2,15 @@
    box-sizing: border-box;
 }
 
+/* No CSS anywhere in this app suppresses the default focus outline, but
+   none of the custom .btn/pattern-list/workflow-node styling defines one
+   either, so keyboard-only navigation ends up inconsistent across controls
+   — WCAG 2.1 AA 2.4.7. One shared rule, applied app-wide. */
+:focus-visible {
+   outline: 2px solid #2563eb;
+   outline-offset: 2px;
+}
+
 html,
 body,
 #root {
@@ -53,6 +62,44 @@ body,
    background: #374151;
 }
 
+.menu-bar-dropdown {
+   position: relative;
+}
+
+.menu-bar-dropdown-panel {
+   position: absolute;
+   top: calc(100% + 6px);
+   right: 0;
+   min-width: 160px;
+   background: #1f2937;
+   border: 1px solid #374151;
+   border-radius: 6px;
+   padding: 4px;
+   display: flex;
+   flex-direction: column;
+   gap: 2px;
+   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+   z-index: 10;
+}
+
+.menu-bar-dropdown-item {
+   display: block;
+   width: 100%;
+   text-align: left;
+   background: none;
+   border: none;
+   border-radius: 4px;
+   padding: 8px 10px;
+   font-size: 13.5px;
+   color: #f9fafb;
+   text-decoration: none;
+   cursor: pointer;
+}
+
+.menu-bar-dropdown-item:hover {
+   background: #374151;
+}
+
 .menu-bar-github {
    display: flex;
    align-items: center;
@@ -67,11 +114,38 @@ body,
 
 /* ── Overall layout: left column / doc panel / canvas panel ─────────────── */
 
+/* Fluid, not fixed, side-column widths: laptop/monitor (this app's core
+   target) already fits comfortably at the upper end of each clamp() and
+   just gets a little more breathing room; the lower end keeps both side
+   columns readable down to tablet landscape without needing the stacked
+   layout below. Tablet portrait still needs the actual breakpoint further
+   down, since 660px of side columns alone approaches that viewport's full
+   width regardless of how fluid each individual column is. */
 .app-layout {
    flex: 1;
    display: grid;
-   grid-template-columns: 320px 340px 1fr;
+   grid-template-columns: clamp(240px, 22vw, 320px) clamp(260px, 24vw, 340px) 1fr;
    min-height: 0;
+}
+
+/* Tablet portrait (and anything narrower, though phone widths are out of
+   scope for this app): stack instead of squeezing three fixed-role columns
+   into a viewport narrower than their combined minimum width. 1024px is
+   the tablet landscape/portrait boundary, not a generic mobile breakpoint. */
+@media (max-width: 1024px) {
+   .app-layout {
+      grid-template-columns: 1fr;
+   }
+
+   .left-column,
+   .layout-panel {
+      border-right: none;
+      border-bottom: 1px solid #e5e7eb;
+   }
+
+   .doc-panel {
+      border-bottom: 1px solid #e5e7eb;
+   }
 }
 
 .layout-panel {
@@ -89,13 +163,43 @@ body,
    margin: 0 0 12px;
 }
 
+/* Static headers for Generator Selection, Documentation Panel, and Canvas:
+   each of these three panels scrolls its own content independently
+   (.layout-panel's overflow-y / .doc-panel's own overflow-y), and the
+   header should stay pinned at the top of that scroll rather than
+   scrolling away with the content beneath it.
+
+   The parent's own top padding is removed (below) and moved onto the
+   sticky title's own padding-top instead, rather than left on the parent
+   with the title just sitting at `top: 0` inside it. Padding is inset
+   space, not a clipping boundary — overflow only clips at the border-box
+   edge — so a scrolled sibling (e.g. a pattern-list button scrolling past)
+   can render *inside* the parent's own top padding, visibly appearing
+   above a sticky title that doesn't itself cover that padding. Moving the
+   padding onto the sticky element's own box means its background now
+   covers that entire inset region, so nothing can appear above it. (An
+   earlier version tried covering this with a negative-margin trick
+   instead, which also broke the three headers' vertical alignment with
+   each other for reasons that weren't fully tracked down — this approach
+   avoids negative margins entirely.) Canvas's own sticky element is
+   .canvas-header-sticky below (wraps the title alongside the size/status/
+   zoom rows, not just the title alone), same technique. */
+.generator-selection > .panel-title,
+.doc-panel > .panel-title {
+   position: sticky;
+   top: 0;
+   z-index: 2;
+   background: #fff;
+   padding-top: 16px;
+}
+
 .panel-title-note {
    text-transform: none;
    font-weight: 400;
    color: #9ca3af;
 }
 
-/* ── Left column: Generator Selection + Algorithm Workflow ──────────────── */
+/* ── Left column: Generator Selection + Final Output preview ────────────── */
 
 .left-column {
    display: flex;
@@ -110,26 +214,275 @@ body,
    border-right: none;
    border-bottom: 1px solid #e5e7eb;
    max-height: 45%;
+   /* Top padding moved onto the sticky title's own box instead (see the
+      .generator-selection > .panel-title rule) so its background covers
+      the full inset region scrolled content would otherwise show through. */
+   padding-top: 0;
+   /* Always-visible scrollbar (not just on hover/scroll) so it's clear
+      there are more patterns than fit in the panel — overrides
+      .layout-panel's overflow-y:auto above at equal specificity by
+      appearing later in the stylesheet. */
+   overflow-y: scroll;
 }
 
-.algorithm-workflow {
+.generator-selection::-webkit-scrollbar {
+   width: 10px;
+}
+
+.generator-selection::-webkit-scrollbar-track {
+   background: #f3f4f6;
+}
+
+.generator-selection::-webkit-scrollbar-thumb {
+   background: #cbd5e1;
+   border-radius: 5px;
+}
+
+.generator-selection::-webkit-scrollbar-thumb:hover {
+   background: #94a3b8;
+}
+
+/* Collapsed state: once a pattern is chosen, the full list isn't needed
+   on screen — collapse to one row (selected pattern + a button to expand
+   again) so Pattern Documentation below gets the space instead. */
+.generator-selection-collapsed {
+   max-height: none;
+   overflow-y: visible;
+}
+
+.generator-selection-collapsed-row {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 10px;
+}
+
+.generator-selection-collapsed-row .pattern-name {
+   font-size: 14px;
+   font-weight: 600;
+   color: #111827;
+}
+
+.generator-selection .btn {
+   padding: 6px 12px;
+   font-size: 12px;
+   border: 1px solid #d1d5db;
+   border-radius: 6px;
+   background: #fff;
+   color: #374151;
+   cursor: pointer;
+   flex: none;
+}
+
+.generator-selection .btn:hover {
+   border-color: #93c5fd;
+}
+
+/* ── Pattern Documentation (last panel in the left column) ──────────────── */
+
+/* Separate from the (node-level) Documentation Panel in the middle column —
+   mixing pattern-level and node-level explanations in one panel read as
+   confusing, so each now has its own home. Also now doubles as what used
+   to be a separate "Render Preview" panel below it, removed once this
+   panel's own Render Preview block started showing the same final-render
+   image — that made the two panels redundant. As the last panel in the
+   column, this now takes the remaining flexible space the same way the
+   removed panel used to, rather than being capped at a fixed height. */
+.pattern-documentation {
    flex: 1 1 auto;
+   overflow-y: auto;
    border-right: none;
+   min-height: 0;
+}
+
+/* Fixes a real aspect-ratio bug for vector-format generators (wave, grid,
+   escher, voronoi, islamic) surfaced by reusing PatternCanvas here: the
+   .final-preview-canvas-scale .pattern-canvas-svg rule below only caps
+   max-width/max-height at 100%, which can't resolve max-height correctly
+   against an auto-height ancestor, so the raw injected <svg>'s own
+   height="500" attribute wins and the image renders far taller than its
+   scaled width, clipped by overflow:hidden. Scoped to this wrapper
+   (higher specificity than that rule) rather than editing it directly,
+   since .final-preview-canvas-scale is named for, and was written for, the
+   now-removed Render Preview panel — kept as-is rather than renamed, to
+   avoid an unrelated rename alongside this fix. */
+.pattern-documentation-canvas-wrap .pattern-canvas-svg svg {
+   width: 100%;
+   height: auto;
+}
+
+.pattern-documentation-minimised {
+   font-size: 12px;
+   color: #9ca3af;
+   font-style: italic;
+}
+
+/* Width-only sizing (no percentage height anywhere) so the canvas is never
+   at the mercy of an auto-height flex ancestor resolving max-height:100%
+   to "no constraint" — the bug behind an earlier wrong-shaped preview.
+   min(100%, 500px) is "the panel's width, or the pattern's real 500x500
+   pixel size, whichever is smaller": the full pattern is always visible,
+   scaling with the panel/window exactly like every other panel — no zoom
+   control here, deliberately (see .canvas-zoom-scale below for the panel
+   that does have one). 500px (not the original 600px) so the full canvas
+   fits on smaller screens without needing to scroll to see all of it. */
+.final-preview-canvas-wrap {
+   overflow: hidden;
+}
+
+.final-preview-canvas-scale {
+   width: min(100%, 500px);
+   flex: none;
+}
+
+.final-preview-canvas-scale .pattern-canvas {
+   width: 100%;
+   height: auto;
+   max-width: none;
+   max-height: none;
+}
+
+.final-preview-canvas-scale .pattern-canvas-svg {
+   width: 100%;
+}
+
+/* ── Pattern Canvas zoom (main canvas only) ──────────────────────────────── */
+
+.canvas-zoom-controls {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   flex: none;
+}
+
+.canvas-zoom-controls .btn {
+   padding: 4px 10px;
+   font-size: 12px;
+   border: 1px solid #e5e7eb;
+   border-radius: 4px;
+   background: #fff;
+   color: #374151;
+   cursor: pointer;
+}
+
+.canvas-zoom-controls .btn:hover:not(:disabled) {
+   border-color: #93c5fd;
+}
+
+.canvas-zoom-controls .btn:disabled {
+   opacity: 0.4;
+   cursor: not-allowed;
+}
+
+.canvas-zoom-value {
+   min-width: 52px;
+   text-align: center;
+   font-variant-numeric: tabular-nums;
+}
+
+/* Same width-only min() technique as the Render Preview panel, plus the
+   --canvas-zoom multiplier: at the zoom=1 default the full canvas is
+   always visible with no scrolling, exactly like Render Preview; zooming
+   in beyond that is an explicit choice, and only then does
+   .canvas-zoom-wrap's overflow:auto actually need to scroll. */
+.canvas-zoom-wrap {
+   overflow: auto;
+}
+
+.canvas-zoom-scale {
+   width: calc(min(100%, 500px) * var(--canvas-zoom, 1));
+   flex: none;
+}
+
+.canvas-zoom-scale .pattern-canvas {
+   width: 100%;
+   height: auto;
+   max-width: none;
+   max-height: none;
+}
+
+.canvas-zoom-scale .pattern-canvas-svg {
+   width: 100%;
+}
+
+.workflow-header-row {
+   display: flex;
+   align-items: baseline;
+   justify-content: space-between;
+   gap: 10px;
+   margin-bottom: 8px;
+}
+
+.workflow-header-row .panel-title {
+   margin: 0;
+}
+
+.category-legend {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 4px 12px;
+   margin-bottom: 8px;
+}
+
+.category-legend-item {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   font-size: 11px;
+   color: #6b7280;
+}
+
+.category-legend-swatch {
+   width: 9px;
+   height: 9px;
+   border-radius: 2px;
+   flex: none;
+}
+
+/* ── Algorithm Workflow (nodes) — now a strip under the Pattern Canvas ──── */
+
+/* Proportional, not fixed, height: shares the column's remaining vertical
+   space with the main canvas above it (.render-panel-body), weighted
+   heavily toward the canvas (flex-grow 1 here vs. 3 there) — the canvas
+   was getting cut off, needing zoom-out to see fully, because this panel
+   was claiming an equal share.
+
+   min-height is a genuine 280px floor here, not the 0 it was before.
+   `min-height: 0` only exists to opt a flex item OUT of the default
+   min-height:auto (which would size it to its content's own min-content
+   height and could force the whole column taller than intended) — but
+   with no floor at all, flex-shrink was free to crush this section far
+   below what its own content (header row, legend, graph, controls bar)
+   actually needs once space got tight, down to observed heights under
+   50px, with the controls bar then rendering as pure visible overflow
+   hundreds of pixels below the actual viewport — needing a page-level
+   scroll to reach, not just a small in-panel one, however was reworked to
+   be a bottom-pinned strip. 280px is enough for all of that content at
+   once; below that, .canvas-panel's own overflow-y:auto takes over
+   (shrinking/scrolling the canvas above instead), which is what makes the
+   `position: sticky; bottom: 0` below actually work — sticky needs a real
+   scrolling ancestor with genuine overflow to stick within, not a child
+   silently overflowing past an undersized box. Applies equally in the
+   tablet-portrait stacked layout (App.css's 1024px breakpoint) — this
+   panel's own overflow behaviour doesn't change there, only its column
+   width does. */
+.algorithm-workflow {
+   flex: 1 1 280px;
+   min-height: 280px;
    display: flex;
    flex-direction: column;
-   min-height: 0;
-   padding-bottom: 0;
-}
-
-.workflow-subtitle {
-   font-size: 12px;
-   color: #6b7280;
-   margin-bottom: 8px;
+   border-top: 1px solid #e5e7eb;
+   margin-top: 16px;
+   padding-top: 16px;
+   position: sticky;
+   bottom: 0;
+   background: #fff;
+   z-index: 1;
 }
 
 .algorithm-workflow .react-flow {
    flex: 1;
-   min-height: 300px;
+   min-height: 150px;
 }
 
 .pattern-list {
@@ -166,7 +519,7 @@ body,
 
 .pattern-category {
    font-size: 10px;
-   color: #9ca3af;
+   color: #6b7280;
    text-transform: uppercase;
 }
 
@@ -179,7 +532,7 @@ body,
    font-weight: 700;
    text-transform: uppercase;
    letter-spacing: 0.04em;
-   color: #9ca3af;
+   color: #6b7280;
    margin: 0 0 4px 2px;
 }
 
@@ -190,15 +543,62 @@ body,
    display: flex;
    flex-direction: column;
    min-width: 0;
+   min-height: 0;
+   /* Top padding moved onto .canvas-header-sticky's own box instead, same
+      reasoning as Generator Selection and Documentation Panel above. */
+   padding-top: 0;
 }
 
-.canvas-size-info {
+/* Sticky header block: title+size row, then status+zoom row — condensed
+   from four separate stacked rows so the canvas below gets more of the
+   panel's vertical space. Same sticky/negative-margin technique as
+   Generator Selection's title above. */
+.canvas-header-sticky {
+   position: sticky;
+   top: 0;
+   z-index: 2;
+   background: #fff;
+   margin-bottom: 12px;
+   padding-top: 16px;
+   padding-bottom: 10px;
+}
+
+/* One line: title/size/status grouped left (.canvas-header-left, wrapping
+   among themselves first if the column gets narrow), zoom controls pinned
+   right. min-width:0 on the left group lets it actually shrink/wrap
+   instead of forcing the row wider than the panel. */
+.canvas-header-row {
    display: flex;
-   flex-direction: column;
-   gap: 2px;
-   font-size: 12px;
+   align-items: baseline;
+   justify-content: space-between;
+   gap: 10px;
+}
+
+.canvas-header-left {
+   display: flex;
+   align-items: baseline;
+   flex-wrap: wrap;
+   gap: 4px 10px;
+   min-width: 0;
+}
+
+.canvas-header-left .panel-title {
+   margin: 0;
+}
+
+.canvas-size-inline {
+   font-size: 11px;
+   color: #9ca3af;
+   flex: none;
+}
+
+/* Deliberately lighter than .panel-title beside it (11px/600 weight
+   uppercase grey) — a live status line describing what's on screen right
+   now shouldn't visually outrank the panel's own static header. */
+.canvas-showing-label {
+   font-size: 11px;
+   font-weight: 400;
    color: #6b7280;
-   margin-bottom: 8px;
 }
 
 .workspace-size-label {
@@ -215,6 +615,17 @@ body,
    background: #f9fafb;
    padding: 12px;
    border-radius: 6px;
+}
+
+/* Main canvas only (not the mini canvas, which also uses .render-panel-body
+   but must stay untouched) — a much heavier flex-grow than
+   .algorithm-workflow's below it, so the main canvas gets most of the
+   column's extra vertical space instead of splitting it roughly evenly,
+   which was cutting the canvas off and forcing users to zoom out to see
+   it fully. Scoped via the .canvas-panel ancestor (two-class specificity)
+   rather than editing the shared .render-panel-body rule above. */
+.canvas-panel .render-panel-body {
+   flex: 3 1 auto;
 }
 
 .render-panel-body-boxed {
@@ -236,14 +647,23 @@ body,
    max-height: 100%;
 }
 
-/* ── Status & controls bar ───────────────────────────────────────────────── */
+/* ── Workflow step/reset controls (moved from the old full-width footer) ── */
 
-.status-bar {
-   flex: 0 0 auto;
-   height: 56px;
+/* Same dark colour as .menu-bar (#111827/#1f2937) — restored after an
+   earlier pass switched this to a light theme on the reasoning that it
+   now lives inside a white content panel rather than spanning the app;
+   matching the menu bar reads as more intentional than blending into the
+   panel, and ties this control bar visually back to the app's own chrome. */
+.workflow-controls-bar {
+   flex: none;
    display: flex;
    align-items: center;
-   padding: 0 16px;
+   justify-content: space-between;
+   flex-wrap: wrap;
+   gap: 10px;
+   margin-top: 10px;
+   padding: 10px 12px;
+   border-radius: 6px;
    background: #111827;
    border-top: 1px solid #1f2937;
 }
@@ -254,7 +674,7 @@ body,
    gap: 12px;
 }
 
-.status-bar .btn {
+.workflow-controls-bar .btn {
    padding: 5px 12px;
    font-size: 12px;
    border: 1px solid #4b5563;
@@ -264,12 +684,12 @@ body,
    cursor: pointer;
 }
 
-.status-bar .btn:hover:not(:disabled) {
+.workflow-controls-bar .btn:hover:not(:disabled) {
    border-color: #93c5fd;
    color: #fff;
 }
 
-.status-bar .btn:disabled {
+.workflow-controls-bar .btn:disabled {
    opacity: 0.4;
    cursor: not-allowed;
 }

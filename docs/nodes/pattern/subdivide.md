@@ -58,7 +58,14 @@ How many cells each axis is divided into per level (`n` above).
 
 ### Depth
 
-How many times the division is reapplied before stopping.
+How many times the division is reapplied before stopping. Since this
+value determines *how many Subdivide nodes exist at all* (one per level —
+see docs/nodes/WORKFLOWS.md §7/§9), it's only editable on the first
+Subdivide node in the chain, not every repeated occurrence (added
+2026-08-24): editing it from a later node would change the whole repeat
+structure, not just that step, which read as a broken control rather than
+a real per-node one before this fix. Subsequent nodes show a short
+explanatory note instead of a duplicate slider.
 
 ---
 

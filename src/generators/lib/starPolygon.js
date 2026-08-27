@@ -38,22 +38,6 @@ export function starSkip(n) {
    return n % 2 === 0 ? Math.max(1, n / 2 - 1) : Math.floor(n / 2);
 }
 
-// Flat [x1, y1, x2, y2, ...] chord list connecting point i to point
-// (i + skip) % n, for every i — the full edge set of the (possibly
-// compound) star polygon, ready for Distance Field's line-feature search.
-export function starEdges(points, skip) {
-   const n = points.length / 2;
-   const edges = new Float32Array(n * 4);
-   for (let i = 0; i < n; i++) {
-      const j = (i + skip) % n;
-      edges[i * 4]     = points[i * 2];
-      edges[i * 4 + 1] = points[i * 2 + 1];
-      edges[i * 4 + 2] = points[j * 2];
-      edges[i * 4 + 3] = points[j * 2 + 1];
-   }
-   return edges;
-}
-
 // Where two infinite lines (through p1-p2 and p3-p4) cross, or null if
 // they're parallel (or nearly enough that the intersection is unreliable).
 export function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {

@@ -130,9 +130,19 @@ export function buildWorkflow(registryId, liveParams = {}) {
    const nodes = steps.map((type, index) => {
       typeSeen[type] = (typeSeen[type] ?? 0) + 1;
       const repeats = typeTotals[type];
+      const isFirstOfType = typeSeen[type] === 1;
+      const matchesType = (p) => mapParam(p.param, params) === type && (!p.visibleIf || p.visibleIf(params));
       const nodeParams = entry.params.filter(
-         (p) => mapParam(p.param, params) === type && (!p.visibleIf || p.visibleIf(params))
+         (p) => matchesType(p) && (!p.firstOccurrenceOnly || isFirstOfType)
       );
+      // A param declaring `firstOccurrenceOnly` that matched this node type
+      // but got filtered out because this isn't the first occurrence —
+      // surfaced as a short explanatory note (WorkflowNode.jsx) rather than
+      // just silently having fewer controls than the first occurrence of
+      // the same node type, which reads as broken rather than deliberate.
+      const suppressedParam = !isFirstOfType
+         ? entry.params.find((p) => p.firstOccurrenceOnly && matchesType(p))
+         : undefined;
       return {
          id: `${type}-${index}`,
          type: "workflow",
@@ -141,6 +151,11 @@ export function buildWorkflow(registryId, liveParams = {}) {
             nodeType: type,
             label: NODE_LIBRARY[type].title + (repeats > 1 ? ` (${typeSeen[type]}/${repeats})` : ""),
             params: nodeParams,
+            structuralNote: suppressedParam
+               ? `${suppressedParam.archetype ?? suppressedParam.param} is set on the first ` +
+                 `${NODE_LIBRARY[type].title} node — editing it here would change the whole ` +
+                 `repeat structure, not just this step.`
+               : undefined,
             // occurrence/totalOccurrences (added 2026-08-21): the same
             // typeSeen/repeats counters already computed for the "(1/2)"
             // label, exposed as data too — stagePreview.js's depth-
@@ -149,6 +164,13 @@ export function buildWorkflow(registryId, liveParams = {}) {
             // that it's a Subdivide step.
             occurrence: typeSeen[type],
             totalOccurrences: repeats,
+            // Stated in words, not only implied by the graph edge feeding
+            // this node — Cognitive Dimensions' Hidden Dependencies, named
+            // in the dissertation's own §6.6 evaluation (App-UX-Quickwins.md
+            // item 2). Every node but the first has exactly one predecessor,
+            // since buildWorkflow's own steps array is a single linear
+            // sequence, not a general graph.
+            dependsOnLabel: index > 0 ? NODE_LIBRARY[steps[index - 1]].title : undefined,
          },
       };
    });

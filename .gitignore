@@ -10,19 +10,17 @@ src/generators/__benchmarks__/results.json
 src/exports/
 
 # Dated project-planning docs kept local, not part of the public repo
-# history (2026-08-23 decision) — plan-checklist.md/MOSCOW_PRIORITIES.md/
-# benchmark-results.md were untracked via `git rm --cached` at the same
-# time this was added, so their past committed versions remain in git
-# history but future edits stop being tracked.
-docs/plan-checklist.md
-docs/MOSCOW_PRIORITIES.md
-docs/benchmark-results.md
-docs/VORONOI_ISLAMIC_HYBRID_PLAN.md
+# history (2026-08-23 decision).
 docs/EINSTEIN_APERIODIC_STRETCH.md
-docs/ISLAMIC_PATTERN_CONSTRUCTION.md
-docs/structure-metrics-results.md
-docs/ALGORITHMIC_COMPOSITION_RESEARCH.md
+docs/VORONOI_ESCHER_HYBRID_PLAN.md
 
 # Build output and local tool config — never meant to be committed.
 src/app/dist/
 .claude/
+
+# Real participant study data — keep generate.js/README.md tracked, not the raw responses.
+docs/evaluation/exports/*.json
+
+# Third-party reference material kept locally, not redistributed from this repo.
+docs/references/combinator.md
+docs/references/Maths to Magic and Visual Wizardry_Exploring the Procedural Creation of Islamic Geometrical Patterns in Houdini.pdf

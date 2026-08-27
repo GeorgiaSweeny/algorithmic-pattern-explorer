@@ -121,6 +121,86 @@ export const NODE_DOCS = {
    },
 };
 
+// Documentation Panel content for the panel's empty state (no node
+// selected yet) — one entry per `generator` id in patternRegistry.js
+// (fourteen registry entries collapse to nine `generator` values; wave/
+// noise/grid/recursive each cover multiple modes/shapes with one shared
+// write-up). Transcribed verbatim from each generator's Summary/Purpose/
+// Computational Thinking Concepts sections in docs/generators/ — same
+// source-of-truth discipline as NODE_DOCS above, just one level more
+// zoomed out: what the whole pipeline is *for*, not one computational
+// stage (docs/evaluation/pre-study2-feature-plans.md §2).
+export const GENERATOR_DOCS = {
+   wave: {
+      explanation:
+         "Folds a straight measurement — position or distance — through a repeating sine curve to produce stripes or rings.",
+      purpose:
+         "Shows how a value that increases forever (a coordinate, a distance) can be turned into one that cycles smoothly and predictably, just by passing it through a periodic function. This is the simplest generator in the spectrum: one measurement, one fold, one output.",
+      objective: "See how one fold — a sine curve — produces two very different-looking patterns depending only on what's measured.",
+      concepts: ["Transformation", "Parameterisation", "Rule-based generation"],
+   },
+   noise: {
+      explanation:
+         "Builds an organic, cloud-like texture out of smoothly blended randomness, layered at increasing detail and decreasing strength.",
+      purpose:
+         "Demonstrates that \"random\" and \"smoothly varying random\" are genuinely different things, and that the second is what makes procedural textures look natural rather than like static.",
+      objective: "Distinguish \"random\" from \"smoothly varying random\" and see why the difference matters visually.",
+      concepts: ["Randomness", "Emergence", "Parameterisation"],
+   },
+   grid: {
+      explanation:
+         "Repeats one simple shape across the whole canvas with no gaps or overlaps, the same idea behind bathroom tiles or a chessboard.",
+      purpose:
+         "Shows the simplest possible version of \"which repeating cell is this point in?\" — a question that comes up again in more complex forms elsewhere in this project (Voronoi's nearest-seed search, Islamic geometry's radial cells).",
+      objective: "See how a point's position alone, with no search involved, can decide which repeating cell it belongs to.",
+      concepts: ["Rule-based generation", "Parameterisation", "Spatial Reasoning"],
+   },
+   escher: {
+      explanation:
+         "Deforms a regular tiling's straight edges into a matching wavy or jagged boundary, so neighbouring tiles interlock like jigsaw pieces.",
+      purpose:
+         "Shows how a small, local change — bending one tile's edges — can turn a plain repeating grid into the interlocking figurative tessellations popularised by M.C. Escher, without designing a whole new tiling from scratch.",
+      objective: "See how mirroring one edge deformation across a tile keeps every tile interlocking with no gaps.",
+      concepts: ["Transformation", "Rule-based generation", "Symmetry"],
+   },
+   voronoi: {
+      explanation: "Scatters seed points across the canvas, then colours every other point according to whichever seed is nearest.",
+      purpose:
+         "Shows how a handful of scattered points can partition an entire plane into regions purely by asking \"which point is closest?\" — cell boundaries are never drawn directly, they emerge from the nearest-point rule itself.",
+      objective: "See a mosaic of cells emerge from nothing but a \"which point is nearest?\" rule.",
+      concepts: ["Spatial Reasoning", "Emergence", "Abstraction"],
+   },
+   islamic: {
+      explanation: "Builds a star medallion by placing points evenly around a circle and connecting each one to another a fixed number of steps away.",
+      purpose:
+         "Demonstrates that an elaborate, richly decorative pattern can come from a small, fully deterministic geometric rule applied repeatedly — the same family of construction found throughout historic Islamic architecture and art.",
+      objective: "See how a fixed \"connect every second point\" rule produces an elaborate star at any number of points.",
+      concepts: ["Rule-based generation", "Symmetry", "Procedural Modelling"],
+   },
+   recursive: {
+      explanation:
+         "Builds a fractal by splitting a shape into smaller pieces, then applying that exact same rule to each piece again, at a smaller and smaller scale.",
+      purpose:
+         "Shows self-similarity directly: a structure built from one simple rule, repeated at every scale, that looks statistically like itself when you zoom into any smaller region of it.",
+      objective: "See the same simple rule, applied repeatedly at smaller scales, build a structure that looks like itself at every zoom level.",
+      concepts: ["Iteration", "Emergence", "Rule-based generation"],
+   },
+   voronoiIslamic: {
+      explanation: "Places an Islamic star medallion inside each cell of an irregular Voronoi mosaic, instead of a regular grid.",
+      purpose:
+         "Directly tests whether a construction built for a regular, evenly-spaced arrangement of cells still works once the cells themselves stop being regular at all, by swapping the cell source and keeping the star construction unmodified.",
+      objective: "See one construction (a star inside a cell) survive a change from regular to irregular cells, with only one new piece of geometry needed.",
+      concepts: ["Composition", "Spatial Reasoning", "Emergence"],
+   },
+   recursiveNoise: {
+      explanation: "Perturbs a Sierpinski fractal's construction with Perlin noise, nudging each level's split point by a smooth random offset.",
+      purpose:
+         "Tests whether a rule-based recursive construction and a noise generator's own randomness can be combined directly, with the randomness woven into every step of the recursion rather than only applied after the fact.",
+      objective: "See a rule-based fractal and organic randomness combine, and where their combination is provably identical to the fractal alone.",
+      concepts: ["Composition", "Randomness", "Iteration"],
+   },
+};
+
 // What each registry param actually does to the rendered pattern — shown
 // in the Documentation Panel's Parameters section (added 2026-08-21) so
 // selecting a node explains not just what that *node* does in the

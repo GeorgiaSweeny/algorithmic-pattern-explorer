@@ -1,6 +1,15 @@
+/* 16px on the sides/bottom, matching .layout-panel's own padding
+   (Generator Selection, Canvas) — this panel doesn't use that shared
+   class, but had no padding of its own either, which is why its header
+   sat visibly higher than the other two panels' sticky headers before
+   this fix. No top padding here — that's on the sticky title's own box
+   instead (App.css's .doc-panel > .panel-title), so its background
+   covers the full inset region rather than leaving a gap scrolled
+   content could show through. */
 .doc-panel {
    overflow-y: auto;
    min-width: 0;
+   padding: 0 16px 16px;
 }
 
 .doc-empty {
@@ -48,6 +57,11 @@
    justify-content: center;
    overflow: hidden;
    background: #fafafa;
+}
+
+.node-illustration {
+   width: 110px;
+   height: 110px;
 }
 
 .doc-visual-placeholder {

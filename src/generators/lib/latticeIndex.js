@@ -6,7 +6,8 @@ LATTICE INDEX
 * assigns a discrete colour-class index to a position within a regular,
 * infinitely repeating tiling, using shape-specific coordinate arithmetic.
 *
-* This is NOT the same concept as Partition (lib/partition.js): Partition
+* This is NOT the same concept as Partition (docs/nodes/computation/partition.md
+* — a documented concept, not its own `lib/` module): Partition
 * answers "which of these finitely many seed points is nearest" by search;
 * a plane tiling has no finite point set to search against, so each shape
 * here computes its cell index directly from closed-form coordinate math —

@@ -3,7 +3,10 @@ import { NODE_LIBRARY } from "../workflows.js";
 import "./WorkflowNode.css";
 
 // One colour per docs/nodes/ category (see workflows.js's NODE_LIBRARY).
-const CATEGORY_COLOURS = {
+// Exported so App.jsx can build a colour-key legend from the same source of
+// truth (Green & Petre's Role-expressiveness — nothing in the UI previously
+// stated what each header colour means; App-UX-Quickwins.md item 6).
+export const CATEGORY_COLOURS = {
    environment: "#6b7280",
    initialisation: "#2563eb",
    computation: "#7c3aed",
@@ -91,7 +94,8 @@ function ParamControl({ param, onChange }) {
 // permanently.
 export default function WorkflowNode({ data }) {
    const colour = CATEGORY_COLOURS[NODE_LIBRARY[data.nodeType]?.category] ?? "#6b7280";
-   const hasBody = data.selected && (data.params.length > 0 || data.exportActions);
+   const hasBody =
+      data.selected && (data.params.length > 0 || data.exportActions || data.structuralNote || data.dependsOnLabel);
 
    return (
       <div className={`workflow-node${data.selected ? " selected" : ""}`} style={{ borderColor: colour }}>
@@ -101,6 +105,16 @@ export default function WorkflowNode({ data }) {
          </div>
          {hasBody && (
             <div className="workflow-node-body">
+               {data.dependsOnLabel && (
+                  <div className="param-control param-fixed workflow-node-dependency">
+                     <div className="param-fixed-note">Takes its input from {data.dependsOnLabel}'s output.</div>
+                  </div>
+               )}
+               {data.structuralNote && (
+                  <div className="param-control param-fixed">
+                     <div className="param-fixed-note">{data.structuralNote}</div>
+                  </div>
+               )}
                {data.params.map((param) => (
                   <ParamControl key={param.param} param={param} onChange={data.onParamChange} />
                ))}

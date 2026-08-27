@@ -1,0 +1,113 @@
+.onboarding-root {
+   position: fixed;
+   inset: 0;
+   z-index: 1000;
+   pointer-events: none;
+}
+
+/* Spotlight trick: a transparent box the size of the highlighted element,
+   with an oversized box-shadow that dims everything else on the page in
+   one rule, no separate full-screen overlay element needed. */
+.onboarding-spotlight {
+   position: fixed;
+   box-shadow: 0 0 0 9999px rgba(17, 24, 39, 0.6);
+   border-radius: 8px;
+   border: 2px solid #2563eb;
+   transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+   pointer-events: none;
+}
+
+/* Fallback for the rare case a step's target isn't found in the DOM
+   (shouldn't happen — all five targets are always mounted — but fails
+   safe rather than leaving the page fully undimmed). */
+.onboarding-dim {
+   position: fixed;
+   inset: 0;
+   background: rgba(17, 24, 39, 0.6);
+}
+
+.onboarding-callout {
+   position: fixed;
+   width: 340px;
+   max-width: calc(100vw - 24px);
+   background: #fff;
+   border-radius: 10px;
+   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+   padding: 16px;
+   pointer-events: auto;
+}
+
+.onboarding-callout-step {
+   font-size: 11px;
+   text-transform: uppercase;
+   letter-spacing: 0.06em;
+   color: #6b7280;
+   font-weight: 600;
+   margin-bottom: 6px;
+}
+
+.onboarding-callout-title {
+   margin: 0 0 8px;
+   font-size: 16px;
+   color: #111827;
+}
+
+.onboarding-callout-body {
+   margin: 0 0 16px;
+   font-size: 13.5px;
+   line-height: 1.5;
+   color: #374151;
+}
+
+.onboarding-callout-actions {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 8px;
+}
+
+.onboarding-nav {
+   display: flex;
+   gap: 8px;
+}
+
+/* This app has no global .btn base style — every consumer scopes its own
+   (App.css's canvas-zoom-controls/status-bar .btn); EvaluationOverlay.jsx's
+   own bare .btn buttons render fully unstyled for the same reason, so
+   scope one here rather than inherit that gap. */
+.onboarding-nav .btn {
+   padding: 6px 14px;
+   font-size: 13px;
+   border: 1px solid #d1d5db;
+   border-radius: 6px;
+   background: #fff;
+   color: #374151;
+   cursor: pointer;
+}
+
+.onboarding-nav .btn:disabled {
+   opacity: 0.4;
+   cursor: not-allowed;
+}
+
+.onboarding-skip {
+   background: none;
+   border: none;
+   color: #6b7280;
+   text-decoration: underline;
+   cursor: pointer;
+   padding: 6px 4px;
+   font-size: 13px;
+}
+
+/* Higher specificity than .onboarding-nav .btn above (two classes, not
+   one) so this actually overrides it rather than losing on cascade order. */
+.onboarding-nav .btn.onboarding-next {
+   background: #2563eb;
+   color: #fff;
+   border-color: #2563eb;
+}
+
+.onboarding-nav .btn.onboarding-next:hover {
+   background: #1d4ed8;
+}

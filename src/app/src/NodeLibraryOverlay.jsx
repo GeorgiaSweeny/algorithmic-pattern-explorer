@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { NODE_LIBRARY } from "./workflows.js";
 import { REGISTRY } from "../../patternRegistry.js";
 import { NODE_LIBRARY_DOCS, WORKFLOW_DOCS_BY_GENERATOR } from "./docsContent.js";
-import { CONCEPT_TERMS, CATEGORY_TERMS } from "./glossary.js";
+import { CONCEPT_TERMS, CATEGORY_TERMS, PROPERTY_TERMS } from "./glossary.js";
 import { renderMarkdown } from "./markdown.jsx";
+import NodeIllustration, { hasIllustration } from "./nodeIllustrations.jsx";
+import SpectrumBar from "./SpectrumBar.jsx";
 import "./NodeLibraryOverlay.css";
 
 // Full-reference companion to DocumentationPanel.jsx's inline, per-selection
@@ -13,6 +15,16 @@ import "./NodeLibraryOverlay.css";
 // algorithm write-up, and a glossary of the Computational Thinking Concepts
 // terms used throughout. Opened from the menu bar (App.jsx), independent of
 // node/pattern selection state, the same way EvaluationOverlay is.
+//
+// User-facing label is "Documentation Library" (the menu button and this
+// overlay's own title), not "Node Library" — it covers patterns and the
+// CT-concept glossary too, not just nodes, so the old name undersold it;
+// "Documentation Library" also reads as distinct from
+// DocumentationPanel.jsx's "Documentation Panel" heading elsewhere in the
+// app, which plain "Documentation" alone would have collided with.
+// Component name/file/CSS class prefix (`lib-*`) stay as
+// `NodeLibraryOverlay`/`lib-` unchanged — internal, not user-visible, and
+// renaming it doesn't change what a reader sees.
 //
 // Content is not re-authored here: Nodes and Patterns tabs render
 // docs/nodes/*.md and docs/nodes/WORKFLOWS.md directly (via docsContent.js's
@@ -45,8 +57,10 @@ const NODES_BY_CATEGORY = groupNodesByCategory(NODE_LIBRARY);
 // rather than the term/definition list this tab rendered inline before.
 const TERM_GROUPS = [
    { label: "Node Categories", terms: CATEGORY_TERMS },
+   { label: "Pattern Properties", terms: PROPERTY_TERMS },
    { label: "Computational Thinking Concepts", terms: CONCEPT_TERMS },
 ];
+const ALL_TERMS = [...CATEGORY_TERMS, ...PROPERTY_TERMS, ...CONCEPT_TERMS];
 
 const TABS = [
    { id: "nodes", label: "Nodes" },
@@ -62,18 +76,15 @@ export default function NodeLibraryOverlay({ onClose }) {
 
    const nodeDocText = useMemo(() => NODE_LIBRARY_DOCS[selectedNodeType], [selectedNodeType]);
    const patternDocText = useMemo(() => WORKFLOW_DOCS_BY_GENERATOR.get(selectedGenerator), [selectedGenerator]);
-   const termEntry = useMemo(
-      () => [...CATEGORY_TERMS, ...CONCEPT_TERMS].find((t) => t.term === selectedTerm),
-      [selectedTerm]
-   );
+   const termEntry = useMemo(() => ALL_TERMS.find((t) => t.term === selectedTerm), [selectedTerm]);
 
    return (
       <div className="lib-overlay" role="dialog" aria-modal="true" onClick={onClose}>
          <div className="lib-panel" onClick={(e) => e.stopPropagation()}>
-            <button className="lib-close" onClick={onClose} aria-label="Close Node Library">
+            <button className="lib-close" onClick={onClose} aria-label="Close Documentation Library">
                ×
             </button>
-            <h2 className="lib-title">Node Library</h2>
+            <h2 className="lib-title">Documentation Library</h2>
 
             <div className="lib-tabs">
                {TABS.map((t) => (
@@ -109,6 +120,11 @@ export default function NodeLibraryOverlay({ onClose }) {
                      ))}
                   </nav>
                   <article className="lib-content">
+                     {hasIllustration(selectedNodeType) && (
+                        <div className="lib-visual-example">
+                           <NodeIllustration nodeType={selectedNodeType} />
+                        </div>
+                     )}
                      {nodeDocText ? renderMarkdown(nodeDocText) : <p>No documentation found for this node.</p>}
                   </article>
                </div>
@@ -167,6 +183,15 @@ export default function NodeLibraryOverlay({ onClose }) {
                      {termEntry ? (
                         <>
                            <h2>{termEntry.term}</h2>
+                           {/* The actual widget, not just a description of it — a
+                               representative "Hybrid" midpoint value, since this
+                               entry explains the bar every pattern's own spectrum
+                               value renders as, not one specific pattern's. */}
+                           {termEntry.term === "Stochastic ↔ Deterministic Spectrum" && (
+                              <div className="lib-visual-example lib-spectrum-example">
+                                 <SpectrumBar spectrum={0.5} />
+                              </div>
+                           )}
                            <p>{termEntry.definition}</p>
                         </>
                      ) : (

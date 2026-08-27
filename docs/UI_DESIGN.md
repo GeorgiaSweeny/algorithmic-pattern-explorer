@@ -17,7 +17,7 @@ Together, these views support exploration of computational thinking concepts thr
 # Changes from Original Design
 
 This document has been updated against the working implementation in
-`src/ui-layout-mockup.html` / `.css`. The changes recorded below were made to
+`src/vanilla/ui-layout-mockup.html` / `.css`. The changes recorded below were made to
 **improve clarity and simplify the layout** — not to change the interface's
 underlying design objectives.
 
@@ -63,7 +63,7 @@ sections after it have been updated to reflect the points above.
 
 This document describes the target design. The working implementation is the
 ReactFlow app at `src/app/` (distinct from the static, pre-React
-`src/ui-layout-mockup.html`/`.css`, which was a design exploration, not the
+`src/vanilla/ui-layout-mockup.html`/`.css`, which was a design exploration, not the
 delivered interface). As of 2026-08-18:
 
 **Implemented**, matching this document's structure and interaction model:

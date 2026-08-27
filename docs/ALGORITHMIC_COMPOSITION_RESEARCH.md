@@ -16,7 +16,7 @@ primary research question, algorithms as the vehicle). Those documents haven't
 been edited yet — this file exists first so the reframing can be checked before
 it's carried back into the project's primary framing documents.
 
-**Supervisor scoping note** (direct guidance, recorded verbatim because it's the
+**Supervisor scoping note** (direct guidance, recorded because it's the
 boundary condition for everything below): the project should draw on
 combinator-style thinking about function composition — supervisor referenced
 Marshall Lochbaum's BQN tutorial on combinators
@@ -46,12 +46,28 @@ primitive library's completeness?
 subdivision threshold, a Voronoi-seeded tessellation — see `README.md`'s
 Generative Spectrum future work) extend or stress this compositional model? Do
 they require genuinely new composition patterns, or do they recombine the
-patterns already found in the seven base generators? `islamic.js`'s
-`star-lines` mode is early evidence for the latter — see its composition-table
-entry below, which recombines `voronoi.js`'s and `wave.js`'s existing patterns
-rather than needing a new one, though it's a variant of an already-planned
-base generator rather than one of the Aug 7-9 hybrids this question is really
-aimed at.
+patterns already found in the seven base generators? `islamic.js`'s original
+`star-lines` mode was early evidence for the latter — recombining
+`voronoi.js`'s and `wave.js`'s existing patterns with no new primitive — but
+that mode (and its `rosette` sibling) was rebuilt
+after both were found to be geometrically inaccurate (see
+`docs/ISLAMIC_PATTERN_CONSTRUCTION.md`), so that specific evidence no longer
+applies to the current codebase; the rebuilt `islamic.js`'s own
+composition-table entry below is a different (and, it turns out, stronger)
+data point for this question — it needed the Fork pattern for the first time
+outside `escher.js`, plus two new primitives, not zero. **`recursiveNoise.js`
+is the hybrid this secondary question is really aimed at**: see its composition-table entry and open question 4 below — the answer there is
+mixed, not purely "recombines existing patterns": it needed a genuinely new
+*shape* (a Fork living inside a Repeat's step) but zero new *primitives*.
+**`voronoiIslamic.js`** is a third data point, built specifically
+to target the *other* half of this question directly: does the "which cell →
+build a rosette there" pipeline generalise from a regular point source to a
+stochastic one, with the downstream construction held fixed? See its
+composition-table entry and `docs/VORONOI_ISLAMIC_HYBRID_PLAN.md` — the
+answer there is the cleanest of the three: no new pattern at all, and only
+one new primitive, because (unlike the other two) it recombines two
+pipelines (`voronoi.js`'s, `islamic.js`'s) that were each already fully
+decomposed before this hybrid was built.
 
 **Demonstration/evaluation (secondary, supports the above)**: Does the
 educational node-graph interface make the compositional structure identified
@@ -64,23 +80,27 @@ the analysis and testing below, independent of any user study).
 
 ## The primitive library (`src/generators/lib/`)
 
-Documented in `docs/GENERATOR_CONTRACT.md`. Twelve pure functions, each
-corresponding to one conceptual node in `docs/nodes/`:
+Documented in `docs/GENERATOR_CONTRACT.md`. Thirteen primitive modules, each
+corresponding to one conceptual node in `docs/nodes/` (twelve as of Aug 2-6;
+`starPolygon.js` is the one new row, added rebuilding `islamic.js`
+— several existing rows also gained new exported functions the same rebuild,
+noted inline below):
 
 | Primitive | Signature | Role |
 |---|---|---|
 | `rng.js` (`xorshift32`, `xorshift32Unit`) | `(seed) => next()` | deterministic PRNG, shared by every stochastic generator |
 | `seedPoints.js` (`generateSeedPoints`) | `(numPoints, seed) => Float32Array` | a point cloud from a seed — ignores per-pixel input entirely |
-| `distanceField.js` (`nearestPoint`, `distanceToPoint`) | `(x, y, points\|px,py) => {index, distSq}\|number` | nearest-feature search / single-point distance |
+| `distanceField.js` (`nearestPoint`, `distanceToPoint`, `nearestSegmentDistSq`, `pointInPolygon`) | `(x, y, points\|px,py\|edges\|polygon) => {index, distSq}\|number\|boolean` | nearest-feature search (point or line-segment), single-point distance, and inside/outside test — the last two both added 2026-08-20 for `islamic.js`'s rebuild (see below) |
 | `partition.js` (`partitionIndex`) | `(x, y, points, numRegions) => int` | `nearestPoint` folded into a bounded region index |
-| `colourMapping.js` (`toneSet`) | `(tones) => number[]` | discrete index → output tone |
+| `colourMapping.js` (`toneSet`, `bandTone`) | `(tones) => number[]`; `(shades, bandIndex) => number` | discrete index → output tone; `bandTone`  maps a *signed* concentric-band index to one of `tones`' values, generalising a flat two-way primary/accent split to any declared tone count 2-5 — shared, not islamic-specific, so any future radial-banding generator gets it for free |
 | `edgeDeformation.js` (`bump`) | `(t, type) => number` | periodic boundary displacement |
 | `subdivide.js` (`subdivideCell`) | `(x, y, n) => {gx, gy, x, y}` | one level of an n×n cell subdivision |
-| `waveform.js` (`sineWave`) | `(value, frequency, phase) => number` | periodic fold of a scalar field — closes the gap where `wave.js`'s plain-sine mode had no corresponding primitive; also used by `islamic.js` |
-| `constructionCircle.js` (`constructionCircle`, `radialDivisions`) | `(cx, cy, radius) => circle`; `(circle, segments) => Float32Array` | deterministic counterpart to `seedPoints.js` — places points at fixed angles instead of scattering them with an RNG |
+| `waveform.js` (`sineWave`) | `(value, frequency, phase) => number` | periodic fold of a scalar field — closes the gap where `wave.js`'s plain-sine mode had no corresponding primitive. No longer used by `islamic.js` as of the rebuild (its old `star-lines` mode's `Distance Field → Waveform` chain doesn't exist any more — see the composition table below), so `wave.js` is now its only consumer. |
+| `constructionCircle.js` (`constructionCircle`, `radialDivisions`) | `(cx, cy, radius) => circle`; `(circle, segments, rotation) => Float32Array` | deterministic counterpart to `seedPoints.js` — places points at fixed angles instead of scattering them with an RNG. `radialDivisions`' own `rotation` argument went unused by any caller until `islamic.js` exposed it as a user parameter |
 | `fold.js` (`foldOctaves`) | `(sample, octaves, {persistence, lacunarity}) => number` | the Fold/reduce combinator itself, generalised out of `noise.js`'s fBm loop — tested independently in `lib.fold.test.js` |
 | `repeat.js` (`repeat`) | `(step, n, initialValue) => {stopped, value}` | the Repeat/power combinator itself, generalised out of `recursive.js`'s recursion — tested independently in `lib.repeat.test.js` |
-| `latticeIndex.js` (`squareIndex`, `triangleIndex`, `hexagonIndex`, `brickIndex`, `diamondIndex`) | `(x, y, tileSize, numShades) => int` | closed-form cell index for one of five regular tilings — the answer to open question 1 below (not a `partition.js` in disguise) |
+| `latticeIndex.js` (`squareIndex`, `triangleIndex`, `hexagonIndex`, `brickIndex`, `diamondIndex`, `hexagonCentroid`) | `(x, y, tileSize, numShades) => int`; `hexagonCentroid: (x, y, size) => [cx, cy]` | closed-form cell index for one of five regular tilings — the answer to open question 1 below (not a `partition.js` in disguise). `hexagonCentroid`  is the inverse of `hexagonIndex`'s own cube-coordinate rounding — cell index and cell centre share one rounding step rather than two independent ones, so they can't disagree — reused by `islamic.js`'s new `tileShape: "hexagon"` option, the first consumer of `latticeIndex.js` outside `grid.js`. |
+| `starPolygon.js` (`starSkip`, `starEdges`, `lineIntersect`, `starOutline`) | `(n) => int`; `(points, skip) => Float32Array`; `(4 points) => {x,y}\|null`; `(points, skip) => Float32Array` | `starSkip`/`starEdges` predate the rebuild (the old `star-lines` mode's raw `{n/k}` chords). `lineIntersect` and `starOutline`  derive the star polygon's own *silhouette* — tip ring plus waist points computed as genuine chord self-intersections — the geometric core of the rebuilt `islamic.js`; see `docs/ISLAMIC_PATTERN_CONSTRUCTION.md`. |
 
 ## Combinator vocabulary used below
 
@@ -115,25 +135,33 @@ patterns the seven generators turned out to need that aren't in that base set:
 | `recursive.js` | Repeat/power | `subdivideCell` applied to its own remapped output, `depth` times, with an early-exit test at each level, now built directly from `lib/repeat.js` (`repeat`) rather than a hand-rolled `_recurse` function. Doesn't fit atop, fork, or constant-bind — needed the fifth pattern. |
 | `grid.js` | Atop, over a sixth primitive | `latticeIndex.js`'s per-shape function (`squareIndex`, `triangleIndex`, `hexagonIndex`, `brickIndex`, `diamondIndex`) computed from `(x, y, tileSize)`, then composed with `toneSet` — structurally Atop, same as Voronoi/Wave, but over a primitive that isn't `nearestPoint`, `distanceToPoint` or `sineWave`. Resolves open question 1 below: the per-shape arithmetic is fully decomposed now, but into a new primitive family, not a reuse of `partition.js`. |
 | `noise.js` | Fold/reduce | The fBm octave loop (`src/generators/noise.js`) sums `octaves` transformed calls to `Perlin.noise2D` with increasing frequency and decreasing amplitude — a fold, not a fixed-arity compose. Now built directly from `lib/fold.js` (`foldOctaves`); the fold structure is exactly why a plain atop/fork vocabulary doesn't fit it, and is why it's the one pattern that needed a dedicated primitive rather than reusing an existing one. |
-| `islamic.js` (`rosette`) | Constant-bind → Atop chain | Same shape as `voronoi.js`: `radialDivisions(constructionCircle(...), segments)` computed once per (segments, radius) pair (constant-bound, cached), then per-pixel `nearestPoint(lx, ly, points)` folded into `toneSet`. The only difference from Voronoi is the point source — `radialDivisions` (deterministic, angular) instead of `generateSeedPoints` (stochastic, RNG-scattered) — everything downstream of the point set is the *identical* composition. Direct evidence for the primary RQ: one small primitive (`nearestPoint`) already proven reusable across a stochastic and a deterministic generator. |
-| `islamic.js` (`star-lines`) | Constant-bind → Atop, recombining two existing patterns | Identical to `rosette` up to `nearestPoint`, then additionally composes with `sineWave` — the exact `Distance Field → Waveform` atop chain `wave.js`'s `rings` mode already uses, just fed by a multi-point Distance Field instead of a single fixed point. A hybrid in the sense of secondary-RQ interest (§ below), but notably it needed **no new composition pattern** — it recombines two patterns already established by `voronoi.js` and `wave.js`. |
+| `islamic.js`  | Constant-bind → Fork → Atop | `starOutline(radialDivisions(constructionCircle(...), segments, rotation), starSkip(segments))` computed once per (segments, radius, rotation) triple (constant-bind, cached) — itself an Atop chain, `constructionCircle → radialDivisions → starOutline`, where `starOutline` internally uses `lineIntersect` per waist vertex. Per pixel, the *same* local coordinates then Fork into two primitives — `nearestSegmentDistSq(lx, ly, edges)` (distance to the silhouette's boundary) and `pointInPolygon(lx, ly, outline)` (which side of it) — recombined by a sign flip into one signed distance, which is finally banded and passed through `bandTone`. Notably *not* the same shape as the original `rosette`/`star-lines` modes this replaced (see `docs/ISLAMIC_PATTERN_CONSTRUCTION.md`): those were pure Atop chains reusing `nearestPoint`/`sineWave` with zero new primitives; this construction needed the Fork pattern — previously unique to `escher.js` — for the first time in a second generator, plus four new primitives (`pointInPolygon`, `lineIntersect`, `starOutline`, `bandTone`). A genuinely different, and arguably stronger, data point for the primary RQ than the original modes were: the *pattern* (Fork) is still reused from `escher.js`, but getting an accurate result this time cost real new primitive surface, not zero. |
+| `recursiveNoise.js` | Repeat, whose step is a Fork → Atop | The secondary RQ's hybrid generator (resolves open question 4 below): `recursive.js`'s Repeat/power loop over Subdivide, but each iteration's step first Forks its own point into `(point, noise(point))`, recombines by addition into a domain-warped point, then feeds *that* to `subdivideCell`. Genuinely new shape — a Fork living *inside* a Repeat's step, not a fork feeding one decision — built from zero new primitives (`lib/fold.js` via `noise.js`, `lib/subdivide.js`/`lib/repeat.js` via `recursive.js`'s own structure). At its `amplitude = 0` boundary it is provably identical to `recursive.js`'s own output (checked directly in `recursiveNoise.property.test.js`, not assumed), giving the hybrid a falsifiable deterministic baseline rather than a claim taken on faith. **Follow-up**: the flat `amplitude` applied identically at every level (reported as making the whole carpet look merely shifted, not depth itself having character) is now a linear ramp keyed to `repeat.js`'s own per-iteration index `i` — a `step(value, i)` argument `repeat.js` always provided but this generator previously discarded. Still zero new primitives (`i` was free), but a richer *shape* than before: the Repeat step's own behaviour now varies with iteration index, not just its input — every other use of `lib/repeat.js` in this codebase (`recursive.js`, and this file's own unwarped Subdivide scaffold) still applies the identical step every time, so this is a genuinely new variant of Repeat, not just a parameter tweak. |
+| `voronoiIslamic.js` | Constant-bind → Atop → Atop → Fork → Atop | Confirms the plan's own prediction (`docs/VORONOI_ISLAMIC_HYBRID_PLAN.md` §4) almost exactly: `generateSeedPoints(numCells, seed)` plus, new this generator, `nearestNeighbourDistances(points)` are computed once (constant-bind, cached); per pixel, `nearestPoint(x, y, points)` gives cell membership (Atop), the pixel is re-expressed as local coordinates relative to its own seed (a second Atop), then `islamic.js`'s *unmodified* Fork (`nearestSegmentDistSq` + `pointInPolygon`) and closing Atop (`bandTone`) are reused verbatim. Cost: exactly one new primitive (`nearestNeighbourDistances`, `lib/seedPoints.js`) and zero new patterns — the cheapest of the three hybrid/rebuild data points in this table, exactly because it recombines two already-fully-decomposed pipelines (`voronoi.js`'s and `islamic.js`'s own rows above) rather than building new geometry (`islamic.js`'s rebuild, four new primitives) or a new recursive shape (`recursiveNoise.js`, a genuinely new Fork-inside-Repeat pattern). The one place the plan's "closed form" carried over only partially: `islamic.js`'s tile-fixed `radius = tileSize * scale` had no direct analogue for an irregular point source, resolved by scaling to each cell's own nearest-neighbour spacing (plan §3.2's "v2") rather than reusing a constant. **Follow-up**: an opt-in `variation` param (default 0, exact identity at that default) lets each cell's `segments`/`rotation` independently diverge, reusing `lib/rng.js`'s existing `xorshift32Unit` inside the same per-cell Atop chain — a Constant-bind on an extra derived seed, not a new pattern, so this row's "one new primitive, zero new patterns" finding is unchanged by the addition. **Second follow-up**: self-contained cells with no connection between them read as scattered medallions, not an Islamic *tiling* — added a second, independent line test for the Voronoi cell boundary itself (`lib/distanceField.js`'s new `nearestTwoPoints`, a pixel is exactly on its own cell's edge where equidistant from its two nearest seeds — the standard per-pixel proxy for a Voronoi edge, needing no real cell-polygon construction), combined with the existing star-silhouette line test by OR before banding. Structurally this is Fork *gaining a second branch* — two independent line-source tests feeding the same closing Atop (`bandTone`) — rather than a new pattern; cost is one further new primitive (`nearestTwoPoints`), the same order of cost as this hybrid's own original build, not a second hybrid's worth of new surface. |
 
 **Reading across the table**: five generators (`voronoi`, `wave`, `escher`,
 `islamic`, `grid`) now fit "compose, optionally with one constant-bound
 input, optionally with a fork" — a genuinely small, reusable set for the
 *pattern*, even though `grid.js` needed a *primitive* (`latticeIndex.js`)
-none of the others share. That's worth being precise about: the small
-vocabulary claim is about how primitives compose (Atop/fork/constant-bind),
-not a claim that every generator draws from the same handful of primitives —
-`grid.js` is now full evidence for the former and a genuine counterexample to
-a stronger version of the latter. `islamic.js` joins without requiring a new
-pattern *or* a new primitive, just a different point-generating node feeding
-the same `Distance Field` — a stronger result than `grid.js`'s. Two
-(`recursive`, `noise`) needed patterns outside that set entirely (repeat,
-fold) — both of which are standard, named operators in the array-language
-tradition this vocabulary is drawn from, not ad hoc inventions. All seven
-generators are now fully decomposed into `lib/` primitives; none remain
-partially decomposed.
+none of the others share, and the rebuilt `islamic.js` needed four. That's
+worth being precise about: the small vocabulary claim is about how
+primitives compose (Atop/fork/constant-bind), not a claim that every
+generator draws from the same handful of primitives — `grid.js` and the
+rebuilt `islamic.js` are both now evidence for the former and genuine
+counterexamples to a stronger version of the latter. (An earlier version of
+this document could claim `islamic.js` needed *neither* a new pattern nor a
+new primitive — true of the original `rosette`/`star-lines` modes, which
+turned out to be geometrically inaccurate; the accurate rebuild needed Fork,
+already established by `escher.js`, but real new primitive surface to get
+there. The compositional-pattern claim survived being asked to actually
+produce a correct result; the zero-new-primitives claim didn't, and that
+distinction — pattern reuse surviving where primitive reuse didn't — is
+itself a more informative finding for the primary RQ than either half taken
+alone.) Two generators (`recursive`, `noise`) needed patterns outside that
+set entirely (repeat, fold) — both of which are standard, named operators in
+the array-language tradition this vocabulary is drawn from, not ad hoc
+inventions. All seven generators are now fully decomposed into `lib/`
+primitives; none remain partially decomposed.
 
 ---
 
@@ -175,12 +203,75 @@ partially decomposed.
    contract-satisfying result? This is a small, provable claim (not a language
    design exercise) that would directly extend the existing property-based test
    suite rather than requiring new infrastructure.
-4. **Hybrid generators** (secondary RQ): when a genuinely new generator is built
-   — e.g. Perlin noise perturbing `recursive.js`'s subdivision threshold — which
-   pattern does the "perturbation" wiring need? A plausible guess is another
-   fork (noise value and cell coordinates both feed the depth/threshold
-   decision), but this should be checked against the real implementation once
-   built, not assumed.
+4. **Resolved** (2026-08-19): the guess above was partially correct.
+   Built `recursiveNoise.js` — Perlin noise perturbing `recursive.js`'s
+   "sierpinski" mode — and checked the actual composition needed, rather
+   than assuming. It is a **Fork inside a Repeat**, not a fork feeding a
+   single decision: at *each* iteration of the Repeat/power loop
+   (`lib/repeat.js`, the same combinator `recursive.js` itself uses), that
+   iteration's current point forks into two branches — the point unchanged,
+   and the point fed through Noise (`noise.js`, itself a Fold over Perlin
+   octaves) — recombined by addition into a domain-warped point, *before*
+   that warped point is handed to Subdivide's centre-cell test. So the fork
+   isn't a one-off combination of "noise value" and "cell coordinates" as
+   guessed; it's the *input* to every one of the `depth` repeated steps,
+   meaning the composition shape is `Repeat(step = Fork(id, Noise) → atop →
+   Subdivide)` — a genuinely new shape (Repeat had never before contained a
+   Fork), built entirely from two already-existing, already-tested
+   primitives (`lib/fold.js` via `noise.js`, `lib/subdivide.js` +
+   `lib/repeat.js` via `recursive.js`'s own structure) with zero new
+   bespoke math. See `recursiveNoise.js`'s header comment and
+   `docs/plan-checklist.md`'s Aug 7-9 entry.
+
+   This also gave a clean answer to open question 3 above, at least for this
+   one case: at the hybrid's `amplitude = 0` boundary, the composition is
+   *provably* identical to `recursive.js`'s own contract-satisfying output
+   (`recursiveNoise.property.test.js` checks this directly against
+   `recursive.js`, byte-for-byte, not just "close"), and for `amplitude > 0`
+   the same generic contract suite (`contract.generic.test.js`) that covers
+   every other registry entry — range, determinism, totality — passes
+   without any hybrid-specific exception. So for this composition at least,
+   Fork/Repeat/Atop chained together did preserve the contract automatically;
+   generalising that to *all* possible fork/atop compositions remains open.
+5. **Raised, not resolved** (2026-08-23, extended into a full node-level
+   plan): does a hierarchical substitution / inflation system
+   (the construction behind the hat and spectre aperiodic monotiles — see
+   `docs/EINSTEIN_APERIODIC_STRETCH.md`) fit this vocabulary at all?
+   Answer, worked through in that document's §4: **no, not as `repeat` is
+   currently defined.** `lib/repeat.js`'s `repeat(step, n, initialValue)`
+   threads *one* carried value through `n` steps — exactly what
+   `recursive.js` and `recursiveNoise.js` both do. Metatile substitution
+   needs a step that maps *one element to several*, applied to *every*
+   element of a set that grows each level — a map-one-to-many rewrite, not
+   a power/fold over a single value. That is a genuinely different
+   combinator, not a parameter tweak to the existing one, and — usefully
+   for the primary RQ — it turns out to be structurally the same thing as
+   the **L-Systems / shape-grammar** item `README.md`'s Future Work already
+   lists as speculative and out of scope. So this generator, if ever built,
+   wouldn't just be a ninth data point for the table above; it would need
+   the vocabulary's first genuinely new addition since fold/repeat, and one
+   this project had already flagged as future work on independent grounds
+   before this stress test confirmed it's needed here too. Stretch goal
+   only, not scheduled.
+6. **Raised, not resolved** (2026-08-24): a third hybrid candidate —
+   Voronoi-seeded Escher tessellation — revisited after the
+   noise/reaction-diffusion Islamic alternative was closed as
+   won't-complete (redundant with `voronoiIslamic.js`, since both would
+   just swap the stochastic *source* feeding the same deterministic
+   construction). This one is different: `escher.js`'s interlocking
+   depends on edge deformation being periodic and antisymmetric across a
+   *fixed-size* tile grid, a property a Voronoi partition's irregular,
+   non-periodic cell edges don't have for free. Full design-space
+   analysis in `docs/VORONOI_ESCHER_HYBRID_PLAN.md` (kept local): a cheap
+   raster proxy (reusing `nearestTwoPoints`) may still fit the existing
+   vocabulary, but the geometrically correct version needs actual Voronoi
+   polygon construction — closer to a graph/incidence structure than a
+   per-pixel arithmetic chain, and not obviously an instance of
+   atop/fork/constant-bind/fold/repeat. If built, this would be a second,
+   independent example (alongside the hat/spectre one above) of a
+   construction method that may need something outside the current
+   five-combinator set — or, if the raster proxy suffices, a third
+   confirming data point at much lower cost. Not scheduled.
 
 ## Relationship to existing infrastructure
 

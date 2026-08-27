@@ -1,0 +1,700 @@
+<!-- Canonical copy. Also served at src/app/public/evaluation/evaluation-dry-run.html
+     for the app's own "Dry Run" menu link — keep both in sync by hand when editing. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluation Dry Run</title>
+
+<style>
+  :root {
+    /* Palette pulled directly from src/app/src/App.css and EvaluationOverlay.css
+       — this page reuses the app's own colours rather than inventing a
+       separate one, down to the exact menu-bar dark (#111827) below. */
+    --page:        #f9fafb;
+    --surface:     #ffffff;
+    --surface-2:   #f3f4f6;
+    --ink:         #111827;
+    --ink-2:       #374151;
+    --ink-muted:   #6b7280;
+    --grid:        #e5e7eb;
+    --baseline:    #9ca3af;
+    --border:      #e5e7eb;
+    --accent:      #2563eb;   /* the app's own primary/action colour */
+    --cs:          #2563eb;   /* CS-conversion cohort — the app's accent */
+    --random:      #d97706;   /* random-participant cohort */
+    --ctrl:        #6b7280;   /* control cohort — neutral, no intervention */
+    --good:        #16a34a;
+    --pre-bar:     #9ca3af;
+    --post-bar:    #2563eb;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+  }
+
+  .app-bar {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    background: #111827;
+    border-bottom: 1px solid #1f2937;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .app-bar span { font-weight: 400; opacity: 0.7; margin-left: 4px; }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 40px 24px 96px; }
+
+  .kicker {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  h1 {
+    font-weight: 700;
+    font-size: clamp(26px, 4vw, 34px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+  }
+  .dek {
+    font-size: 15.5px;
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin: 0 0 28px;
+  }
+
+  .flag {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 44px;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .flag b { color: var(--ink); }
+
+  section { margin: 48px 0; }
+  section > h2 {
+    font-weight: 700;
+    font-size: 19px;
+    margin: 0 0 6px;
+  }
+  section > .lede {
+    font-size: 14px;
+    color: var(--ink-2);
+    max-width: 68ch;
+    margin: 0 0 20px;
+  }
+  section > .lede.placeholder {
+    font-style: italic;
+    color: var(--ink-muted);
+    border-left: 2px solid var(--border);
+    padding-left: 12px;
+  }
+
+  /* stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .tile-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .swatch { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .tile-name { font-size: 12px; letter-spacing: 0.03em; color: var(--ink-2); text-transform: uppercase; font-weight: 600; }
+  .tile-row { display: flex; align-items: baseline; gap: 18px; }
+  .tile-metric { display: flex; flex-direction: column; gap: 2px; }
+  .tile-label { font-size: 11.5px; color: var(--ink-muted); }
+  .tile-value { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 700; }
+  .tile-arrow { color: var(--ink-muted); font-size: 18px; align-self: center; }
+  .tile-delta { font-size: 13px; font-weight: 600; color: var(--good); }
+  .tile-foot { margin-top: 12px; font-size: 12.5px; color: var(--ink-muted); }
+
+  /* table */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 480px; }
+  thead th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+  }
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--grid);
+    font-variant-numeric: tabular-nums;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  .grp-cell { display: flex; align-items: center; gap: 8px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .gain-pos { color: var(--good); font-variant-numeric: tabular-nums; }
+  .gain-zero { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  tbody tr.group-start td { border-top: 1px solid var(--border); }
+
+  /* slope chart */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 20px 14px;
+  }
+  .legend { display: flex; gap: 20px; margin-bottom: 4px; font-size: 12.5px; color: var(--ink-2); }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .legend-swatch { width: 14px; height: 3px; border-radius: 2px; }
+  .slope-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+  .slope-panel { flex: 1 1 220px; min-width: 200px; }
+  .slope-panel-head { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+  .slope-panel-head .swatch { width: 9px; height: 9px; }
+  svg text { font-family: var(--sans); fill: var(--ink-muted); }
+  .axis-label { font-size: 11px; }
+  .tick-label { font-size: 11px; }
+  .participant-label { font-size: 10.5px; fill: var(--ink-2); }
+  .slope-line { fill: none; stroke-width: 2; }
+  .slope-dot { stroke-width: 0; cursor: pointer; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--baseline); stroke-width: 1; }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 11.5px;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-50%, -100%);
+    transition: opacity 0.1s ease;
+    z-index: 5;
+  }
+  .tooltip.show { opacity: 1; }
+
+  /* concept bars */
+  .bar-row { display: grid; grid-template-columns: 168px 1fr 78px; align-items: center; gap: 10px; padding: 7px 0; }
+  .bar-row + .bar-row { border-top: 1px solid var(--grid); }
+  .bar-name { font-size: 13px; color: var(--ink); }
+  .bar-track { position: relative; height: 20px; overflow: visible; }
+  .bar-fill { position: absolute; left: 0; height: 9px; border-radius: 4px; }
+  .bar-fill.pre { background: var(--pre-bar); top: 0; }
+  .bar-fill.post { background: var(--post-bar); top: 11px; }
+  .bar-delta { font-size: 12px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .bar-delta.hi { color: var(--good); font-weight: 600; }
+  .concept-legend { display: flex; gap: 20px; margin: 2px 0 16px; font-size: 12.5px; color: var(--ink-2); }
+  .concept-legend .legend-swatch { border-radius: 3px; height: 10px; width: 10px; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+
+  .raw-json {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    white-space: pre;
+    overflow-x: auto;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  /* net-effect callout */
+  .net-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .net-eq { display: flex; align-items: baseline; gap: 10px; font-size: 15px; flex-wrap: wrap; }
+  .net-term { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+  .net-term .tile-value { font-size: 20px; }
+  .net-term .tile-label { font-size: 10.5px; text-align: center; }
+  .net-op { color: var(--ink-muted); font-size: 18px; }
+  .net-result .tile-value { color: var(--good); }
+  .net-note { font-size: 13px; color: var(--ink-2); flex: 1 1 220px; min-width: 220px; }
+
+  @media (max-width: 760px) {
+    .tiles { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .tiles { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 100px 1fr 56px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-bar">Algorithmic Pattern Explorer <span>· Evaluation</span></div>
+
+<div class="wrap">
+
+  <p class="kicker">Reference template · not real data</p>
+  <h1>Evaluation dry run</h1>
+  <p class="dek">
+    A worked example of the pre/post computational-thinking quiz results, built from
+    invented numbers, for one purpose only: showing what the recording table, the charts,
+    and the write-up should look like before the real fifteen-person study runs.
+  </p>
+
+  <div class="flag">
+    <div><b>All numbers on this page are fabricated.</b> They exist to test the shape of
+    the analysis — table columns, chart forms, the kind of sentence you'd write about
+    them — not to predict the outcome. Swap the arrays at the top of this page's script
+    for real scores and everything below regenerates.</div>
+  </div>
+
+  <section id="summary">
+    <h2>Cohort summary</h2>
+    <p class="lede placeholder">
+      In the real Results chapter, this paragraph states each cohort's actual pre/post
+      means. See <code>docs/evaluation/study-results.html</code>.
+    </p>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="net-effect">
+    <h2>Net effect estimate</h2>
+    <p class="lede placeholder">
+      In the real Results chapter, this paragraph states the net-effect number and whether
+      the baselines were close enough to compare (§7). See
+      <code>docs/evaluation/study-results.html</code>.
+    </p>
+    <div class="net-card" id="net-card"></div>
+  </section>
+
+  <section id="individual">
+    <h2>Individual scores</h2>
+    <p class="lede placeholder">
+      In the real Results chapter, this paragraph reads the three panels below cohort by
+      cohort — spread, outliers, whether the predicted pattern held. See
+      <code>docs/evaluation/study-results.html</code>.
+    </p>
+    <div class="chart-card">
+      <div class="slope-grid" id="slope-grid"></div>
+    </div>
+  </section>
+
+  <section id="table">
+    <h2>Recording template</h2>
+    <p class="lede placeholder">
+      In the real Results chapter, this table holds the actual fifteen participants'
+      scores in this same shape. See <code>docs/evaluation/study-results.html</code>.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Cohort</th><th>Participant</th><th>Pre</th><th>Post</th><th>Gain</th></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="raw-export">
+    <h2>What a real download looks like</h2>
+    <p class="lede">
+      One participant's exported JSON — what <b>Download My Results</b> produces from a
+      real session, pre and post quiz passes both included. <code>timestamp</code> is
+      left <code>null</code> here on purpose — this page is about the score distribution,
+      not a timing scenario; a real download always has a real one. This is the file the
+      study runner should collect from every device rather than a screenshot or a
+      verbal score.
+    </p>
+    <div class="chart-card">
+      <pre id="raw-json" class="raw-json"></pre>
+    </div>
+  </section>
+
+  <section id="concepts">
+    <h2>Per-concept breakdown</h2>
+    <p class="lede placeholder">
+      In the real Results chapter, this paragraph names which concepts moved most and
+      least, and how much weight that ranking can bear at n=10 (§8). See
+      <code>docs/evaluation/study-results.html</code>.
+    </p>
+    <div class="chart-card">
+      <div class="concept-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:var(--pre-bar)"></span>Pre</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:var(--post-bar)"></span>Post</span>
+      </div>
+      <div id="concept-bars"></div>
+    </div>
+  </section>
+
+  <footer>Mock data generated for methodology dry-run purposes · quiz instrument:
+    <code>src/app/src/evaluation/quizContent.js</code> · analysis guidance:
+    <code>docs/evaluation/evaluation-instrument-design-decisions.md</code></footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // ---- the real instrument, mirrored from src/app/src/evaluation/quizContent.js ----
+  // Every question now has 5 options (1 correct, 1 obviously-wrong, 1
+  // near-miss, 2 mid-plausibility) rather than 4 — correctIndex varies
+  // per question, not just 0/1, since option order isn't fixed.
+  var QUESTIONS = [
+    { id: "randomness", concept: "Randomness", correctIndex: 1 },
+    { id: "iteration", concept: "Iteration", correctIndex: 2 },
+    { id: "transformation", concept: "Transformation", correctIndex: 1 },
+    { id: "symmetry", concept: "Symmetry", correctIndex: 1 },
+    { id: "rule-based-generation", concept: "Rule-based generation", correctIndex: 1 },
+    { id: "parameterisation", concept: "Parameterisation", correctIndex: 1 },
+    { id: "emergence", concept: "Emergence", correctIndex: 1 },
+    { id: "procedural-modelling", concept: "Procedural modelling", correctIndex: 1 },
+    { id: "computational-creativity", concept: "Computational creativity", correctIndex: 0 },
+    { id: "stochastic-vs-deterministic", concept: "Randomness", correctIndex: 1 },
+    { id: "node-concept", concept: "Rule-based generation", correctIndex: 1 },
+    { id: "hybrid-concept", concept: "Emergence", correctIndex: 1 },
+    { id: "workflow-sequence", concept: "Sequence of operations", correctIndex: 1 },
+    { id: "seed-stage-role", concept: "Stage role", correctIndex: 1 },
+    { id: "lattice-index-role", concept: "Stage role", correctIndex: 0 },
+    { id: "rings-mode-stage", concept: "Parameterisation", correctIndex: 1 },
+  ];
+  var MAX = QUESTIONS.length;
+  var OPTIONS_PER_QUESTION = 5;
+
+  // ---- record generation, in evaluationStorage.js's exact schema ----
+  // Each cohort gets a fixed "acquisition order" (easiest/most-already-known
+  // item first); a participant's score for a phase is just how far down that
+  // order they reach. This is a modelling choice, not real data — but it's a
+  // legible one: it's what "the app teaches parameterisation/symmetry/emergence
+  // fastest, and app-specific vocabulary slowest" (this page's earlier finding)
+  // looks like at the level of individual answers, and it reconciles exactly
+  // with the whole-score deltas the rest of this page reports.
+  var CS_ORDER = [
+    "randomness", "rule-based-generation", "procedural-modelling", "stochastic-vs-deterministic",
+    "iteration", "transformation", "parameterisation", "computational-creativity",
+    "symmetry", "emergence", "node-concept", "hybrid-concept",
+    "workflow-sequence", "seed-stage-role", "lattice-index-role", "rings-mode-stage",
+  ];
+  // Also used for the control cohort: same background population, no learning
+  // applied, so the same difficulty ranking — only which K items clear it moves,
+  // by chance, between pre and post.
+  var RANDOM_ORDER = [
+    "randomness", "rule-based-generation", "procedural-modelling", "transformation",
+    "iteration", "stochastic-vs-deterministic", "computational-creativity", "parameterisation",
+    "symmetry", "emergence", "seed-stage-role", "node-concept",
+    "lattice-index-role", "workflow-sequence", "hybrid-concept", "rings-mode-stage",
+  ];
+
+  function wrongIndex(correctIndex) { return (correctIndex + 1) % OPTIONS_PER_QUESTION; }
+
+  function buildItems(order, k) {
+    var correctIds = {};
+    order.slice(0, k).forEach(function (id) { correctIds[id] = true; });
+    return QUESTIONS.map(function (q) {
+      var correct = !!correctIds[q.id];
+      return {
+        id: q.id,
+        concept: q.concept,
+        selectedIndex: correct ? q.correctIndex : wrongIndex(q.correctIndex),
+        correctIndex: q.correctIndex,
+        correct: correct,
+      };
+    });
+  }
+
+  function buildRecord(phase, order, k, timestamp) {
+    var items = buildItems(order, k);
+    var score = items.reduce(function (s, it) { return s + (it.correct ? 1 : 0); }, 0);
+    return { type: "quiz", phase: phase, score: score, total: MAX, items: items, timestamp: timestamp };
+  }
+
+  // Drawn from a seeded PRNG (mulberry32, seed 11), not hand-picked — each
+  // cohort gets a preK range and a weighted gain distribution matching the
+  // assumptions this page's methodology settled on (CS higher/less room to
+  // move; random participants lower/more room; control pure noise), and the
+  // actual per-participant numbers are whatever that draw produced. No
+  // timestamps: the timing scenario lives in docs/evaluation/mock-exports/
+  // instead — this page is about the score distribution, not the schedule.
+  //
+  // Control cohort is sized at 10, matching the combined size of the two
+  // app-exploring cohorts (CS 5 + random 5 = 10), not just the one arm
+  // (random) it's actually compared against in the net-effect card below —
+  // a control this large gives every app-exploring participant, across
+  // both cohorts, a comparably-sized no-exposure baseline to be read
+  // against, even though §7's matched-baseline condition still limits the
+  // net-effect subtraction itself to the random cohort alone.
+  var participantMeta = [
+    { id: "P1", cohort: "cs", label: "CS conversion", order: CS_ORDER, preK: 11, postK: 12 },
+    { id: "P2", cohort: "cs", label: "CS conversion", order: CS_ORDER, preK: 12, postK: 13 },
+    { id: "P3", cohort: "cs", label: "CS conversion", order: CS_ORDER, preK: 13, postK: 14 },
+    { id: "P4", cohort: "cs", label: "CS conversion", order: CS_ORDER, preK: 9, postK: 10 },
+    { id: "P5", cohort: "cs", label: "CS conversion", order: CS_ORDER, preK: 12, postK: 13 },
+    { id: "P6", cohort: "random", label: "Random participant", order: RANDOM_ORDER, preK: 6, postK: 9 },
+    { id: "P7", cohort: "random", label: "Random participant", order: RANDOM_ORDER, preK: 6, postK: 8 },
+    { id: "P8", cohort: "random", label: "Random participant", order: RANDOM_ORDER, preK: 8, postK: 9 },
+    { id: "P9", cohort: "random", label: "Random participant", order: RANDOM_ORDER, preK: 5, postK: 6 },
+    { id: "P10", cohort: "random", label: "Random participant", order: RANDOM_ORDER, preK: 6, postK: 7 },
+    { id: "C1", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 6, postK: 5 },
+    { id: "C2", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 6, postK: 6 },
+    { id: "C3", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 6, postK: 7 },
+    { id: "C4", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 8, postK: 9 },
+    { id: "C5", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 5, postK: 5 },
+    { id: "C6", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 7, postK: 7 },
+    { id: "C7", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 5, postK: 6 },
+    { id: "C8", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 6, postK: 5 },
+    { id: "C9", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 7, postK: 8 },
+    { id: "C10", cohort: "ctrl", label: "Control (no app)", order: RANDOM_ORDER, preK: 6, postK: 6 },
+  ];
+
+  var participants = participantMeta.map(function (p) {
+    var preRecord = buildRecord("pre", p.order, p.preK, null);
+    var postRecord = buildRecord("post", p.order, p.postK, null);
+    return {
+      id: p.id, cohort: p.cohort, label: p.label,
+      pre: preRecord.score, post: postRecord.score,
+      preRecord: preRecord, postRecord: postRecord,
+    };
+  });
+
+  var COHORT_COLOR = { cs: "--cs", random: "--random", ctrl: "--ctrl" };
+
+  // ---- per-concept breakdown, derived from the two app-exploring cohorts' real items ----
+  var conceptStats = {};
+  QUESTIONS.forEach(function (q) {
+    conceptStats[q.concept] = conceptStats[q.concept] || { pre: 0, post: 0, items: 0, n: 0 };
+  });
+  var treatmentGroup = participants.filter(function (p) { return p.cohort === "cs" || p.cohort === "random"; });
+  treatmentGroup.forEach(function (p) {
+    p.preRecord.items.forEach(function (it) { if (it.correct) conceptStats[it.concept].pre++; });
+    p.postRecord.items.forEach(function (it) { if (it.correct) conceptStats[it.concept].post++; });
+  });
+  Object.keys(conceptStats).forEach(function (name) {
+    conceptStats[name].items = QUESTIONS.filter(function (q) { return q.concept === name; }).length;
+    conceptStats[name].n = conceptStats[name].items * treatmentGroup.length;
+  });
+  var concepts = Object.keys(conceptStats).map(function (name) {
+    var s = conceptStats[name];
+    return { name: name, pre: s.pre, post: s.post, n: s.n, items: s.items };
+  }).sort(function (a, b) { return (b.post / b.n - b.pre / b.n) - (a.post / a.n - a.pre / a.n); });
+
+  function mean(arr, key) { return arr.reduce(function (s, d) { return s + d[key]; }, 0) / arr.length; }
+
+  // ---- stat tiles ----
+  var csGroup = participants.filter(function (p) { return p.cohort === "cs"; });
+  var randomGroup = participants.filter(function (p) { return p.cohort === "random"; });
+  var ctrlGroup = participants.filter(function (p) { return p.cohort === "ctrl"; });
+  var tiles = document.getElementById("tiles");
+  var cohortSummaries = [
+    { key: "ctrl", name: "Control, no app (n=10)", color: "var(--ctrl)", data: ctrlGroup },
+    { key: "random", name: "Random participants (n=5)", color: "var(--random)", data: randomGroup },
+    { key: "cs", name: "CS conversion (n=5)", color: "var(--cs)", data: csGroup },
+  ];
+  cohortSummaries.forEach(function (g) {
+    var preM = mean(g.data, "pre"), postM = mean(g.data, "post");
+    var delta = postM - preM;
+    var tile = document.createElement("div");
+    tile.className = "tile";
+    tile.innerHTML =
+      '<div class="tile-head"><span class="swatch" style="background:' + g.color + '"></span>' +
+      '<span class="tile-name">' + g.name + '</span></div>' +
+      '<div class="tile-row">' +
+        '<div class="tile-metric"><span class="tile-label">Pre mean</span><span class="tile-value">' + preM.toFixed(1) + '</span></div>' +
+        '<span class="tile-arrow">→</span>' +
+        '<div class="tile-metric"><span class="tile-label">Post mean</span><span class="tile-value">' + postM.toFixed(1) + '</span></div>' +
+        '<div class="tile-metric"><span class="tile-label">Gain</span><span class="tile-delta">+' + delta.toFixed(1) + '</span></div>' +
+      '</div>' +
+      '<div class="tile-foot">out of ' + MAX + ' items</div>';
+    tiles.appendChild(tile);
+  });
+
+  // ---- net effect card ----
+  var randomSummary = cohortSummaries.filter(function (g) { return g.key === "random"; })[0];
+  var ctrlSummary = cohortSummaries.filter(function (g) { return g.key === "ctrl"; })[0];
+  var randomGain = mean(randomSummary.data, "post") - mean(randomSummary.data, "pre");
+  var ctrlGain = mean(ctrlSummary.data, "post") - mean(ctrlSummary.data, "pre");
+  var net = randomGain - ctrlGain;
+  var netCard = document.getElementById("net-card");
+  netCard.innerHTML =
+    '<div class="net-eq">' +
+      '<div class="net-term"><span class="tile-value">+' + randomGain.toFixed(1) + '</span><span class="tile-label">Random-participant gain</span></div>' +
+      '<span class="net-op">−</span>' +
+      '<div class="net-term"><span class="tile-value">+' + ctrlGain.toFixed(1) + '</span><span class="tile-label">Control gain</span></div>' +
+      '<span class="net-op">=</span>' +
+      '<div class="net-term net-result"><span class="tile-value">+' + net.toFixed(1) + '</span><span class="tile-label">Net app effect</span></div>' +
+    '</div>' +
+    '<div class="net-note">Both cohorts start at the same 6.2/16 pre-test mean, so this' +
+    ' subtraction isolates the part of the gain not explained by retaking the quiz —' +
+    ' the closest this design gets to a causal estimate, still only descriptive at n=5' +
+    ' (random) vs n=10 (control).</div>';
+
+  // ---- table ----
+  var tbody = document.getElementById("table-body");
+  participants.forEach(function (p, i) {
+    var gain = p.post - p.pre;
+    var isGroupStart = i === 0 || participants[i - 1].cohort !== p.cohort;
+    var tr = document.createElement("tr");
+    if (isGroupStart) tr.className = "group-start";
+    var swatchColor = "var(" + COHORT_COLOR[p.cohort] + ")";
+    tr.innerHTML =
+      '<td><span class="grp-cell"><span class="swatch" style="background:' + swatchColor + '"></span>' + p.label + '</span></td>' +
+      '<td class="num">' + p.id + '</td>' +
+      '<td class="num">' + p.pre + '</td>' +
+      '<td class="num">' + p.post + '</td>' +
+      '<td class="' + (gain > 0 ? 'gain-pos' : 'gain-zero') + '">' + (gain > 0 ? '+' + gain : '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  // ---- slope chart: small multiples, one mini panel per cohort ----
+  // A single 15-line chart crowds badly at this score range (several
+  // participants land on the exact same or a near-identical score).
+  // Splitting into one 5-line panel per cohort keeps the pre/post
+  // trajectory story but gives each line room to breathe; all three
+  // panels share the same 0-16 y-scale so they stay visually comparable.
+  var tooltip = document.getElementById("tooltip");
+  var ns = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    var e = document.createElementNS(ns, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  var slopeGrid = document.getElementById("slope-grid");
+  var PW = 240, PH = 260;
+  var marginL = 26, marginR = 34, marginT = 14, marginB = 26;
+  var xPre = marginL + 30, xPost = PW - marginR - 30;
+  var yFor = function (v) { return PH - marginB - (v / MAX) * (PH - marginT - marginB); };
+  var MIN_LABEL_GAP = 13;
+
+  cohortSummaries.forEach(function (g, panelIndex) {
+    var cohortKey = g.data[0].cohort;
+    var panel = document.createElement("div");
+    panel.className = "slope-panel";
+    panel.innerHTML =
+      '<div class="slope-panel-head"><span class="swatch" style="background:' + g.color + '"></span>' + g.name + '</div>';
+    var svg = el("svg", {
+      width: "100%", viewBox: "0 0 " + PW + " " + PH, role: "img",
+      "aria-label": "Slope chart of pre and post quiz scores, " + g.name,
+    });
+    panel.appendChild(svg);
+    slopeGrid.appendChild(panel);
+
+    // gridlines every 4 points; numeric ticks only on the first panel so
+    // the three mini axes don't repeat the same labels three times over
+    for (var v = 0; v <= MAX; v += 4) {
+      svg.appendChild(el("line", { x1: marginL, x2: PW - marginR, y1: yFor(v), y2: yFor(v), class: "gridline" }));
+      if (panelIndex === 0) {
+        var lab = el("text", { x: marginL - 6, y: yFor(v) + 4, class: "tick-label", "text-anchor": "end" });
+        lab.textContent = v;
+        svg.appendChild(lab);
+      }
+    }
+    var preLab = el("text", { x: xPre, y: PH - 4, class: "axis-label", "text-anchor": "middle" });
+    preLab.textContent = "PRE";
+    svg.appendChild(preLab);
+    var postLab = el("text", { x: xPost, y: PH - 4, class: "axis-label", "text-anchor": "middle" });
+    postLab.textContent = "POST";
+    svg.appendChild(postLab);
+
+    // post-column label declutter, scoped to this panel's 5 participants
+    var labelOrder = g.data.map(function (p) {
+      return { p: p, y: yFor(p.post) };
+    }).sort(function (a, b) { return a.y - b.y; });
+    labelOrder.forEach(function (entry, i) {
+      if (i > 0 && entry.y - labelOrder[i - 1].y < MIN_LABEL_GAP) {
+        entry.y = labelOrder[i - 1].y + MIN_LABEL_GAP;
+      }
+    });
+    var labelY = {};
+    labelOrder.forEach(function (entry) { labelY[entry.p.id] = entry.y; });
+
+    var color = cssVar(COHORT_COLOR[cohortKey]);
+    g.data.forEach(function (p) {
+      var y1 = yFor(p.pre), y2 = yFor(p.post);
+      svg.appendChild(el("path", {
+        d: "M " + xPre + " " + y1 + " L " + xPost + " " + y2,
+        class: "slope-line", stroke: color, opacity: 0.85,
+      }));
+
+      [[xPre, y1, p.pre], [xPost, y2, p.post]].forEach(function (pt) {
+        var dot = el("circle", { cx: pt[0], cy: pt[1], r: 5, class: "slope-dot", fill: color });
+        dot.addEventListener("mousemove", function () {
+          var rect = svg.getBoundingClientRect();
+          var scaleX = rect.width / PW;
+          tooltip.textContent = p.id + " · " + p.label + " · score " + pt[2] + "/" + MAX;
+          tooltip.style.left = (rect.left + pt[0] * scaleX) + "px";
+          tooltip.style.top = (rect.top + pt[1] * scaleX - 10 + window.scrollY) + "px";
+          tooltip.classList.add("show");
+        });
+        dot.addEventListener("mouseleave", function () { tooltip.classList.remove("show"); });
+        svg.appendChild(dot);
+      });
+
+      var ly = labelY[p.id];
+      if (Math.abs(ly - y2) > 0.5) {
+        svg.appendChild(el("line", { x1: xPost + 7, x2: xPost + 13, y1: y2, y2: ly, class: "gridline" }));
+      }
+      var idLab = el("text", { x: xPost + 15, y: ly + 4, class: "participant-label" });
+      idLab.textContent = p.id;
+      svg.appendChild(idLab);
+    });
+  });
+
+  // ---- concept bars ----
+  // Bars are percentage-correct, not raw counts: concepts tested by two
+  // items (Randomness, Rule-based generation, Emergence, Parameterisation,
+  // Stage role) have double the denominator of single-item concepts, so a
+  // raw count would make bar length reflect item count as much as
+  // performance.
+  var container = document.getElementById("concept-bars");
+  concepts.forEach(function (c) {
+    var prePct = (c.pre / c.n) * 100;
+    var postPct = (c.post / c.n) * 100;
+    var gainPct = postPct - prePct;
+    var row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML =
+      '<div class="bar-name">' + c.name + (c.items > 1 ? ' <span style="color:var(--ink-muted)">(' + c.items + ' items)</span>' : '') + '</div>' +
+      '<div class="bar-track">' +
+        '<div class="bar-fill pre" style="width:' + prePct + '%"></div>' +
+        '<div class="bar-fill post" style="width:' + postPct + '%"></div>' +
+      '</div>' +
+      '<div class="bar-delta' + (gainPct >= 25 ? ' hi' : '') + '">' + Math.round(prePct) + '%→' + Math.round(postPct) + '%</div>';
+    container.appendChild(row);
+  });
+
+  // ---- raw export sample ----
+  var sample = participants.filter(function (p) { return p.id === "P6"; })[0];
+  document.getElementById("raw-json").textContent =
+    JSON.stringify([sample.preRecord, sample.postRecord], null, 2);
+})();
+</script>
+</body>
+</html>

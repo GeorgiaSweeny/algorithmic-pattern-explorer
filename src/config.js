@@ -8,7 +8,7 @@ CONFIGURATION FILE
 // CANVAS
 //======================
 export const CANVAS = {
-  WIDTH: 600,
-  HEIGHT: 600,
-  CENTROID: [300, 300]
+  WIDTH: 500,
+  HEIGHT: 500,
+  CENTROID: [250, 250]
 };

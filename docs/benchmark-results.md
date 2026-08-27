@@ -1,14 +1,16 @@
 # Generator Benchmark Suite
 
 `src/generators/__benchmarks__/benchmark.js` (run via `npm run bench` from `src/`)
-measures empirical time complexity for all seven generators, rather than relying
-on reading the source to guess it. It checks two things:
+measures empirical time complexity for all eight generators (including the Aug
+7-9 hybrid, `recursiveNoise.js`), rather
+than relying on reading the source to guess it. It checks two things:
 
 1. **Grid-size scaling** — time to evaluate an N x N sample grid over the fixed
    600x600 canvas, for N = 25, 50, 100, 200, 400.
 2. **Parameter sweeps** — at a fixed grid size, how time scales with the one
    parameter each generator's own logic suggests should drive its per-pixel cost
-   (Perlin octaves, Voronoi's `numCells`, Sierpinski's `depth`, Islamic's `segments`).
+   (Perlin octaves, Voronoi's `numCells`, Sierpinski's `depth`, Islamic's
+   `segments`, `recursiveNoise`'s `amplitude`).
 
 ## Methodology
 
@@ -38,7 +40,7 @@ present alongside the parameter-dependent cost.
 
 ## Grid-size scaling
 
-All seven generators come out at approximately k=1.0 against pixel count:
+All eight generators come out at approximately k=1.0 against pixel count:
 
 | Generator | k (vs pixel count) |
 |---|---|
@@ -49,6 +51,7 @@ All seven generators come out at approximately k=1.0 against pixel count:
 | recursive | 0.90–0.98 |
 | escher | 1.01–1.03 |
 | islamic | 0.98 (single run so far — added when the generator was built, not yet repeated like the other six) |
+| recursiveNoise | 0.97 (single run so far — added when the generator was built) |
 
 This confirms none of the seven do asymptotically more than O(1) work per pixel
 as the canvas is sampled at higher resolution — the increasing constant factors
@@ -146,6 +149,42 @@ free to increase past a certain point — the UI's `depth` slider (`map: [1, 6]`
 `patternRegistry.js`) never approaches the range where this would matter, but if
 that range were ever extended, performance would not be the limiting concern
 (visual density/legibility would be).
+
+### recursiveNoise: amplitude — a step function, not a power law
+
+Every other sweep in this suite fits (or approximately fits) a power law,
+`time ≈ a + b·param^k`, because the parameter it varies changes *how much* of
+the same kind of work happens (more octaves, more seed points to search, more
+recursion levels). `amplitude` is different: reading `recursiveNoise.js`
+shows it gates a whole *branch* —
+
+```js
+if (amplitude !== 0) {
+   const nx = noise(px * CANVAS.WIDTH, py * CANVAS.HEIGHT, { scale: NOISE_SCALE, seed, octaves: NOISE_OCTAVES });
+   const ny = noise(px * CANVAS.WIDTH + 999, py * CANVAS.HEIGHT + 999, { scale: NOISE_SCALE, seed: seed + 1, octaves: NOISE_OCTAVES });
+   // ... warp px, py, then wrap
+}
+```
+
+— two full `noise()` calls (`NOISE_OCTAVES = 2` each) run once per recursion
+level whenever `amplitude !== 0`, and zero times when it's exactly `0`. The
+sweep confirms this is a step, not a slope: **2.85ms at `amplitude=0`,
+jumping to ~13.6ms at `amplitude=0.1`, then completely flat (13.57ms →
+14.52ms, a ~7% drift attributable to measurement noise, not to `amplitude`'s
+magnitude) all the way to `amplitude=2.0`.** The suite's log-log exponent fit
+returns `NaN` here — `log(0)` is `-Infinity`, so a fit that assumes a
+continuous power law is simply the wrong tool for a parameter whose only real
+effect on cost is on/off.
+
+**Implication for the application**: unlike every other swept parameter in
+this suite, `amplitude`'s cost is paid entirely by *using the hybrid feature
+at all*, not by how far a user pushes it. The UI's `amplitude` slider
+(`map: [0, 0.5]`, `patternRegistry.js`) can be moved freely once a user
+leaves `0` with no further performance cliff to worry about — the one
+decision point is the binary noise-warp on/off, already reflected in the
+generator's own `amplitude !== 0` guard, which exists for correctness
+(skip the warp and the modulo-wrap arithmetic entirely when it would be a
+no-op) and happens to have this cost-shape side effect for free.
 
 ## Reproducing
 

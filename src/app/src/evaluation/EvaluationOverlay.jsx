@@ -24,6 +24,14 @@ import "./EvaluationOverlay.css";
 * comment for the methodology note): one question bank, administered
 * twice. `download()` mirrors export.js's own Blob-download pattern
 * rather than a second implementation of the same few lines.
+*
+* Deliberately no score shown after either pass — not even "you got N
+* right." Telling a participant their pre-quiz score would let them infer
+* which answers were wrong and go looking for the right ones before the
+* post-quiz, or re-pick answers on the post-quiz just to see the number
+* move, contaminating the within-subject comparison this instrument
+* exists to measure. Scores only surface in the downloaded JSON, for the
+* study runner, after the whole session is over.
 */
 
 function download(text, filename) {
@@ -76,7 +84,6 @@ function QuizForm({ phase, onSubmit }) {
 export default function EvaluationOverlay({ onClose }) {
    const [stage, setStage] = useState("intro"); // "intro" | "quiz" | "summary"
    const [phase, setPhase] = useState("pre"); // "pre" | "post"
-   const [lastScore, setLastScore] = useState(null);
 
    function startQuiz(nextPhase) {
       setPhase(nextPhase);
@@ -84,8 +91,9 @@ export default function EvaluationOverlay({ onClose }) {
    }
 
    function submitQuiz(answers) {
-      const score = recordQuizPass(phase, QUIZ_QUESTIONS, answers);
-      setLastScore(score);
+      // Score is recorded but never read back here — see this file's own
+      // header comment for why the result stays hidden until download.
+      recordQuizPass(phase, QUIZ_QUESTIONS, answers);
       setStage("summary");
    }
 
@@ -103,7 +111,7 @@ export default function EvaluationOverlay({ onClose }) {
 
             {stage === "intro" && (
                <div className="eval-intro">
-                  <h2>Evaluation</h2>
+                  <h2>Test</h2>
                   <p>
                      This is an optional research instrument for the dissertation this
                      application supports. It measures whether exploring the algorithm
@@ -138,8 +146,8 @@ export default function EvaluationOverlay({ onClose }) {
                <div className="eval-summary">
                   <h2>Thanks!</h2>
                   <p>
-                     {phase === "pre" ? "Pre-quiz" : "Post-quiz"} recorded — score{" "}
-                     {lastScore} / {QUIZ_QUESTIONS.length}.
+                     {phase === "pre" ? "Pre-quiz" : "Post-quiz"} recorded. Results aren't
+                     shown here — download your results at the end to see them.
                   </p>
                   {phase === "pre" && (
                      <p>Now go explore a few generators, then come back and take the post-quiz.</p>

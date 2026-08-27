@@ -11,7 +11,7 @@ project. It merges three sources that each carry a partial view of priority:
 
 Where the source docs disagreed on emphasis, priority here follows
 [`docs/plan-checklist.md`](plan-checklist.md)'s "Priorities if time runs short"
-ranking, since that's the one built under the actual 14-day time constraint.
+ranking, since that's the one built under the actual time constraint.
 
 Priority definitions used throughout:
 
@@ -41,7 +41,7 @@ Priority definitions used throughout:
 | Grid Tessellations generator | Should | Implemented. Fully decomposed via `lib/latticeIndex.js` (composition question resolved in `ALGORITHMIC_COMPOSITION_RESEARCH.md` — not a `partition.js` reuse, a sixth reusable primitive family). |
 | Generator contract (`GENERATOR_CONTRACT.md`) | Must | Verified by automated property-based tests, not manual inspection (non-functional requirement). |
 | Property-based test suite, all 7 generators | Must | Primary contribution's success criterion is defensible, test-backed composition analysis. |
-| Registry/generator param-consistency guard | Must | `registry.params-consistency.test.js` — same rigor bar; caught a live bug (`recursive-svg.js` ignores `mode`), still open, fix scheduled with Aug 2-6 wiring work per `plan-checklist.md`. |
+| Registry/generator param-consistency guard | Must | `registry.params-consistency.test.js` — same rigor bar; caught a live bug (`recursive-svg.js` ignoring `mode`) during the Aug 2-6 wiring work, since fixed. Extended 2026-08-21 to cover every pattern's `tones`/`colourN` params and raster patterns' `colour1`/`colour2` (checked against `render.js`'s `mapColour`, not the generator itself — see that file's own header comment for the "Colour Mapping is a separate stage" reasoning). |
 | `lib/` primitive decomposition per generator | Must | Required so the composition analysis in `ALGORITHMIC_COMPOSITION_RESEARCH.md` is checkable against real code, not just claimed. |
 | `noise.js` and `recursive.js` internals decomposed into `lib/` primitives | Could | Done — `lib/fold.js`, `lib/repeat.js`; both existing property-test suites pass unchanged. |
 | `recursive.js` `mode` param behaviour decided | Could | Done — `grid` mode accumulates per-level cell parity (self-similar checkerboard, no holes), distinct from `sierpinski`'s centre-cell exclusion. |
@@ -50,25 +50,27 @@ Priority definitions used throughout:
 
 | Item | Priority | Notes |
 |---|---|---|
-| Perlin-perturbed recursive subdivision hybrid | Should | Stochastic/deterministic hybrid; doesn't depend on the other two hybrids. |
-| Voronoi-seeded tessellation hybrid | Should | Doesn't depend on the other two hybrids. |
-| Property tests for built hybrids | Should | Same rigor bar as the core 7 generators. |
+| Perlin-perturbed recursive subdivision hybrid | Must | Done — `recursiveNoise.js` (`perlin-sierpinski`). `amplitude = 0` is byte-identical to Sierpinski Carpet, a falsifiable baseline; needed a genuinely new composition *shape* (Repeat whose step is a Fork) but zero new primitives. `scale`/`octaves` (noise.js's own params) exposed 2026-08-21 for a richer parameter sweep. |
+| Voronoi-seeded Islamic tiling hybrid | Must | Done — `voronoiIslamic.js` (`voronoi-islamic`), built 2026-08-21. Selected over the Escher-tile-placement variant below as the more direct test of the primary RQ (does the "which cell → build a rosette there" pipeline generalise from a regular to a stochastic point source, downstream construction held fixed). One new primitive (`nearestNeighbourDistances`), zero new patterns — full reasoning in `docs/VORONOI_ISLAMIC_HYBRID_PLAN.md`. Opt-in per-cell `variation` param added same day for visual range, default 0 (exact identity, doesn't disturb the original comparison). |
+| Property tests for built hybrids | Must | Done — same rigor bar as the core 7 generators (`recursiveNoise.property.test.js`, `voronoiIslamic.property.test.js`, plus `lib.seedPoints.test.js` for the one new primitive). |
+| Voronoi-seeded Escher tessellation hybrid (random partition drives tile placement) | Could | Not built — distinct from the Voronoi Islamic row above (that one seeds Islamic Rosette's construction, not Escher's). Deferred per `plan-checklist.md`'s Aug 7-9 cut order; the other two hybrids don't depend on it. |
 | Noise/reaction-diffusion-driven Islamic pattern hybrid | Could | Cut-order #3 per plan-checklist.md — other two hybrids don't depend on it. |
-| Entropy/structure metrics across hybrid params | Could | Cut-order #2 — separable from the hybrids existing and working; secondary RQ's empirical content, not its precondition. |
-| Benchmark suite extended to cover hybrids | Should | Re-run once hybrids exist; core-generator benchmarking is already Must/done. |
+| Entropy/structure metrics across hybrid params | Must | Done — `structureMetrics.js`/`docs/structure-metrics-results.md`, sweeps `recursiveNoise.js`'s `amplitude` against edge density and block-pattern entropy; both increase monotonically, direct quantitative evidence for the continuous stochastic/deterministic spectrum claim. |
+| Benchmark suite extended to cover hybrids | Must | Done — `benchmark.js`'s `REPRESENTATIVE_PARAMS`/`PARAM_SWEEPS` cover both `recursiveNoise` and `voronoiIslamic`. |
 
 ## 3. Algorithm Explorer / Demonstration Interface
 
 | Item | Priority | Notes |
 |---|---|---|
-| ReactFlow node graph (all 7 core generators) | Must | Primary demonstration-layer deliverable — the node model *is* the thing being evaluated. |
+| ReactFlow node graph (all 7 core generators plus 2 hybrids) | Must | Primary demonstration-layer deliverable — the node model *is* the thing being evaluated. |
 | Functional page: select generator / view graph / adjust params / canvas updates | Must | MVP interaction loop per `PROJECT_SPECIFICATION.md` User Requirements. |
 | Documentation panel per node (name, plain-language explanation, purpose, CT concepts, params) | Must | `PROJECT_SPECIFICATION.md` §Documentation Panel — required, not optional. |
 | Real-time canvas rendering, immediate feedback on param change | Must | Core interaction principle; explicit functional requirement. |
-| Inspect intermediate algorithm stages | Must | "Core contribution of the demonstration layer" per spec. |
-| Reset parameters to default | Must | Explicit user requirement. |
+| Inspect intermediate algorithm stages | Must | Done (2026-08-21) — `src/app/src/stagePreview.js`, one generic mechanism across all 9 generators (params override for 6, a dedicated small preview renderer for the 3 with no reducing param), previously the single most under-delivered Must relative to the spec calling this "the core contribution of the demonstration layer specifically." Also closed the Documentation Panel's "Visual Example" placeholder as a side effect (same mechanism, thumbnail size). |
+| Reset parameters to default | Must | Done (2026-08-21) — one button in `App.jsx`'s status bar. |
 | PNG export | Must | Explicit user requirement ("where supported"). |
 | SVG export | Should | README MVP lists as "where supported" — secondary to PNG. |
+| Component-level tests for the demonstration layer itself | Should | Done (2026-08-21) — `@testing-library/react` + jsdom; `App.test.jsx`/`WorkflowNode.test.jsx`/`DocumentationPanel.test.jsx`, 19 tests. Previously the generator layer's own "verified by tests, not manual inspection" rigor stopped exactly at the boundary of the layer actually being evaluated with users. |
 | Documentation/education UI polish beyond MVP loop | Could | Explicitly deferred post-schedule-end in plan-checklist.md's cut order (#4, last to cut — but still not Must). |
 | Optional short node-behaviour animations | Could | Spec marks these "optional" explicitly. |
 | Visual overlays on canvas | Could | Spec marks these "optional where educationally useful." |
@@ -85,9 +87,9 @@ Full detail lives in
 | Interface understandable with no programming background | Must | US-1.1 |
 | Explorer Mode (step through existing algorithms, no building required) | Must | US-12.5 |
 | Visual + interactive + written explanation per node (multi-modal) | Must | US-4.1, US-4.2, US-4.4 |
-| Explicit learning objective shown per node/algorithm | Must | US-6.1 |
+| Explicit learning objective shown per node/algorithm | Must | US-6.1. Done (2026-08-21) — a new `objective` field per `nodeDocs.js` entry, its own Documentation Panel block. |
 | Minimal initial interface, progressive disclosure | Must | US-9.1, US-9.2 |
-| Tiered algorithm structure (core/intermediate/advanced) | Must | US-10.1 |
+| Tiered algorithm structure (core/intermediate/advanced) | Must | US-10.1. Done (2026-08-23) — Generator Selection is grouped by category (`entry.category`) in `src/patternRegistry.js`'s own array order, reordered simplest → most complex (Wave, Noise, Tiles, Escher, Voronoi, Islamic, Fractal), with the two Hybrid patterns separated out and listed last since each only makes sense once its own ingredient generators are already understood on their own. `docs/nodes/WORKFLOWS.md`'s §1-9 section order mirrors the same sequence. |
 | Adapts explanation depth across learner age/experience | Should | US-1.2 |
 | Conceptual (not just surface) explanation per node | Should | US-3.2 |
 | Optional animation of node behaviour over time | Should | US-4.3 |
@@ -112,9 +114,10 @@ Full detail lives in
 
 | Item | Priority | Notes |
 |---|---|---|
-| Computational-thinking quiz instrument (pre/during/post) drafted | Must | The Aug-11/12 deliverable per plan-checklist.md is the instrument working, not a completed study. |
-| In-app concept-check prompts during use | Must | Part of the same MVP evaluation deliverable. |
-| Pre/post evaluation data collection + write-up | Must | Required for the secondary RQ's empirical validation — the project's Success Criteria (`PROJECT_SPECIFICATION.md`) require evidence users actually achieved the listed learning outcomes, not just that the instrument exists. Runs after the Aug 12 coding deadline, during the dissertation write-up period, targeting Aug 31 to leave a buffer before the Sep 7 submission deadline — later timing, not lower necessity. |
+| Computational-thinking quiz instrument (pre/during/post) drafted | Must | Done (2026-08-21) — `src/app/src/evaluation/quizContent.js` (12 questions covering all 9 named CT concepts) + `EvaluationOverlay.jsx` (single-instrument pre/post flow, opened from the menu bar, kept separate from the main explorer loop). The Aug-11/12 deliverable per plan-checklist.md is the instrument working, not a completed study — satisfied exactly. |
+| In-app concept-check prompts during use | Must | Done (2026-08-21) — `ConceptCheckPrompt.jsx`, triggered once per session per newly-encountered node concept (reuses `nodeDocs.js`'s existing `NODE_DOCS[nodeType].concepts` tagging, not a second mapping). |
+| Local, anonymous data capture for the instrument above | Must | Done (2026-08-21) — `evaluationStorage.js`, `localStorage`-backed, downloadable as JSON from the overlay's summary screen. No backend, no accounts — consistent with this project's own System Constraint. |
+| Pre/post evaluation data collection + write-up | Must | Not started — requires the instrument above (now built) to actually be run with real participants. Required for the secondary RQ's empirical validation — the project's Success Criteria (`PROJECT_SPECIFICATION.md`) require evidence users actually achieved the listed learning outcomes, not just that the instrument exists. Targeting Aug 31 to leave a buffer before the Sep 11 submission deadline (confirmed 2026-08-23; earlier Sep 7 was a self-imposed buffer date, not the real deadline). |
 
 ## 6. Explicitly Out of Scope (Won't Have, any horizon)
 
@@ -139,6 +142,12 @@ are natural next steps rather than deliberately excluded:
 * Interactive algorithm authoring (guided, constraint-validated)
 * Guided learning pathways (tutorials, exercises, lesson plans)
 * Additional generative systems: L-Systems, reaction–diffusion, cellular automata, agent-based systems
+* Aperiodic monotile tiling (hat / spectre, Smith et al. 2023's resolution of
+  the Einstein problem) — references and feasibility assessment in
+  `docs/EINSTEIN_APERIODIC_STRETCH.md`; likely needs a genuinely new
+  composition pattern (hierarchical substitution) beyond atop/fork/constant-
+  bind/fold/repeat, so treated as a vocabulary stress-test rather than a
+  near-term build
 
 ---
 

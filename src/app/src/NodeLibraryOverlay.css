@@ -88,7 +88,7 @@
    font-size: 11px;
    text-transform: uppercase;
    letter-spacing: 0.04em;
-   color: #9ca3af;
+   color: #6b7280;
 }
 
 .lib-sidebar-group:first-child h4 {
@@ -129,6 +129,25 @@
    font-size: 14px;
    line-height: 1.6;
    color: #1f2937;
+}
+
+.lib-visual-example {
+   height: 160px;
+   border: 1px solid #e5e7eb;
+   border-radius: 6px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   background: #fafafa;
+   margin-bottom: 16px;
+}
+
+/* A horizontal bar, not a square icon — overrides the fixed square height
+   above rather than stretching the bar to fill it. */
+.lib-spectrum-example {
+   height: auto;
+   display: block;
+   padding: 16px 20px;
 }
 
 .lib-content h2,

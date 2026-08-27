@@ -13,7 +13,7 @@ COLOUR MAPPING
 * exact values (a plain +-1 and a true 0 midpoint) can't drift if the
 * formula above them ever changes.
 */
-export const TONES = {
+const TONES = {
    "2": [1, -1],
    "3": [1, 0, -1],
 };

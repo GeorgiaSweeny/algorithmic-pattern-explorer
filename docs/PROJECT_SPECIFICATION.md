@@ -296,7 +296,7 @@ points — confirmed distinct from the recursive generator's repeat/power
 pattern, and requiring no new composition pattern of its own (see
 `docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`). Scoped down from the shape-grammar
 construction method in this project's own prior R&D
-(`docs/references/Maths to Magic...pdf`) to fit the pure-function generator
+(github.com/GeorgiaSweeny/Pattern_Generator_HDA) to fit the pure-function generator
 contract every other generator satisfies, rather than reproducing that
 research's boolean-CSG authoring pipeline — see `docs/nodes/WORKFLOWS.md` §7
 for the full reasoning.

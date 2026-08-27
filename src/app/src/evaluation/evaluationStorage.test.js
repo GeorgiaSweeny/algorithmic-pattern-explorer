@@ -27,8 +27,8 @@ beforeEach(() => {
 });
 
 const QUESTIONS = [
-   { id: "q1", correctIndex: 1 },
-   { id: "q2", correctIndex: 0 },
+   { id: "q1", concept: "Randomness", correctIndex: 1 },
+   { id: "q2", concept: "Iteration", correctIndex: 0 },
 ];
 
 describe("evaluationStorage: quiz recording", () => {
@@ -37,7 +37,7 @@ describe("evaluationStorage: quiz recording", () => {
       expect(score).toBe(1); // q1 correct, q2 wrong
    });
 
-   it("stores each quiz pass with its phase, score, total and answers", () => {
+   it("stores each quiz pass with its phase, score, total and a per-item breakdown", () => {
       recordQuizPass("pre", QUESTIONS, { q1: 1, q2: 0 });
       const records = getAllRecords();
       expect(records).toHaveLength(1);
@@ -46,7 +46,10 @@ describe("evaluationStorage: quiz recording", () => {
          phase: "pre",
          score: 2,
          total: 2,
-         answers: { q1: 1, q2: 0 },
+         items: [
+            { id: "q1", concept: "Randomness", selectedIndex: 1, correctIndex: 1, correct: true },
+            { id: "q2", concept: "Iteration", selectedIndex: 0, correctIndex: 0, correct: true },
+         ],
       });
       expect(typeof records[0].timestamp).toBe("string");
    });

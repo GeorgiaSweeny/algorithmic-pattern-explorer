@@ -2,6 +2,11 @@
    position: fixed;
    inset: 0;
    background: rgba(17, 24, 39, 0.6);
+   /* Blurs the app behind the overlay, not just dims it — a participant
+      taking the quiz shouldn't be able to read the canvas/workflow behind
+      this panel while answering. */
+   backdrop-filter: blur(8px);
+   -webkit-backdrop-filter: blur(8px);
    display: flex;
    align-items: center;
    justify-content: center;

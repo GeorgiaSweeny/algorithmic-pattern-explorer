@@ -10,7 +10,7 @@ Nodes are organised by **conceptual role**, not by which algorithm first introdu
 
 - **`core/`** — Reusable computational concepts. General-purpose building blocks (transforms, sampling, colour, rendering) that apply across many algorithms: `workspace`, `seed`, `base-geometry`, `grid`, `rotate`, `translate`, `scale`, `mirror`, `repeat`, `noise`, `colour-mapping`, `render`.
 
-- **`computation/`** — Spatial / numeric systems. Nodes that compute a field, mapping, or relationship over space or values: `distance-field`, `partition`, `interpolation`, `gradient-field`, `waveform`, `lattice-index`.
+- **`computation/`** — Spatial / numeric systems. Nodes that compute a field, mapping, or relationship over space or values: `distance-field`, `partition` (documented concept, not yet backed by its own `lib/` module — see the node's own doc), `waveform`, `lattice-index`.
 
 - **`generation/`** — Initial sampling structures. Nodes that produce the first set of points/geometry an algorithm builds on: `seed-points`, `construction-circle`.
 

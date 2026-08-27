@@ -1,5 +1,5 @@
 // Render-node export actions (docs/UI_DESIGN.md: "Export moved from a
-// canvas-level feature to a Render-node control"). Mirrors src/ui.js's
+// canvas-level feature to a Render-node control"). Mirrors src/vanilla/ui.js's
 // _exportSvg/_exportPng, rebuilding the image from GENERATORS/SVG_GENERATORS
 // rather than reading a live DOM canvas, so it works independently of
 // whichever node happens to be selected.

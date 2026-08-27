@@ -304,7 +304,14 @@ export const REGISTRY = [
          // special-cased to 3), so there's a real off-canonical variant
          // here worth letting a user explore rather than hiding it.
          { param: "subdivisions", archetype: "Detail", value: 3, map: [2, 6] },
-         { param: "depth",        archetype: "Complexity", value: 4, map: [1, 6] },
+         // firstOccurrenceOnly: this generator's node graph repeats one
+         // Subdivide node per depth level (workflows.js's STEP_DEFS), so
+         // `depth` would otherwise show as an editable slider on every one
+         // of them — editing it from any of them changes the whole repeat
+         // count, not just that step, which reads as broken rather than a
+         // real per-node control. Shown only on the first occurrence;
+         // subsequent ones get an explanatory note instead (WorkflowNode.jsx).
+         { param: "depth",        archetype: "Complexity", value: 4, map: [1, 6], firstOccurrenceOnly: true },
          ...twoColourParams(),
       ],
    },
@@ -318,7 +325,8 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "mode",         value: "grid" },
-         { param: "depth",        archetype: "Complexity", value: 3, map: [1, 6] },
+         // See sierpinski's own `depth` entry above for why firstOccurrenceOnly.
+         { param: "depth",        archetype: "Complexity", value: 3, map: [1, 6], firstOccurrenceOnly: true },
          { param: "subdivisions", archetype: "Detail",     value: 4, map: [2, 9] },
          ...twoColourParams(),
       ],
@@ -341,7 +349,9 @@ export const REGISTRY = [
       spectrum:     0.5,
       nativeFormat: "raster",
       params: [
-         { param: "depth",     archetype: "Complexity", value: 4,   map: [1, 6]   },
+         // See sierpinski's own `depth` entry (above, recursive.js) for why
+         // firstOccurrenceOnly — same node-count-per-depth-level structure.
+         { param: "depth",     archetype: "Complexity", value: 4,   map: [1, 6],   firstOccurrenceOnly: true },
          { param: "amplitude", archetype: "Randomness",  value: 0,   map: [0, 0.5] },
          // noise.js's own scale/octaves, passed straight through to the
          // same noise() calls — same params, same registry ranges as

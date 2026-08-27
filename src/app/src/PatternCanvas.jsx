@@ -16,16 +16,21 @@ import { resolvePreview, seedPointsRasterValue, seedPointsSvg, rawDistanceSvg } 
 // `node` (or selecting a node with no defined rule) falls back to the
 // pattern's real current output, unchanged from before this existed.
 //
-// Also used, unmodified, as DocumentationPanel.jsx's small "Visual
-// Example" thumbnail — always computed at the full CANVAS resolution
-// (correct for every generator, several of which normalise coordinates
-// against the imported CANVAS constant directly, e.g. recursive.js) and
-// scaled down for display via CSS (`.pattern-canvas`'s own `max-width/
-// max-height: 100%`), not resampled at a smaller pixel grid. Simpler and
-// risk-free; a genuine reduced-resolution resampling pass would be the
-// next optimisation if two full-resolution renders per param change ever
-// becomes a measured problem (see docs/benchmark-results.md for the
-// existing per-generator per-frame cost).
+// Also used, unmodified, as App.jsx's left-column "Render Preview" —
+// always computed at the full CANVAS resolution (correct for every
+// generator, several of which normalise coordinates against the imported
+// CANVAS constant directly, e.g. recursive.js) and scaled down for display
+// via CSS (`.pattern-canvas`'s own `max-width/max-height: 100%`, or an
+// explicit width in the zoomable Render Preview case — see App.css's
+// `.final-preview-canvas-scale`), not resampled at a smaller pixel grid.
+// Simpler and risk-free; a genuine reduced-resolution resampling pass
+// would be the next optimisation if two full-resolution renders per param
+// change ever becomes a measured problem (see docs/benchmark-results.md
+// for the existing per-generator per-frame cost).
+// DocumentationPanel.jsx's "Visual Example" used to reuse this component
+// too, until it became a generic per-node-type diagram instead (see
+// nodeIllustrations.jsx) — a render of whichever pattern happened to be
+// selected didn't actually explain the node's operation.
 export default function PatternCanvas({ entry, params, node }) {
    const canvasRef = useRef(null);
    const svgHostRef = useRef(null);
