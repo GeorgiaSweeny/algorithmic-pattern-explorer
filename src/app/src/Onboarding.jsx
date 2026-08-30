@@ -17,7 +17,7 @@ import "./Onboarding.css";
 *
 * No third-party tour library — this app has exactly three runtime
 * dependencies (@xyflow/react, react, react-dom); adding one for a single,
-* fixed six-step sequence would be a heavier change than the feature
+* fixed seven-step sequence would be a heavier change than the feature
 * itself. Structurally mirrors EvaluationOverlay.jsx's own pattern: one
 * component, own CSS file, mounted conditionally from App.jsx.
 */
@@ -32,7 +32,7 @@ export function hasSeenOnboarding() {
    }
 }
 
-function markOnboardingSeen() {
+export function markOnboardingSeen() {
    try {
       localStorage.setItem(STORAGE_KEY, "true");
    } catch {
@@ -42,45 +42,63 @@ function markOnboardingSeen() {
    }
 }
 
-// One entry per step: `selector` is queried against the live DOM (all five
+// One entry per step: `selector` is queried against the live DOM (all seven
 // targets are always mounted, never conditionally rendered away, so this is
-// reliable without needing refs threaded down from App.jsx).
+// reliable without needing refs threaded down from App.jsx). `selector` can
+// also be an array — every matching element gets its own spotlight, for a
+// step that explains a relationship between two panels (e.g. clicking a
+// node in the diagram vs. where its explanation shows up), with the
+// callout itself still anchored to the first entry.
 const STEPS = [
    {
       selector: ".generator-selection",
-      title: "Pick an algorithm",
-      body: "Every pattern generator lives here, grouped by family. Selecting one updates everything else on screen.",
+      title: "Choose a pattern",
+      body: "Pick a pattern from the list. Everything else on screen updates to match your choice.",
    },
    {
-      selector: ".final-preview",
-      title: "Final result, always visible",
-      body: "This preview always shows the pattern's finished output, no matter which stage you're inspecting below.",
+      selector: ".pattern-documentation",
+      title: "See the finished pattern",
+      body: "This shows what your pattern looks like when it's done, plus a simple explanation of what it is and why it matters.",
    },
    {
-      selector: ".doc-panel",
-      title: "Explanations appear here",
-      body: "Select any node in the workflow graph and its plain-language explanation shows up in this panel.",
+      selector: [".doc-panel", ".algorithm-workflow"],
+      title: "Learn about each step",
+      body: "Click a box (node) in the diagram below and a simple explanation of that step appears here.",
    },
    {
-      selector: ".canvas-panel",
-      title: "One stage at a time",
-      body: "This canvas shows the output of whichever single computational stage is currently selected, not just the final result. Use the Prev/Next buttons at the bottom of the screen to step through the pipeline.",
+      selector: ".render-panel-body",
+      title: "Watch one step at a time",
+      body: "This shows the stage of the pattern you're on when you select a node below, not the whole pattern. Use the Prev and Next buttons below to move through the steps.",
    },
    {
       selector: ".algorithm-workflow",
-      title: "The computational pipeline",
-      body: "Each box is one computational stage; the arrows show how data flows from one to the next. Click any box to inspect it.",
+      title: "How the pattern is built",
+      body: "Each node is one step, and the arrows show the order they happen in. Click a node to see its settings — changing them changes the output. The colour key above shows what kind of step each node is.",
+   },
+   {
+      selector: ".workflow-controls-bar",
+      title: "Step through, or start over",
+      body: "Prev and Next move you through the steps one at a time. If you've changed any settings, Reset to Defaults puts them all back to how they started.",
+   },
+   {
+      selector: ".menu-bar-doc-library",
+      title: "Want to know more?",
+      body: "The Documentation Library has more detail on every pattern, node, and key terms. You can open it any time.",
    },
 ];
 
-function useTargetRect(selector, active) {
-   const [rect, setRect] = useState(null);
+// Returns one rect per selector (null for any that don't match), in the
+// same order as `selectors` — so the first entry is always the "primary"
+// target a step's callout anchors to, even when later entries are also
+// spotlighted.
+function useTargetRects(selectors, active) {
+   const [rects, setRects] = useState(() => selectors.map(() => null));
+   const key = selectors.join("|");
 
    useLayoutEffect(() => {
       if (!active) return;
       function measure() {
-         const el = document.querySelector(selector);
-         setRect(el ? el.getBoundingClientRect() : null);
+         setRects(selectors.map((s) => document.querySelector(s)?.getBoundingClientRect() ?? null));
       }
       measure();
       window.addEventListener("resize", measure);
@@ -91,15 +109,18 @@ function useTargetRect(selector, active) {
          window.removeEventListener("resize", measure);
          clearInterval(interval);
       };
-   }, [selector, active]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [key, active]);
 
-   return rect;
+   return rects;
 }
 
 export default function Onboarding({ onClose }) {
    const [stepIndex, setStepIndex] = useState(0);
    const step = STEPS[stepIndex];
-   const rect = useTargetRect(step.selector, true);
+   const selectors = Array.isArray(step.selector) ? step.selector : [step.selector];
+   const rects = useTargetRects(selectors, true);
+   const rect = rects.find(Boolean) ?? null;
 
    useEffect(() => {
       function onKeyDown(e) {
@@ -153,20 +174,51 @@ export default function Onboarding({ onClose }) {
       return { top, left };
    })();
 
+   // A single dim layer, not one box-shadow-based overlay per target: two
+   // independent "dim everything but my own box" shadows (the old approach)
+   // stack on top of each other, so each one's dim also darkens over the
+   // *other* one's cutout wherever they don't overlap — a multi-target step
+   // (e.g. Documentation Panel + node diagram) ended up visibly dimmer than
+   // a single-target one. An SVG path with one closed subpath for the full
+   // viewport and one more per target rect, combined with fill-rule
+   // "evenodd", punches every target out of the same single fill in one
+   // pass instead, so cutouts are always full brightness regardless of how
+   // many there are. The highlight border itself is still a separate plain
+   // div per rect, drawn on top.
+   const padding = 6;
+   const dimPath =
+      `M0,0H${window.innerWidth}V${window.innerHeight}H0Z ` +
+      rects
+         .filter(Boolean)
+         .map((r) => {
+            const x = r.left - padding;
+            const y = r.top - padding;
+            const w = r.width + padding * 2;
+            const h = r.height + padding * 2;
+            return `M${x},${y}H${x + w}V${y + h}H${x}Z`;
+         })
+         .join(" ");
+
    return (
       <div className="onboarding-root">
-         {rect && (
-            <div
-               className="onboarding-spotlight"
-               style={{
-                  top: rect.top - 6,
-                  left: rect.left - 6,
-                  width: rect.width + 12,
-                  height: rect.height + 12,
-               }}
-            />
+         <svg className="onboarding-dim-svg">
+            <path d={dimPath} fillRule="evenodd" />
+         </svg>
+         {rects.map(
+            (r, i) =>
+               r && (
+                  <div
+                     key={selectors[i]}
+                     className="onboarding-spotlight"
+                     style={{
+                        top: r.top - padding,
+                        left: r.left - padding,
+                        width: r.width + padding * 2,
+                        height: r.height + padding * 2,
+                     }}
+                  />
+               ),
          )}
-         {!rect && <div className="onboarding-dim" />}
          <div className="onboarding-callout" style={calloutStyle}>
             <div className="onboarding-callout-step">
                Step {stepIndex + 1} of {STEPS.length}

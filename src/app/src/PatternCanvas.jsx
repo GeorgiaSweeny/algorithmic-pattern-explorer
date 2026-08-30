@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { GENERATORS } from "../../generators/index.js";
 import { SVG_GENERATORS } from "../../generators/svg/index.js";
 import { mapColour } from "../../render.js";
@@ -31,9 +31,28 @@ import { resolvePreview, seedPointsRasterValue, seedPointsSvg, rawDistanceSvg } 
 // too, until it became a generic per-node-type diagram instead (see
 // nodeIllustrations.jsx) — a render of whichever pattern happened to be
 // selected didn't actually explain the node's operation.
+// SVG generators (wave-svg.js's "wg"/"wp", islamic-svg.js's "islamic-tile",
+// etc.) hardcode their own <defs> ids, which is fine as long as only one
+// PatternCanvas is ever mounted at a time — true everywhere except the
+// evaluation quiz's image-bearing items, which mount several side by side
+// in the same document. SVG ids are document-global, not scoped to their
+// own <svg>, so `url(#wp)` in a second mounted instance resolves to
+// whichever element with `id="wp"` appears *first* in the whole page —
+// every such SVG rendered after the first one silently shows the first
+// one's own pattern/gradient/clip instead of its own. Suffixing every id
+// (and every reference to one) with a per-mount `useId()` value scopes
+// them without touching a single generator's own SVG string.
+function scopeSvgIds(svg, uid) {
+   return svg
+      .replace(/\bid="([^"]+)"/g, (_, id) => `id="${id}-${uid}"`)
+      .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${uid})`)
+      .replace(/(xlink:href|href)="#([^"]+)"/g, (_, attr, id) => `${attr}="#${id}-${uid}"`);
+}
+
 export default function PatternCanvas({ entry, params, node }) {
    const canvasRef = useRef(null);
    const svgHostRef = useRef(null);
+   const uid = useId().replace(/:/g, "");
    const isVector = entry.nativeFormat === "vector";
    const nodeType = node?.data?.nodeType;
    const preview = resolvePreview(entry.generator, nodeType, params, node?.data);
@@ -77,8 +96,8 @@ export default function PatternCanvas({ entry, params, node }) {
       else if (preview?.kind === "override") svg = fn(WIDTH, HEIGHT, { ...params, ...preview.overrides });
       else svg = fn(WIDTH, HEIGHT, params);
 
-      svgHostRef.current.innerHTML = svg;
-   }, [entry, params, isVector, preview]);
+      svgHostRef.current.innerHTML = scopeSvgIds(svg, uid);
+   }, [entry, params, isVector, preview, uid]);
 
    if (isVector) {
       return <div ref={svgHostRef} className="pattern-canvas pattern-canvas-svg" />;

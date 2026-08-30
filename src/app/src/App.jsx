@@ -11,11 +11,9 @@ import DocumentationPanel from "./DocumentationPanel.jsx";
 import PatternDocumentation from "./PatternDocumentation.jsx";
 import NodeLibraryOverlay from "./NodeLibraryOverlay.jsx";
 import { exportSvg, exportPng } from "./export.js";
-import { NODE_DOCS } from "./nodeDocs.js";
 import EvaluationOverlay from "./evaluation/EvaluationOverlay.jsx";
-import ConceptCheckPrompt from "./evaluation/ConceptCheckPrompt.jsx";
-import { recordConceptCheck, hasPromptedConcept, markConceptPrompted } from "./evaluation/evaluationStorage.js";
-import Onboarding, { hasSeenOnboarding } from "./Onboarding.jsx";
+import Onboarding, { hasSeenOnboarding, markOnboardingSeen } from "./Onboarding.jsx";
+import Welcome from "./Welcome.jsx";
 import "./App.css";
 
 const nodeTypes = { workflow: WorkflowNode };
@@ -79,13 +77,13 @@ export default function App() {
    const [selectedId, setSelectedId] = useState(REGISTRY[0].id);
    const selectedEntry = REGISTRY.find((e) => e.id === selectedId);
    const [paramValues, setParamValues] = useState(() => defaultParams(selectedEntry));
-   // -1 = no node selected yet — the Documentation Panel shows the
-   // pattern-level overview (GENERATOR_DOCS) in that state, before a
-   // learner has picked any one computational stage to inspect
-   // (docs/evaluation/pre-study2-feature-plans.md §2). Not just an initial
-   // value: switching pattern resets back to -1 too, so the overview
-   // reappears for every newly-selected pattern, not only on first load.
-   const [selectedIndex, setSelectedIndex] = useState(-1);
+   // 0 = the pattern's first node, so the Documentation Panel always has a
+   // concrete stage to explain by default rather than opening on its empty
+   // "select a node" state. -1 (pattern-level overview, GENERATOR_DOCS) is
+   // still reachable via Prev. Not just an initial value: switching pattern
+   // resets back to 0 too, so the first node is selected again for every
+   // newly-selected pattern, not only on first load.
+   const [selectedIndex, setSelectedIndex] = useState(0);
    // Main canvas zoom: 1 = "min(100% of the panel, the pattern's actual
    // pixel size)" — the canvas is always fully visible with no scrolling
    // needed at the default. Zooming in beyond that is an explicit choice,
@@ -96,11 +94,17 @@ export default function App() {
    const CANVAS_ZOOM_MIN = 0.5;
    const CANVAS_ZOOM_MAX = 3;
    const [showTest, setShowTest] = useState(false);
+   const [showTest2, setShowTest2] = useState(false);
    const [showEvaluationMenu, setShowEvaluationMenu] = useState(false);
    const evaluationMenuRef = useRef(null);
    const [showNodeLibrary, setShowNodeLibrary] = useState(false);
-   const [activeConceptPrompt, setActiveConceptPrompt] = useState(null); // { nodeType, concept } | null
-   const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
+   // Welcome (app intro) and Onboarding (panel-by-panel tour) are one
+   // combined first-visit flow gated by the same "seen" flag: Welcome
+   // shows first, its own "Take the tour" hands off into Onboarding, and
+   // "Skip" dismisses both for good. The menu bar's "Replay Tutorial"
+   // button re-opens the same combined flow from the start.
+   const [showWelcome, setShowWelcome] = useState(() => !hasSeenOnboarding());
+   const [showOnboarding, setShowOnboarding] = useState(false);
    // Starts collapsed: a pattern is always selected by default, so the full
    // list isn't needed on screen until a learner actively wants to change
    // it. Expanding this and Pattern Documentation being shown are mutually
@@ -119,12 +123,11 @@ export default function App() {
       return () => document.removeEventListener("mousedown", handleClickOutside);
    }, [showEvaluationMenu]);
 
-   // Reset to the new pattern's defaults, no node selected (back to the
-   // pattern-level overview), and default canvas zoom whenever the
-   // selection changes.
+   // Reset to the new pattern's defaults, first node selected, and default
+   // canvas zoom whenever the selection changes.
    useEffect(() => {
       setParamValues(defaultParams(selectedEntry));
-      setSelectedIndex(-1);
+      setSelectedIndex(0);
       setCanvasZoom(1);
    }, [selectedId]);
 
@@ -180,31 +183,6 @@ export default function App() {
    // stepped all the way to the last stage).
    const showingFinalRender = isRenderStep || !selectedNode;
 
-   // In-app concept-check prompt (docs/plan-checklist.md's Aug-11/12
-   // evaluation deliverable): the first time a newly-selected node is
-   // tagged with a computational-thinking concept not yet checked in on
-   // this session, surface a lightweight, dismissible prompt. Reuses
-   // nodeDocs.js's existing NODE_DOCS concepts tagging rather than a
-   // second concept mapping. Runs once per node selection, not per
-   // param edit — selectedNode's nodeType is what it depends on.
-   useEffect(() => {
-      const nodeType = selectedNode?.data.nodeType;
-      const concepts = NODE_DOCS[nodeType]?.concepts ?? [];
-      const nextConcept = concepts.find((c) => !hasPromptedConcept(c));
-      if (nextConcept) {
-         markConceptPrompted(nextConcept);
-         setActiveConceptPrompt({ nodeType, concept: nextConcept });
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [selectedNode?.data.nodeType]);
-
-   function respondToConceptPrompt(response) {
-      if (activeConceptPrompt) {
-         recordConceptCheck(activeConceptPrompt.nodeType, activeConceptPrompt.concept, response);
-      }
-      setActiveConceptPrompt(null);
-   }
-
    function selectByNodeId(nodeId) {
       const idx = nodes.findIndex((n) => n.id === nodeId);
       if (idx !== -1) setSelectedIndex(idx);
@@ -215,10 +193,13 @@ export default function App() {
          <header className="menu-bar">
             <span className="menu-bar-title">Algorithmic Pattern Explorer</span>
             <div className="menu-bar-actions">
-               <button className="btn menu-bar-node-library" onClick={() => setShowNodeLibrary(true)}>
+               <button
+                  className="btn menu-bar-node-library menu-bar-doc-library"
+                  onClick={() => setShowNodeLibrary(true)}
+               >
                   Documentation Library
                </button>
-               <button className="btn menu-bar-node-library" onClick={() => setShowOnboarding(true)}>
+               <button className="btn menu-bar-node-library" onClick={() => setShowWelcome(true)}>
                   Replay Tutorial
                </button>
                <div className="menu-bar-dropdown" ref={evaluationMenuRef}>
@@ -242,6 +223,16 @@ export default function App() {
                         >
                            Test
                         </button>
+                        <button
+                           className="menu-bar-dropdown-item"
+                           role="menuitem"
+                           onClick={() => {
+                              setShowTest2(true);
+                              setShowEvaluationMenu(false);
+                           }}
+                        >
+                           Test 2
+                        </button>
                         <a
                            className="menu-bar-dropdown-item"
                            role="menuitem"
@@ -261,6 +252,16 @@ export default function App() {
                            onClick={() => setShowEvaluationMenu(false)}
                         >
                            Study Results
+                        </a>
+                        <a
+                           className="menu-bar-dropdown-item"
+                           role="menuitem"
+                           href="/evaluation/study2-results.html"
+                           target="_blank"
+                           rel="noreferrer"
+                           onClick={() => setShowEvaluationMenu(false)}
+                        >
+                           Study 2 Results
                         </a>
                      </div>
                   )}
@@ -287,14 +288,21 @@ export default function App() {
          </header>
 
          {showNodeLibrary && <NodeLibraryOverlay onClose={() => setShowNodeLibrary(false)} />}
-         {showTest && <EvaluationOverlay onClose={() => setShowTest(false)} />}
-         {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
-         {activeConceptPrompt && (
-            <ConceptCheckPrompt
-               concept={activeConceptPrompt.concept}
-               onRespond={respondToConceptPrompt}
+         {showTest && <EvaluationOverlay study={1} onClose={() => setShowTest(false)} />}
+         {showTest2 && <EvaluationOverlay study={2} onClose={() => setShowTest2(false)} />}
+         {showWelcome && (
+            <Welcome
+               onStartTour={() => {
+                  setShowWelcome(false);
+                  setShowOnboarding(true);
+               }}
+               onSkip={() => {
+                  setShowWelcome(false);
+                  markOnboardingSeen();
+               }}
             />
          )}
+         {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
 
          <div className="app-layout">
             <aside className="left-column">

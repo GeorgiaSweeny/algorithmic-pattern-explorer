@@ -18,7 +18,7 @@
    background: #fff;
    border-radius: 10px;
    padding: 28px 32px;
-   width: min(640px, 92vw);
+   width: min(860px, 94vw);
    max-height: 86vh;
    overflow-y: auto;
    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
@@ -77,4 +77,96 @@
    font-size: 13.5px;
    padding: 4px 0;
    cursor: pointer;
+}
+
+.eval-change-desc {
+   font-size: 13.5px;
+   font-style: italic;
+   color: #374151;
+   margin: 4px 0 12px;
+}
+
+.eval-image-row {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 16px;
+   margin-bottom: 12px;
+}
+
+.eval-image-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+   gap: 14px;
+   margin-bottom: 12px;
+}
+
+.eval-image-thumb {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 4px;
+   border: 2px solid transparent;
+   border-radius: 6px;
+   padding: 4px;
+}
+
+.eval-image-thumb .pattern-canvas {
+   width: 170px;
+   height: 170px;
+   display: block;
+   border-radius: 4px;
+}
+
+.eval-image-label {
+   font-size: 11.5px;
+   font-weight: 600;
+   color: #6b7280;
+   text-transform: uppercase;
+   letter-spacing: 0.03em;
+}
+
+.eval-image-thumb-btn {
+   background: none;
+   border: none;
+   padding: 0;
+   cursor: pointer;
+   font: inherit;
+}
+
+.eval-image-thumb-btn .eval-image-thumb {
+   border-color: #e5e7eb;
+}
+
+.eval-image-thumb-btn:hover .eval-image-thumb {
+   border-color: #9ca3af;
+}
+
+.eval-image-thumb-selected {
+   border-color: #2563eb !important;
+   background: rgba(37, 99, 235, 0.06);
+}
+
+.eval-order-list {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+   max-width: 320px;
+}
+
+.eval-order-row {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   font-size: 13.5px;
+   padding: 4px 0;
+}
+
+.eval-order-node {
+   flex: 1;
+}
+
+.eval-order-row select {
+   font: inherit;
+   padding: 2px 6px;
 }

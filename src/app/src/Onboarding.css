@@ -5,25 +5,31 @@
    pointer-events: none;
 }
 
-/* Spotlight trick: a transparent box the size of the highlighted element,
-   with an oversized box-shadow that dims everything else on the page in
-   one rule, no separate full-screen overlay element needed. */
+/* One dim layer for the whole step, whatever the number of targets — see
+   Onboarding.jsx's dimPath comment. Its path is a single evenodd fill with
+   one hole per target rect (or none, the rare case a step's target isn't
+   found in the DOM — fails safe to a plain full-page dim rather than
+   leaving the page fully undimmed). */
+.onboarding-dim-svg {
+   position: fixed;
+   inset: 0;
+   width: 100%;
+   height: 100%;
+}
+
+.onboarding-dim-svg path {
+   fill: rgba(17, 24, 39, 0.6);
+}
+
+/* Highlight border only now — the dimming itself is the shared SVG layer
+   above, not a per-target box-shadow (stacking multiple of those darkened
+   each target's own cutout with every other target's shadow). */
 .onboarding-spotlight {
    position: fixed;
-   box-shadow: 0 0 0 9999px rgba(17, 24, 39, 0.6);
    border-radius: 8px;
    border: 2px solid #2563eb;
    transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
    pointer-events: none;
-}
-
-/* Fallback for the rare case a step's target isn't found in the DOM
-   (shouldn't happen — all five targets are always mounted — but fails
-   safe rather than leaving the page fully undimmed). */
-.onboarding-dim {
-   position: fixed;
-   inset: 0;
-   background: rgba(17, 24, 39, 0.6);
 }
 
 .onboarding-callout {

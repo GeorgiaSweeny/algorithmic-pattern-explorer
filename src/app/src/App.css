@@ -380,23 +380,35 @@ body,
    font-variant-numeric: tabular-nums;
 }
 
-/* Same width-only min() technique as the Render Preview panel, plus the
-   --canvas-zoom multiplier: at the zoom=1 default the full canvas is
-   always visible with no scrolling, exactly like Render Preview; zooming
-   in beyond that is an explicit choice, and only then does
-   .canvas-zoom-wrap's overflow:auto actually need to scroll. */
+/* Unlike the Render Preview panel, this column's available height isn't
+   fixed — the canvas shares the column with the Algorithm Workflow strip
+   below it, so a short (non-fullscreen) window leaves less vertical room
+   than horizontal. Capping by width alone (the old min(100%, 500px)) let
+   the canvas overflow vertically and forced a scroll to see the rest of
+   it. aspect-ratio + width/height:auto + matching max-width/max-height
+   makes the browser pick the largest square that fits BOTH axes at once
+   (each max-*'s own min(500px, 100%) resolves against that axis's own
+   definite size — real here, since .canvas-panel's flex-column chain runs
+   up to .app's height:100vh), so the full canvas is always visible by
+   default with no scrolling. --canvas-zoom scales both caps together,
+   past that natural fit; only then does .canvas-zoom-wrap's overflow:auto
+   need to actually scroll. */
 .canvas-zoom-wrap {
    overflow: auto;
 }
 
 .canvas-zoom-scale {
-   width: calc(min(100%, 500px) * var(--canvas-zoom, 1));
+   aspect-ratio: 1 / 1;
+   width: auto;
+   height: auto;
+   max-width: calc(min(500px, 100%) * var(--canvas-zoom, 1));
+   max-height: calc(min(500px, 100%) * var(--canvas-zoom, 1));
    flex: none;
 }
 
 .canvas-zoom-scale .pattern-canvas {
    width: 100%;
-   height: auto;
+   height: 100%;
    max-width: none;
    max-height: none;
 }

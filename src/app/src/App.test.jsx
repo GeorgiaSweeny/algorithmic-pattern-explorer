@@ -96,21 +96,35 @@ describe("App: Reset to Defaults", () => {
 describe("App: Evaluation menu / Test overlay", () => {
    it("opens the Evaluation dropdown, launches Test from it, and closes via its own close control", () => {
       render(<App />);
-      expect(screen.queryByText("Test", { selector: "h2" })).not.toBeInTheDocument();
+      expect(screen.queryByText("Study 1", { selector: "h2" })).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
       fireEvent.click(screen.getByText("Test", { selector: "button" }));
-      expect(screen.getByText("Test", { selector: "h2" })).toBeInTheDocument();
+      expect(screen.getByText("Study 1", { selector: "h2" })).toBeInTheDocument();
 
       fireEvent.click(screen.getByLabelText("Close evaluation"));
-      expect(screen.queryByText("Test", { selector: "h2" })).not.toBeInTheDocument();
+      expect(screen.queryByText("Study 1", { selector: "h2" })).not.toBeInTheDocument();
    });
 
-   it("dropdown lists Test, Dry Run, and Study Results", () => {
+   it("opens the Evaluation dropdown, launches Test 2 from it, and closes via its own close control", () => {
+      render(<App />);
+      expect(screen.queryByText("Study 2", { selector: "h2" })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
+      fireEvent.click(screen.getByText("Test 2", { selector: "button" }));
+      expect(screen.getByText("Study 2", { selector: "h2" })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByLabelText("Close evaluation"));
+      expect(screen.queryByText("Study 2", { selector: "h2" })).not.toBeInTheDocument();
+   });
+
+   it("dropdown lists Test, Test 2, Dry Run, Study Results, and Study 2 Results", () => {
       render(<App />);
       fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
       expect(screen.getByText("Test", { selector: "button" })).toBeInTheDocument();
+      expect(screen.getByText("Test 2", { selector: "button" })).toBeInTheDocument();
       expect(screen.getByText("Dry Run")).toBeInTheDocument();
       expect(screen.getByText("Study Results")).toBeInTheDocument();
+      expect(screen.getByText("Study 2 Results")).toBeInTheDocument();
    });
 });

@@ -8,10 +8,7 @@ EVALUATION DATA CAPTURE — TESTS
 * to test this module's pure data-shape logic in isolation.
 */
 import { describe, it, expect, beforeEach } from "vitest";
-import {
-   recordQuizPass, recordConceptCheck, getAllRecords, clearAllRecords,
-   hasPromptedConcept, markConceptPrompted,
-} from "./evaluationStorage.js";
+import { recordQuizPass, getAllRecords, clearAllRecords } from "./evaluationStorage.js";
 
 function makeLocalStorageStub() {
    const store = new Map();
@@ -63,17 +60,72 @@ describe("evaluationStorage: quiz recording", () => {
    });
 });
 
-describe("evaluationStorage: concept-check recording", () => {
-   it("stores a concept-check response alongside quiz records", () => {
-      recordConceptCheck("seed", "Randomness", "understood");
-      const records = getAllRecords();
-      expect(records).toHaveLength(1);
-      expect(records[0]).toMatchObject({
-         type: "conceptCheck",
-         nodeType: "seed",
-         concept: "Randomness",
-         response: "understood",
+describe("evaluationStorage: node-select scoring", () => {
+   const NODE_QUESTION = [
+      { id: "voronoi-required-nodes", concept: "Stage role", type: "node-select", correctNodeSet: ["Seed", "Seed Points"] },
+   ];
+
+   it("scores an exact match as correct, contributing to the headline score", () => {
+      const score = recordQuizPass("pre", NODE_QUESTION, { "voronoi-required-nodes": ["Seed Points", "Seed"] });
+      expect(score).toBe(1);
+      const [record] = getAllRecords();
+      expect(record.items[0]).toMatchObject({ correct: true, partialScore: 2 });
+   });
+
+   it("scores a partial, non-exact selection as incorrect but keeps a positive partialScore", () => {
+      const score = recordQuizPass("pre", NODE_QUESTION, { "voronoi-required-nodes": ["Seed"] });
+      expect(score).toBe(0);
+      const [record] = getAllRecords();
+      expect(record.items[0]).toMatchObject({ correct: false, partialScore: 1 });
+   });
+
+   it("floors partialScore at 0 when intruders outweigh correct picks", () => {
+      recordQuizPass("pre", NODE_QUESTION, { "voronoi-required-nodes": ["Edge Deformation", "Lattice Index"] });
+      const [record] = getAllRecords();
+      expect(record.items[0]).toMatchObject({ correct: false, partialScore: 0 });
+   });
+
+   it("treats an unanswered node-select item as no selections, not a crash", () => {
+      recordQuizPass("pre", NODE_QUESTION, {});
+      const [record] = getAllRecords();
+      expect(record.items[0]).toMatchObject({ correct: false, partialScore: 0, selected: [] });
+   });
+});
+
+describe("evaluationStorage: order scoring", () => {
+   const ORDER_QUESTION = [
+      {
+         id: "islamic-sequence-order",
+         concept: "Sequence of operations",
+         type: "order",
+         nodeSequence: ["Colour Mapping", "Grid", "Distance Field"],
+         correctSequence: ["Grid", "Distance Field", "Colour Mapping"],
+      },
+   ];
+
+   it("scores every node in its correct position as correct, contributing to the headline score", () => {
+      const score = recordQuizPass("pre", ORDER_QUESTION, {
+         "islamic-sequence-order": { Grid: "1", "Distance Field": "2", "Colour Mapping": "3" },
       });
+      expect(score).toBe(1);
+      const [record] = getAllRecords();
+      expect(record.items[0]).toMatchObject({ correct: true, positionsCorrect: 3 });
+   });
+
+   it("scores a partially-correct sequence as incorrect but keeps a positionsCorrect count", () => {
+      const score = recordQuizPass("pre", ORDER_QUESTION, {
+         "islamic-sequence-order": { Grid: "1", "Distance Field": "3", "Colour Mapping": "2" },
+      });
+      expect(score).toBe(0);
+      const [record] = getAllRecords();
+      // Only "Grid" landed on its correct position (1); the other two swapped.
+      expect(record.items[0]).toMatchObject({ correct: false, positionsCorrect: 1 });
+   });
+
+   it("treats an unanswered order item as no placements, not a crash", () => {
+      recordQuizPass("pre", ORDER_QUESTION, {});
+      const [record] = getAllRecords();
+      expect(record.items[0]).toMatchObject({ correct: false, positionsCorrect: 0, selected: {} });
    });
 });
 
@@ -82,14 +134,5 @@ describe("evaluationStorage: clearAllRecords", () => {
       recordQuizPass("pre", QUESTIONS, { q1: 1, q2: 0 });
       clearAllRecords();
       expect(getAllRecords()).toEqual([]);
-   });
-});
-
-describe("evaluationStorage: session-only concept-prompt tracking", () => {
-   it("hasPromptedConcept reflects markConceptPrompted (module-level, not persisted to localStorage)", () => {
-      const concept = `test-concept-${Math.random()}`;
-      expect(hasPromptedConcept(concept)).toBe(false);
-      markConceptPrompted(concept);
-      expect(hasPromptedConcept(concept)).toBe(true);
    });
 });

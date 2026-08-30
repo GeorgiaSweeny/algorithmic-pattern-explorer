@@ -13,6 +13,7 @@ src/exports/
 # history (2026-08-23 decision).
 docs/EINSTEIN_APERIODIC_STRETCH.md
 docs/VORONOI_ESCHER_HYBRID_PLAN.md
+docs/evaluation/study2-quiz-implementation-plan.md
 
 # Build output and local tool config — never meant to be committed.
 src/app/dist/
