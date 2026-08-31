@@ -2,19 +2,13 @@
 ========================================
 GENERATOR BENCHMARK SUITE
 ========================================
-* Measures wall-clock time to evaluate each generator over an N x N sample grid
-* spanning the canvas, at increasing N (render resolution), and separately
-* measures sensitivity to each generator's key per-pixel cost driver (Perlin
-* octaves, Voronoi cell count, recursion depth, Islamic segment count, and —
-* since Aug 7-9 — the hybrid recursiveNoise generator's amplitude). All eight
-* generators are per-pixel pure functions, so grid-size scaling should
-* empirically confirm O(N^2) for every one of them; the parameter sweep is
-* what actually distinguishes generators with O(1) per-pixel work (grid, wave,
-* escher) from ones with per-pixel work that scales with a parameter (noise:
-* O(octaves), voronoi: O(numCells) and islamic: O(segments), both from
-* distanceField.js's brute-force nearest-point search, recursive: O(depth),
-* recursiveNoise: O(depth) plus two Perlin noise() calls per amplitude!=0
-* sample).
+* Measures wall-clock time to evaluate each generator over an N x N sample
+* grid at increasing N, and separately sweeps each generator's own per-pixel
+* cost driver (octaves, numCells, depth, segments, amplitude). Every
+* generator is a per-pixel pure function, so grid-size scaling should
+* empirically confirm O(N^2); the parameter sweeps distinguish O(1)
+* per-pixel generators (grid, wave, escher) from ones whose cost scales
+* with a parameter (noise, voronoi, islamic, recursive, recursiveNoise).
 *
 * Run with: npm run bench   (from src/)
 * Writes raw results to __benchmarks__/results.json for the dissertation plots.
@@ -42,14 +36,10 @@ function samplePoints(n) {
    return pts;
 }
 
-// Below this, a single pass over `points` is too fast to time reliably: fixed
-// per-call/loop overhead and timer resolution dominate the signal we actually
-// want (the generator's own per-pixel cost). Every trial repeats the full pass
-// enough times to add up to roughly TARGET_MS of wall-clock time, then divides
-// back down — reps is chosen from a calibration pass rather than a fixed point
-// count, because per-point cost isn't uniform across this suite (e.g. Voronoi's
-// cost scales with numCells, so a fixed "3M point evaluations" budget that's
-// fine for a cheap generator can mean tens of seconds for a numCells=5000 run).
+// Below this, a single pass is too fast to time reliably (overhead/timer
+// resolution dominate). Each trial repeats the pass enough times to reach
+// roughly TARGET_MS, with reps derived from a calibration pass rather than
+// a fixed point count, since per-point cost varies a lot across this suite.
 const TARGET_MS = 8;
 const MAX_REPS = 300;
 
@@ -109,13 +99,8 @@ const REPRESENTATIVE_PARAMS = {
    voronoiIslamic: { numCells: 20, segments: 8, scale: 0.42, frequency: 3, tones: "2", seed: 1337 },
 };
 
-// Each entry sweeps the parameter believed to drive per-pixel cost, at a fixed
-// grid size, to isolate that dependence from grid-size scaling. islamic sweeps
-// `segments` for the same reason voronoi sweeps `numCells`: both ultimately call
-// distanceField.js's nearestPoint, a brute-force O(points) search, so both
-// should show the same near-linear cost growth against their respective point
-// counts (grid.js's latticeIndex.js primitives are the counterexample — no
-// point search, so no parameter drives their per-pixel cost this way).
+// Each entry sweeps the parameter believed to drive per-pixel cost, at a
+// fixed grid size, to isolate that dependence from grid-size scaling.
 const PARAM_SWEEPS = {
    noise:     { param: "octaves",  values: [1, 2, 4, 8, 16], gridSize: 150 },
    voronoi:   { param: "numCells", values: [10, 20, 40, 80, 160, 320, 1280, 5120], gridSize: 150 },
@@ -162,11 +147,10 @@ for (const [name, sweep] of Object.entries(PARAM_SWEEPS)) {
    console.log(`${name} (grid ${sweep.gridSize}x${sweep.gridSize}, varying ${sweep.param}):`);
    for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      // Ratio vs the previous row: for a pure O(k) relationship this should equal
-      // the ratio of the parameter values themselves. If it starts below that and
-      // climbs toward it, the true relationship is closer to affine (time = a +
-      // b*k) — a fixed per-pixel cost plus a linear term — and the single log-log
-      // exponent below is a conservative (under-)estimate at these parameter sizes.
+      // Ratio vs the previous row: for pure O(k) this equals the parameter
+      // ratio; climbing toward it suggests an affine relationship (a fixed
+      // cost plus a linear term), making the log-log exponent below an
+      // under-estimate at these sizes.
       const ratio = i === 0 ? null : r.ms / rows[i - 1].ms;
       const ratioStr = ratio === null ? "" : `  (x${ratio.toFixed(2)})`;
       console.log(`  ${sweep.param}=${String(r[sweep.param]).padStart(4)}  ${r.ms.toFixed(2).padStart(8)} ms${ratioStr}`);

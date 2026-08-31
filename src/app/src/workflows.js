@@ -1,3 +1,12 @@
+/*
+========================================
+NODE WORKFLOW DEFINITIONS
+========================================
+* Builds the ReactFlow {nodes, edges} graph for each pattern: NODE_LIBRARY
+* (node types + categories), STEP_DEFS (node sequence per generator),
+* PARAM_NODE_MAP (which node a param belongs to), and buildWorkflow itself.
+*/
+
 import { REGISTRY } from "../../patternRegistry.js";
 
 // One entry per node type documented in docs/nodes/. `category` drives the
@@ -42,21 +51,16 @@ const STEP_DEFS = {
       "workspace", "grid", "constructionCircle", "radialDivisions",
       "distanceField", "colourMapping", "render",
    ],
-   // Hybrid: Voronoi's own opening two nodes (Seed, Seed Points) feeding
-   // directly into islamic.js's existing tail (Construction Circle onward,
-   // Grid dropped since cell membership comes from Distance Field's
-   // nearestPoint search, not a lattice) — see
-   // docs/VORONOI_ISLAMIC_HYBRID_PLAN.md section 4's predicted structure.
+   // Hybrid: Voronoi's opening nodes (Seed, Seed Points) feed into islamic.js's
+   // tail (Construction Circle onward) — Grid is dropped since cell
+   // membership comes from Distance Field's nearestPoint search instead.
    voronoiIslamic: () => [
       "workspace", "seed", "seedPoints", "constructionCircle", "radialDivisions",
       "distanceField", "colourMapping", "render",
    ],
-   // Hybrid: each level's own Noise sample warps that level's point before
-   // Subdivide runs (see recursiveNoise.js's header comment) — shown as a
-   // Noise/Subdivide pair per level, repeated `depth` times, rather than
-   // recursive.js's bare Subdivide chain, since the composition genuinely
-   // differs (a Fork over Noise feeds each Subdivide step, not just the
-   // step itself repeated).
+   // Hybrid: each level's Noise sample warps that level's point before
+   // Subdivide runs, so shown as a Noise/Subdivide pair repeated `depth`
+   // times, rather than recursive.js's bare Subdivide chain.
    recursiveNoise: (params) => [
       "workspace",
       "baseGeometry",
@@ -135,11 +139,9 @@ export function buildWorkflow(registryId, liveParams = {}) {
       const nodeParams = entry.params.filter(
          (p) => matchesType(p) && (!p.firstOccurrenceOnly || isFirstOfType)
       );
-      // A param declaring `firstOccurrenceOnly` that matched this node type
-      // but got filtered out because this isn't the first occurrence —
-      // surfaced as a short explanatory note (WorkflowNode.jsx) rather than
-      // just silently having fewer controls than the first occurrence of
-      // the same node type, which reads as broken rather than deliberate.
+      // A `firstOccurrenceOnly` param that matched but got filtered out here
+      // (not the first occurrence) is surfaced as an explanatory note
+      // instead of silently having fewer controls than the first node.
       const suppressedParam = !isFirstOfType
          ? entry.params.find((p) => p.firstOccurrenceOnly && matchesType(p))
          : undefined;
@@ -156,20 +158,15 @@ export function buildWorkflow(registryId, liveParams = {}) {
                  `${NODE_LIBRARY[type].title} node — editing it here would change the whole ` +
                  `repeat structure, not just this step.`
                : undefined,
-            // occurrence/totalOccurrences (added 2026-08-21): the same
-            // typeSeen/repeats counters already computed for the "(1/2)"
-            // label, exposed as data too — stagePreview.js's depth-
-            // truncation preview for recursive.js/recursiveNoise.js needs
-            // to know *which* repeated Subdivide step this is, not just
-            // that it's a Subdivide step.
+            // occurrence/totalOccurrences: same typeSeen/repeats counters as
+            // the "(1/2)" label, exposed as data — stagePreview.js's
+            // recursive/recursiveNoise preview needs to know which repeated
+            // Subdivide step this is.
             occurrence: typeSeen[type],
             totalOccurrences: repeats,
-            // Stated in words, not only implied by the graph edge feeding
-            // this node — Cognitive Dimensions' Hidden Dependencies, named
-            // in the dissertation's own §6.6 evaluation (App-UX-Quickwins.md
-            // item 2). Every node but the first has exactly one predecessor,
-            // since buildWorkflow's own steps array is a single linear
-            // sequence, not a general graph.
+            // Stated in words, not only implied by the graph edge. Every
+            // node but the first has exactly one predecessor, since `steps`
+            // is a linear sequence, not a general graph.
             dependsOnLabel: index > 0 ? NODE_LIBRARY[steps[index - 1]].title : undefined,
          },
       };

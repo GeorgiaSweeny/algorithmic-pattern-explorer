@@ -1,16 +1,14 @@
-// Documentation Panel content, one entry per NODE_LIBRARY type (see
-// workflows.js). Transcribed verbatim from each node's Summary/Purpose/
-// Computational Thinking Concepts sections in docs/nodes/ — this panel is
-// explanatory only (docs/UI_DESIGN.md's Documentation Panel section), so it
-// stays in sync with the same source the written node docs use rather than
-// inventing separate copy.
-// `objective` (added 2026-08-21): a one-line, explicit "why am I looking at
-// this stage" statement, answering
-// docs/evaluation/educator-consultation-user-stories.md's US-6.1 ("I want
-// to see the explicit learning objective for a node, so that I understand
-// why I'm engaging with it") — distinct from `purpose` (this stage's role
-// within the algorithm) by being about the *learner's* takeaway, not the
-// algorithm's own mechanics.
+/*
+========================================
+NODE DOCUMENTATION
+========================================
+* Documentation Panel content, one entry per NODE_LIBRARY type (workflows.js)
+* plus per-generator overview text (GENERATOR_DOCS) and per-param
+* descriptions (PARAM_DOCS/PARAM_DOC_OVERRIDES). `objective` is a one-line
+* "why am I looking at this stage" statement, distinct from `purpose` (the
+* stage's role within the algorithm).
+*/
+
 export const NODE_DOCS = {
    workspace: {
       explanation: "Defines the computational space in which the algorithm operates.",
@@ -121,15 +119,9 @@ export const NODE_DOCS = {
    },
 };
 
-// Documentation Panel content for the panel's empty state (no node
-// selected yet) — one entry per `generator` id in patternRegistry.js
-// (fourteen registry entries collapse to nine `generator` values; wave/
-// noise/grid/recursive each cover multiple modes/shapes with one shared
-// write-up). Transcribed verbatim from each generator's Summary/Purpose/
-// Computational Thinking Concepts sections in docs/generators/ — same
-// source-of-truth discipline as NODE_DOCS above, just one level more
-// zoomed out: what the whole pipeline is *for*, not one computational
-// stage (docs/evaluation/pre-study2-feature-plans.md §2).
+// Pattern-level overview text, one entry per `generator` id (fourteen
+// registry entries collapse to nine generator values — wave/noise/grid/
+// recursive each cover multiple modes/shapes with one shared write-up).
 export const GENERATOR_DOCS = {
    wave: {
       explanation:
@@ -201,19 +193,11 @@ export const GENERATOR_DOCS = {
    },
 };
 
-// What each registry param actually does to the rendered pattern — shown
-// in the Documentation Panel's Parameters section (added 2026-08-21) so
-// selecting a node explains not just what that *node* does in the
-// abstract (NODE_DOCS above) but what each of its own current sliders/
-// pickers changes about the output. Keyed by param name: the same name
-// means the same thing for almost every pattern that uses it, since
-// patternRegistry.js's params are drawn from a small shared vocabulary
-// (docs/ALGORITHMIC_COMPOSITION_RESEARCH.md's "minimal language set" —
-// tones/colourN, tileSize, frequency, seed etc. are the same concept
-// wherever they appear), so one description per name covers every
-// pattern that declares it rather than duplicating text per registry
-// entry. PARAM_DOC_OVERRIDES below covers the handful of names whose
-// meaning genuinely diverges by generator (`mode`, `scale`).
+// What each registry param does to the rendered pattern, keyed by param
+// name — the same name means the same thing for almost every pattern that
+// uses it, so one description per name covers every pattern that declares
+// it. PARAM_DOC_OVERRIDES below covers the few names that diverge by
+// generator (`mode`, `scale`).
 export const PARAM_DOCS = {
    scale: "Zooms the underlying field in or out — larger values sample it more coarsely, producing bigger, smoother features; smaller values sample it more finely, producing smaller, busier detail.",
    octaves: "How many layered noise samples (each at double the frequency and half the strength of the last) are summed together. 1 gives smooth blobs; higher values add progressively finer detail on top, the same way musical overtones add texture to a fundamental note.",

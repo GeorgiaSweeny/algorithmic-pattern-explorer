@@ -2,44 +2,27 @@
 ========================================
 NOISE (PERLIN) — ALGORITHM-SPECIFIC PROPERTIES
 ========================================
-* Perlin noise is built by interpolating dot products of unit gradient vectors
-* at lattice points, using a quintic "fade" blending curve — Perlin, K. (1985).
-* "An Image Synthesizer." Computer Graphics (SIGGRAPH '85 Proceedings), 19(3),
-* 287-296, for the original gradient-noise construction, and Perlin, K. (2002).
-* "Improving Noise." ACM Transactions on Graphics (SIGGRAPH 2002), 21(3),
-* 681-682, for the specific 6t^5-15t^4+10t^3 fade curve `patternSystems/
-* noiseLib/perlinNoise.js`'s own `fade()` implements (checked directly against
-* that file, not assumed — see the C2-continuity tests below). Perlin's 2002
-* paper's stated motivation for replacing the 1985 paper's simpler cubic curve
-* (3t^2-2t^3) was exactly the property tested in "the fade curve is C2, not
-* just C1" below: eliminating a second-derivative discontinuity at cell
-* boundaries that the cubic curve has but the quintic curve doesn't — this is
-* the one specific, checkable mathematical claim in Perlin's own papers this
-* codebase's implementation can be tested against, rather than a generic
-* "looks smooth" assertion.
+* Perlin, K. (1985). "An Image Synthesizer." SIGGRAPH '85, 19(3), 287-296 —
+* the original gradient-noise construction. Perlin, K. (2002). "Improving
+* Noise." SIGGRAPH 2002, 21(3), 681-682 — replaces the 1985 paper's cubic
+* fade curve (3t^2-2t^3, C1 but not C2 at cell boundaries) with the quintic
+* 6t^5-15t^4+10t^3 curve (C2), removing a second-derivative discontinuity
+* that produced grid-aligned artifacts. The "fade curve C2 continuity"
+* test below checks this codebase's own fade() has that exact property.
 *
-* The general claim that gradient/Perlin-type noise is smooth and
-* differentiable with a bounded spatial derivative (grounding the Lipschitz
-* test below) is a standard property discussed in Lagae, A., Lefebvre, S.,
-* Cook, R., DeRose, T., Drettakis, G., Ebert, D., Lewis, J.P., Perlin, K., &
-* Zwicker, M. (2010). "A Survey of Procedural Noise Functions." Computer
-* Graphics Forum, 29(8), 2579-2600 — the standard survey of this exact
-* generator family. Note the specific numeric bound (~sqrt(2) in
-* noise-space, `LIPSCHITZ_K` below) is this test's own derived headroom
-* figure, not a constant quoted from that survey — worth being precise
-* about which part of the comment is a citation and which is this test
-* suite's own reasoning, rather than implying the exact constant is
-* published when it isn't.
+* Lagae, A. et al. (2010). "A Survey of Procedural Noise Functions."
+* Computer Graphics Forum, 29(8), 2579-2600 — grounds the Lipschitz-
+* continuity property checked below. LIPSCHITZ_K is this test's own
+* derived headroom constant, not a value from that survey.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
 import { noise } from "../noise.js";
 import { Perlin } from "../../patternSystems/noiseLib/perlinNoise.js";
 
-// Known bound on 2D gradient-noise derivative magnitude in noise-space is ~sqrt(2)
-// (see the file header for what is and isn't a cited constant here);
-// LIPSCHITZ_K adds headroom for the interpolation curve without being loose enough
-// to hide a real regression (e.g. an accidental octave/lacunarity blow-up).
+// Known bound on 2D gradient-noise derivative magnitude in noise-space is
+// ~sqrt(2); LIPSCHITZ_K adds headroom without being loose enough to hide a
+// real regression (e.g. an accidental octave/lacunarity blow-up).
 const LIPSCHITZ_K = 5;
 const DX = 1e-3; // pixels
 
@@ -78,20 +61,9 @@ describe("noise: algorithm-specific invariants", () => {
       );
    });
 
-   // Perlin (2002), "Improving Noise" — the paper's own stated motivation for
-   // replacing the 1985 cubic fade curve (3t^2-2t^3) with the quintic
-   // 6t^5-15t^4+10t^3 this codebase's Perlin class implements
-   // (patternSystems/noiseLib/perlinNoise.js's `fade()`). The cubic curve is
-   // C1 (zero first derivative) but not C2 (nonzero second derivative) at
-   // t=0 and t=1 — algebraically, its second derivative is 6-12t, which is
-   // +/-6 at the endpoints, not 0. The quintic curve is C2 as well: its
-   // second derivative, 60t(2t-1)(t-1), is exactly 0 at both t=0 and t=1.
-   // That second-derivative discontinuity is what produces faint grid-
-   // aligned artifacts in the noise field's curvature at integer lattice
-   // boundaries with the older curve — the specific defect Perlin's 2002
-   // paper fixes. This test checks the actual implementation has that
-   // property, via a central-difference second-derivative estimate at
-   // both endpoints, rather than assuming "uses a fade curve" is enough.
+   // Checks the actual fade() implementation has the C2 property Perlin's
+   // 2002 paper describes, via a central-difference second-derivative
+   // estimate at both cell-boundary endpoints (t=0 and t=1).
    describe("fade curve C2 continuity (Perlin 2002's improvement over 1985)", () => {
       const perlin = new Perlin(1337);
       const H = 1e-4;

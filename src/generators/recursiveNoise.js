@@ -2,71 +2,17 @@
 ========================================
 RECURSIVE NOISE — PERLIN-PERTURBED SIERPINSKI CARPET (HYBRID)
 ========================================
-* Composition: Repeat-over-Subdivide (recursive.js's "sierpinski" mode),
-* where each level's own coordinates are first domain-warped by a Fork over
-* Noise before the centre-cell test runs. In docs/ALGORITHMIC_COMPOSITION_RESEARCH.md's
-* vocabulary: Repeat, whose per-iteration step is itself a Fork (the current
-* point feeds both "unwarped" and Noise, combined by addition) feeding
-* Subdivide — a composition shape none of the seven base generators needed,
-* built entirely from two already-existing, already-tested primitives
-* (lib/fold.js via noise.js, lib/subdivide.js + lib/repeat.js via
-* recursive.js's own structure) with no new bespoke math.
+* Composition: recursive.js's "sierpinski" mode, but each level's coordinates
+* are domain-warped by Noise before the centre-cell test runs. See
+* docs/generators/recursive-noise.md for the amplitude spectrum this
+* demonstrates (deterministic at amplitude = 0 up to noise-dominated).
 *
-* `amplitude` is the primary composition parameter: at amplitude = 0 the warp
-* is skipped entirely and this generator is byte-identical to
-* `recursive(x, y, { depth, subdivisions: 3, mode: "sierpinski" })` — a free
-* falsifiable baseline (see recursiveNoise.property.test.js) rather than a
-* claim taken on faith. Increasing amplitude perturbs which cell each level's
-* point falls into, so the carpet's holes drift off the exact fractal
-* lattice — a continuous deformation from fully deterministic (amplitude = 0)
-* toward noise-dominated, the stochastic/deterministic spectrum
-* docs/README.md's Generative Spectrum table organises every generator
-* along, demonstrated here as a single continuous parameter rather than a
-* fixed per-generator position on it.
-*
-* `scale`/`octaves` (added 2026-08-21) are noise.js's own `scale`/`octaves`
-* params, passed straight through to the same noise() calls below — not a
-* re-derived pair with different units, the literal same two parameters
-* noise.js's own registry entries already expose. Originally hardcoded
-* (NOISE_SCALE = 0.01, NOISE_OCTAVES = 2) and explicitly "fixed, not
-* exposed" to keep the entropy/structure-metric sweep
-* (structureMetrics.js, docs/structure-metrics-results.md) a clean
-* single-variable story against `amplitude` alone. That sweep is
-* unaffected by exposing them: it calls recursiveNoise(fn, { depth,
-* amplitude, seed }) and never passes scale/octaves, so it keeps using
-* these params' defaults — identical to the values that used to be
-* hardcoded — without needing a re-run. Exposing them gives a second,
-* independent axis (how coarse/fine the warp field's own texture is,
-* not just how strongly it's applied) for a richer parameter sweep than
-* amplitude alone gives.
-*
-* `_levelAmplitude` (added 2026-08-21, follow-up): before this, `amplitude`
-* was applied identically at every recursion level, so the whole carpet
-* just looked shifted rather than depth having its own character —
-* flagged directly as feeling redundant with plain domain-warping.
-* `repeat.js`'s step function already receives its own iteration index
-* `i` for free (`step(value, i)`), previously discarded here; a linear
-* ramp needs no new parameter — `amplitude` still means "how strong is
-* the warp, at its strongest point." Compositionally, this makes the
-* Repeat step's own behaviour vary with iteration index, not just its
-* input — a richer variant of Repeat than "the identical step every
-* time," which is what every other use of `lib/repeat.js` in this
-* codebase (`recursive.js` and this file's own Sierpinski scaffold)
-* still is.
-*
-* Follow-up (2026-08-24): the original ramp went from exactly `0` at
-* `i = 0` up to full `amplitude` at the final level, so the coarsest
-* level's own Noise step never visibly did anything regardless of
-* `amplitude` — correct as designed, but confusing in the node-graph UI,
-* where the first Noise node then looked broken rather than
-* intentionally subtle (docs/plan-checklist.md's Aug-24 entry). Replaced
-* with a ramp from `LEVEL_AMPLITUDE_FLOOR` (30% of `amplitude`) up to
-* 100%, so every level's Noise step has some visible effect, while later
-* levels still warp more than earlier ones. `amplitude = 0` still stays
-* an exact identity everywhere (the ramp still multiplies to `0`
-* regardless of the floor fraction), so the falsifiable
-* byte-identical-to-recursive.js baseline is unaffected — only the
-* nonzero-amplitude shape of the ramp changed.
+* `scale`/`octaves` pass straight through to noise.js's own params (a second,
+* independent axis: warp texture vs. warp strength).
+* `_levelAmplitude` ramps the warp from LEVEL_AMPLITUDE_FLOOR (30%) up to
+* 100% across levels so every level's noise step has some visible effect
+* while later levels still warp more — amplitude = 0 stays an exact identity
+* regardless of the floor.
 */
 import { CANVAS } from "../config.js";
 import { subdivideCell } from "./lib/subdivide.js";
@@ -74,12 +20,8 @@ import { repeat } from "./lib/repeat.js";
 import { noise } from "./noise.js";
 
 // Linear ramp: LEVEL_AMPLITUDE_FLOOR fraction of `amplitude` at the first
-// level (i = 0), full `amplitude` at the last (i = depth - 1) — every level
-// gets some warp, later levels get more (see this file's header comment,
-// 2026-08-24 follow-up, for why the floor exists). depth <= 1 has no room
-// for a ramp (a single level, or none) — falls back to 0 regardless of the
-// floor, matching "amplitude = 0 is always an exact identity."
-// Factored out (not inlined) so it's independently unit-testable.
+// level, full `amplitude` at the last (see header). depth <= 1 falls back
+// to 0, matching "amplitude = 0 is always an exact identity."
 export const LEVEL_AMPLITUDE_FLOOR = 0.3;
 
 export function _levelAmplitude(amplitude, i, depth) {
@@ -100,13 +42,9 @@ export function recursiveNoise(x, y, params) {
          const levelAmplitude = _levelAmplitude(amplitude, i, roundedDepth);
 
          if (levelAmplitude !== 0) {
-            // Fork: this level's own (already-subdivided, zoomed-in) point
-            // feeds both the identity and Noise, recombined by addition —
-            // a fresh sample per level, at that level's own local
-            // coordinates, so the warp is itself self-similar across depth
-            // the same way the subdivision structure already is. Two
-            // independent samples (offset in x) give an (nx, ny) warp
-            // vector rather than perturbing both axes identically.
+            // Fresh noise sample per level at that level's own local
+            // coordinates; two independent samples (offset in x) give an
+            // (nx, ny) warp vector.
             const nx = noise(px * CANVAS.WIDTH, py * CANVAS.HEIGHT, {
                scale, seed, octaves,
             });

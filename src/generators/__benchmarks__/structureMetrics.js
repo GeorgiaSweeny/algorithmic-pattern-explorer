@@ -2,50 +2,21 @@
 ========================================
 STRUCTURE/ENTROPY METRICS — SECONDARY RQ EMPIRICAL CONTENT
 ========================================
-* Turns the qualitative claim behind this project's hybrid generators
-* (docs/ALGORITHMIC_COMPOSITION_RESEARCH.md's secondary RQ: hybrid
-* generators sit on a continuous stochastic/deterministic spectrum, not a
-* fixed point on it) into quantitative evidence: sweep each hybrid's own
-* "how much randomness" parameter from 0 upward and measure how the
-* rendered field's own structure changes.
+* Quantifies the claim behind this project's hybrid generators
+* (docs/ALGORITHMIC_COMPOSITION_RESEARCH.md's secondary RQ): sweep each
+* hybrid's own "how much randomness" parameter (recursiveNoise's
+* `amplitude`, voronoiIslamic's `variation`) from 0 upward and measure how
+* the rendered field's structure changes, using two standard metrics:
 *
-* Two hybrids swept (added 2026-08-21 — originally recursiveNoise.js
-* only): recursiveNoise.js's `amplitude` and voronoiIslamic.js's
-* `variation` — the same empirical claim checked on two structurally
-* different hybrids (a Fork-inside-Repeat vs. a per-cell Constant-bind),
-* not asserted once and assumed to generalise.
+*   - Edge density: fraction of 4-connected adjacent pixel pairs whose
+*     binarised values differ — a proxy for how much boundary the pattern has.
+*   - 2x2 block-pattern Shannon entropy: entropy (bits) of the distribution
+*     of 2x2 binary block patterns. Low = few distinct motifs (structured);
+*     near 4 bits (log2(16)) = noise-dominated.
 *
-* Two metrics, deliberately simple and independently well-known rather than
-* invented for this project:
-*
-*   - Edge density: the fraction of 4-connected adjacent pixel pairs whose
-*     binarised values differ. A direct proxy for how much *boundary* the
-*     pattern has — a smooth solid region contributes ~0, a maximally
-*     jagged/checkerboard-like one approaches 1.
-*   - 2x2 block-pattern Shannon entropy: partition the field into
-*     non-overlapping 2x2 blocks, map each to one of 16 possible binary
-*     patterns, and compute the Shannon entropy (bits) of the resulting
-*     pattern distribution. Low entropy means the field is built from very
-*     few distinct local motifs (regular, deterministic structure); entropy
-*     approaching 4 bits (log2(16), the maximum for 16 equiprobable
-*     patterns) means every local motif is about equally common — the
-*     signature of noise-dominated, unstructured output.
-*
-* Both are computed directly from the same pure `(x, y, params) => value`
-* function every other generator satisfies (docs/GENERATOR_CONTRACT.md) —
-* no new rendering path, just sampling each generator over a grid the
-* same way the app's own PatternCanvas does.
-*
-* Run with: npm run structure-metrics   (from src/)
-* Writes raw results to __benchmarks__/structureMetrics.results.json.
-*
-* Re-run required 2026-08-21: recursiveNoise.js's `amplitude` no longer
-* applies flatly at every recursion level (a linear per-level ramp now,
-* see that file's own header comment) — the same nominal `amplitude`
-* value produces different pixel output, and so a different
-* entropy/edge-density reading, than the previous sweep recorded.
-* docs/structure-metrics-results.md's numbers are updated alongside this
-* file, not left stale.
+* Run with: npm run structure-metrics (from src/). Writes raw results to
+* __benchmarks__/structureMetrics.results.json; docs/structure-metrics-results.md
+* holds the interpreted numbers.
 */
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

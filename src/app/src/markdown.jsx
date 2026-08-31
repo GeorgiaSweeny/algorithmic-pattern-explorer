@@ -1,10 +1,11 @@
-// Minimal Markdown → JSX renderer, purpose-built for docs/nodes/*.md and
-// docs/nodes/WORKFLOWS.md's own subset of Markdown (headings, `---` rules,
-// bullet lists, fenced code blocks, inline `code`/**bold**/*italic*). Not a
-// general-purpose parser — the Node Library overlay renders our own docs
-// verbatim (docsContent.js raw-imports the .md files) rather than
-// re-authoring their content as JSX, so this only needs to cover what those
-// files actually use (checked directly, see docsContent.js's header).
+/*
+========================================
+MARKDOWN RENDERER
+========================================
+* Minimal Markdown -> JSX renderer, purpose-built for docs/nodes/*.md's
+* subset of Markdown (headings, `---` rules, bullet lists, fenced code,
+* inline code/bold/italic). Not a general-purpose parser.
+*/
 
 function renderInline(text, keyPrefix) {
    const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g);

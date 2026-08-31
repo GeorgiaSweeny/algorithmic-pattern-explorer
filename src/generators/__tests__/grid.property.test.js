@@ -5,20 +5,12 @@ GRID — ALGORITHM-SPECIFIC PROPERTIES
 * grid.js's comments claim each shape is a *proper colouring*: no two tiles that
 * share an edge get the same tone. These tests hold that claim for every shape
 * grid.js implements (square, diamond, hexagon, triangle, brick), constructing
-* points from an explicit (cell, offset-within-cell) description rather than raw
-* coordinates so tests land predictably inside a tile instead of drifting onto a
-* boundary by chance (see fracDistToBoundary below, and its use throughout).
+* points from an explicit (cell, offset-within-cell) description so tests land
+* predictably inside a tile instead of drifting onto a boundary by chance.
 *
-* One nuance the tests respect rather than paper over: grid.js's own comment
-* only claims hexagon's 3-tone colouring is "proper" — 2-tone hexagon is not
-* (hexagonal-tiling adjacency has chromatic number 3, like its dual triangular
-* lattice, so no 2-colouring of it can be proper). The hexagon/triangle/brick
-* "proper" tests below check tones 3-5 (lib/latticeIndex.js's shared
-* (base-formula) mod numShades generalisation, added when tones was extended
-* to 2-5 project-wide — verified by brute-force adjacency check for n = 3, 4,
-* 5 before generalising, not just assumed by extending the n = 3 formula), and
-* a separate test documents the 2-tone case each of those three shapes can't
-* cover with the same formula.
+* Hexagon's 2-tone colouring is not proper (hexagonal-tiling adjacency has
+* chromatic number 3), so the hexagon/triangle/brick "proper" tests below
+* check tones 3-5 only, with a separate test documenting the 2-tone case.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
@@ -26,32 +18,17 @@ import { grid } from "../grid.js";
 import { toneSet } from "../lib/colourMapping.js";
 
 const tonesArb = fc.constantFrom("2", "3", "4", "5");
-// Tones counts where hexagon/triangle/brick's shared (base-formula) mod
-// numShades generalisation applies — numShades = 2 needs each shape's own
-// simpler fallback instead (see lib/latticeIndex.js).
+// Tones counts where the shared mod-numShades formula applies (numShades = 2
+// needs each shape's own simpler fallback — see lib/latticeIndex.js).
 const properTonesArb = fc.constantFrom("3", "4", "5");
 const sizeArb = fc.double({ min: 10, max: 120, noNaN: true });
-// Domain matches the generator contract (docs/GENERATOR_CONTRACT.md): pixel
-// coordinates in [0, CANVAS.WIDTH] x [0, CANVAS.HEIGHT]. Values outside this range
-// (e.g. subnormal negatives near zero) can trip sign-dependent floor() behaviour
-// that has nothing to do with the colouring algorithm itself.
+// Matches the generator contract's pixel domain (docs/GENERATOR_CONTRACT.md).
 const coordArb = fc.double({ min: 0, max: 600, noNaN: true });
-
-// Distance from x to the nearest multiple of size, as a fraction of size. Used to
-// keep boundary-crossing tests away from points that are already exactly on (or a
-// float rounding error away from) a cell boundary, where the "which side did we
-// land on" question is a floating-point precision question, not an algorithm one.
-function fracDistToBoundary(x, size) {
-   const m = ((x % size) + size) % size;
-   return Math.min(m, size - m) / size;
-}
 
 describe("grid: algorithm-specific invariants", () => {
    it("square: crossing a column or row boundary always changes tone", () => {
-      // Same constructive approach as the diamond test below: build (x, y) from a
-      // (cell, offset-within-cell) pair so points are safely away from a boundary
-      // by construction, instead of generating raw doubles and rejecting the ones
-      // that land too close to one.
+      // Build (x, y) from a (cell, offset-within-cell) pair so points are
+      // safely away from a boundary by construction.
       fc.assert(
          fc.property(
             fc.integer({ min: 0, max: 20 }),
@@ -74,10 +51,7 @@ describe("grid: algorithm-specific invariants", () => {
    });
 
    it("square: is periodic with period n * tileSize (n = number of tones)", () => {
-      // tileSize is restricted to integers here: with an arbitrary double tileSize,
-      // (n * tileSize) / tileSize is not always bit-exactly n (float rounding), which
-      // would fail the assertion for a reason that has nothing to do with the
-      // colouring algorithm. Real tile sizes are always whole pixels in practice.
+      // Integer tileSize avoids float-rounding failures unrelated to the algorithm.
       const intSizeArb = fc.integer({ min: 10, max: 120 });
       fc.assert(
          fc.property(coordArb, coordArb, intSizeArb, tonesArb, (x, y, tileSize, tones) => {
@@ -90,11 +64,8 @@ describe("grid: algorithm-specific invariants", () => {
    });
 
    it("diamond: crossing the rotated-frame boundary always changes tone", () => {
-      // Construct (x, y) from an explicit (cell, offset-within-cell) pair in the
-      // rotated u/v frame so points land safely away from boundaries by
-      // construction, rather than generating raw doubles and filtering out the
-      // (very common, since fast-check probes corner values like 0 deliberately)
-      // near-boundary cases after the fact.
+      // Construct (x, y) from a (cell, offset-within-cell) pair in the rotated
+      // u/v frame so points land safely away from boundaries by construction.
       fc.assert(
          fc.property(
             fc.integer({ min: -20, max: 20 }),
@@ -128,9 +99,8 @@ describe("grid: algorithm-specific invariants", () => {
    });
 
    it("hexagon: colouring is proper for tones 3-5 (adjacent hexes always differ)", () => {
-      // Cube/axial coordinates: inverting _hexagon's forward transform gives the
-      // exact pixel centre of cell (q, r), landing well clear of any rounding
-      // boundary. The six offsets are the standard axial hex-neighbour directions.
+      // Inverting _hexagon's forward transform gives the exact pixel centre
+      // of cell (q, r); offsets are the standard axial hex-neighbour directions.
       const hexNeighbours = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
       function hexCentre(q, r, size) {
          return [size * Math.sqrt(3) * (q + r / 2), 1.5 * size * r];
@@ -154,10 +124,7 @@ describe("grid: algorithm-specific invariants", () => {
    });
 
    it("triangle: colouring is proper for tones 3-5, for the three adjacencies grid.js documents", () => {
-      // U(si,ti) touches D(si,ti), D(si-1,ti) and D(si,ti-1) (grid.js's comment on
-      // _triangle). Building one representative point safely inside each named
-      // region (via the oblique-coordinate inverse x = size*(s+t/2), y = size*t*sqrt3/2)
-      // checks the documented adjacency claim directly.
+      // U(si,ti) touches D(si,ti), D(si-1,ti) and D(si,ti-1) (grid.js's _triangle).
       function toXY(s, t, size) {
          return [size * (s + t / 2), size * t * (Math.sqrt(3) / 2)];
       }
@@ -187,21 +154,16 @@ describe("grid: algorithm-specific invariants", () => {
    });
 
    it("triangle: is bipartite by orientation (any up triangle differs from any down triangle)", () => {
-      // grid.js's comment: "up/down triangles are never mutually adjacent" — the
-      // 2-tone scheme relies on orientation alone. sf/tf are sampled independently
-      // within the up half (sum < 1) and the down half (sum >= 1) with margin from
-      // the sf+tf=1 boundary, so this tests the orientation claim, not rounding at it.
+      // grid.js: up/down triangles are never mutually adjacent — the 2-tone
+      // scheme relies on orientation alone.
       function toXY(s, t, size) {
          return [size * (s + t / 2), size * t * (Math.sqrt(3) / 2)];
       }
-      // sf/tf must clear margin from three boundaries: 0, 1, and the sf+tf=1
-      // diagonal — the recomputed s, t in _triangle go through a second, independent
-      // Math.sqrt(3) evaluation, so even a value nominally at sf=0 can round-trip to
-      // a tiny negative residual and have floor() flip it into the wrong cell.
-      // [0.05, 0.4]: away from 0, and sf+tf caps at 0.8 (up).
-      const fracArb = fc.double({ min: 0.05, max: 0.4, noNaN: true });
-      // [0.05, 0.3] shifted by +0.55: sf, tf in [0.6, 0.85], sf+tf in [1.2, 1.7] (down).
-      const fracDownArb = fc.double({ min: 0.05, max: 0.3, noNaN: true });
+      // sf/tf need margin from three boundaries (0, 1, sf+tf=1) since a second,
+      // independent sqrt(3) evaluation inside _triangle can round-trip a value
+      // nominally at a boundary into the wrong cell.
+      const fracArb = fc.double({ min: 0.05, max: 0.4, noNaN: true }); // up: sf+tf <= 0.8
+      const fracDownArb = fc.double({ min: 0.05, max: 0.3, noNaN: true }); // shifted +0.55: down
       fc.assert(
          fc.property(
             fc.integer({ min: -20, max: 20 }), fc.integer({ min: -20, max: 20 }),
@@ -222,12 +184,10 @@ describe("grid: algorithm-specific invariants", () => {
    });
 
    it("brick: colouring is proper for tones 3-5, for same-row and directly-below neighbours", () => {
-      // Bricks tile the plane with no gaps (row = floor(y/bh), col = floor((x+shift)/bw)
-      // both partition contiguously), so (x+bw, y) in the same row and (x, y+bh) in the
-      // row below are always physically touching regardless of the running-bond shift.
-      // grid.js's comment only claims properness for the fineCol (numShades >= 3) scheme —
-      // 2-tone's plain (col+row)%2 touches the same "2 neighbours per side row" issue the
-      // comment describes and is not guaranteed proper vertically, so this checks 3-5 only.
+      // Bricks tile with no gaps, so (x+bw, y) and (x, y+bh) always touch
+      // physically. grid.js only claims properness for the fineCol (>= 3
+      // tones) scheme — 2-tone is not guaranteed proper vertically, so this
+      // checks 3-5 only.
       fc.assert(
          fc.property(
             fc.integer({ min: 0, max: 20 }),  // row

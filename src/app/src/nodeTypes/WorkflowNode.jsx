@@ -1,11 +1,17 @@
+/*
+========================================
+WORKFLOW NODE
+========================================
+* ReactFlow custom node renderer for the algorithm workflow graph — header
+* coloured by category, with an expandable param-control body when selected.
+*/
+
 import { Handle, Position } from "@xyflow/react";
 import { NODE_LIBRARY } from "../workflows.js";
 import "./WorkflowNode.css";
 
-// One colour per docs/nodes/ category (see workflows.js's NODE_LIBRARY).
-// Exported so App.jsx can build a colour-key legend from the same source of
-// truth (Green & Petre's Role-expressiveness — nothing in the UI previously
-// stated what each header colour means; App-UX-Quickwins.md item 6).
+// One colour per docs/nodes/ category. Exported so App.jsx can build its
+// colour-key legend from the same source of truth.
 export const CATEGORY_COLOURS = {
    environment: "#6b7280",
    initialisation: "#2563eb",
@@ -22,6 +28,27 @@ function ParamControl({ param, onChange }) {
 
    if (param.archetype && param.map) {
       const [min, max] = param.map;
+      // Exactly two selectable values (e.g. map: [0, 1]) reads as a switch,
+      // not a range — a slider here visually implies fine-grained control
+      // the param doesn't actually offer.
+      if (Number.isInteger(min) && Number.isInteger(max) && max - min === 1) {
+         return (
+            <label className="param-control">
+               <span className="param-label">
+                  {param.archetype} <em>({param.param})</em>
+               </span>
+               <span className="param-row">
+                  <input
+                     className="nodrag"
+                     type="checkbox"
+                     checked={Number(value) === max}
+                     onChange={(e) => onChange(param.param, e.target.checked ? max : min)}
+                  />
+                  <span className="param-value">{value}</span>
+               </span>
+            </label>
+         );
+      }
       const step = Number.isInteger(min) && Number.isInteger(max) && max - min <= 20 ? 1 : (max - min) / 100;
       return (
          <label className="param-control">
@@ -30,6 +57,7 @@ function ParamControl({ param, onChange }) {
             </span>
             <span className="param-row">
                <input
+                  className="nodrag"
                   type="range"
                   min={min}
                   max={max}
@@ -43,11 +71,29 @@ function ParamControl({ param, onChange }) {
       );
    }
 
+   if (param.control === "toggle") {
+      const isOn = Number(value) !== 0;
+      return (
+         <label className="param-control">
+            <span className="param-label">{param.label ?? param.param}</span>
+            <span className="param-row">
+               <input
+                  className="nodrag"
+                  type="checkbox"
+                  checked={isOn}
+                  onChange={(e) => onChange(param.param, e.target.checked ? param.onValue : 0)}
+               />
+               <span className="param-value">{isOn ? param.onLabel ?? "On" : param.offLabel ?? "Off"}</span>
+            </span>
+         </label>
+      );
+   }
+
    if (param.control === "select") {
       return (
          <label className="param-control">
             <span className="param-label">{param.label ?? param.param}</span>
-            <select value={value} onChange={(e) => onChange(param.param, e.target.value)}>
+            <select className="nodrag" value={value} onChange={(e) => onChange(param.param, e.target.value)}>
                {param.options.map((opt) => (
                   <option key={opt} value={opt}>
                      {opt}
@@ -64,6 +110,7 @@ function ParamControl({ param, onChange }) {
             <span className="param-label">{param.label ?? param.param}</span>
             <span className="param-row">
                <input
+                  className="nodrag"
                   type="color"
                   value={value}
                   onChange={(e) => onChange(param.param, e.target.value)}
@@ -87,11 +134,8 @@ function ParamControl({ param, onChange }) {
    );
 }
 
-// Selecting a node opens an expandable parameter panel directly beneath it —
-// only one node's controls are open at a time (docs/UI_DESIGN.md's Node
-// Interaction / Parameter Editing sections) — so the body only renders when
-// this node is the selected one, rather than every node showing its params
-// permanently.
+// Only the selected node's param body renders — one node's controls open
+// at a time, not every node showing its params permanently.
 export default function WorkflowNode({ data }) {
    const colour = CATEGORY_COLOURS[NODE_LIBRARY[data.nodeType]?.category] ?? "#6b7280";
    const hasBody =

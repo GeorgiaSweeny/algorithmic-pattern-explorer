@@ -2,10 +2,8 @@
 ========================================
 DISTANCE FIELD — PRIMITIVE-LEVEL TESTS
 ========================================
-* nearestTwoPoints was added for voronoiIslamic.js (2026-08-21 follow-up,
-* docs/VORONOI_ISLAMIC_HYBRID_PLAN.md) — tested here on its own, matching
-* this project's per-primitive test convention (lib.seedPoints.test.js,
-* lib.starPolygon.test.js), independent of the generator that consumes it.
+* Tests nearestTwoPoints (used by voronoiIslamic.js) in isolation, independent
+* of the generator that consumes it.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
@@ -15,12 +13,6 @@ const pointArb = fc.record({
    x: fc.double({ min: 0, max: 600, noNaN: true }),
    y: fc.double({ min: 0, max: 600, noNaN: true }),
 });
-
-function randomPoints(n, rng) {
-   const points = new Float32Array(n * 2);
-   for (let i = 0; i < n * 2; i++) points[i] = rng() * 600;
-   return points;
-}
 
 describe("nearestTwoPoints", () => {
    it("agrees with nearestPoint on index and distSq", () => {

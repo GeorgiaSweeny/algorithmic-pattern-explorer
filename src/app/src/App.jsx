@@ -1,3 +1,12 @@
+/*
+========================================
+MAIN APPLICATION SHELL
+========================================
+* Top-level layout: generator selection, documentation panel, pattern canvas,
+* node workflow graph, and the menu bar (tutorial, evaluation, node library).
+* Owns the selected pattern/params/node state that drives the other panels.
+*/
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ReactFlow, Background, Controls, MarkerType } from "@xyflow/react";
 import { CATEGORY_COLOURS } from "./nodeTypes/WorkflowNode.jsx";
@@ -20,11 +29,8 @@ const nodeTypes = { workflow: WorkflowNode };
 const CANVAS_LABEL = `${CANVAS.WIDTH} × ${CANVAS.HEIGHT} px`;
 const GITHUB_REPO_URL = "https://github.com/GeorgiaSweeny/algorithmic-pattern-generator";
 
-// Human-readable labels for CATEGORY_COLOURS's keys, in the same order
-// nodes typically appear (environment -> initialisation -> computation ->
-// pattern -> presentation -> output) — a one-line legend so the node
-// header colours mean something without having to guess (Green & Petre's
-// Role-expressiveness; App-UX-Quickwins.md item 6).
+// Human-readable labels for CATEGORY_COLOURS's keys, in pipeline order —
+// the legend under the workflow graph.
 const CATEGORY_LABELS = {
    environment: "Environment",
    initialisation: "Initialisation",
@@ -38,11 +44,8 @@ function defaultParams(entry) {
    return Object.fromEntries(entry.params.map((p) => [p.param, p.value]));
 }
 
-// Groups REGISTRY by its existing `category` field (no new data — every
-// entry already declares one) in first-seen order, so the Generator
-// Selection list reads as a tiered structure (docs/evaluation/
-// educator-consultation-user-stories.md's US-10.1) rather than one flat
-// 14-item list, without introducing a second categorisation scheme.
+// Groups REGISTRY by its existing `category` field, in first-seen order,
+// so Generator Selection reads as tiers rather than one flat list.
 function groupByCategory(entries) {
    const groups = new Map();
    for (const entry of entries) {
@@ -53,65 +56,40 @@ function groupByCategory(entries) {
 }
 const REGISTRY_BY_CATEGORY = groupByCategory(REGISTRY);
 
-// Layout, updated from docs/UI_DESIGN.md's original Interface Layout:
-// Generator Selection stacked above a small always-final-output preview
-// (left column), Documentation Panel (middle), Pattern Canvas with the
-// Algorithm Workflow node graph underneath it (right), Status & Controls
-// bar (bottom) — the node graph moved from the left column to sit under
-// the main canvas so it reads as "the steps that produce what's on the
-// right," with the small left-column preview keeping the final result
-// visible at all times while stepping through intermediate stages. Node
-// selection is single-node-at-a-time (Node Interaction section) —
-// selecting a node highlights it, opens its param controls inline
-// beneath it, and (docs/UI_DESIGN.md's Stepping Through Algorithms) can
-// be driven by Prev/Next as well as direct node clicks.
-//
-// The main canvas shows per-node intermediate algorithm state, not just
-// the final render, wherever stagePreview.js defines a rule for the
-// selected node's stage (see that file's own header comment) — one
-// generic mechanism across all 7 generators, not bespoke code per
-// generator. The left column's preview always omits `node` when calling
-// PatternCanvas, which falls back to the real final output unconditionally
-// (see PatternCanvas.jsx's own header comment).
+// Layout: Generator Selection + always-final-output preview (left column),
+// Documentation Panel (middle), Pattern Canvas + workflow graph (right).
+// Node selection is single-node-at-a-time — selecting a node highlights it,
+// shows its params inline, and drives what the canvas renders (see
+// stagePreview.js and PatternCanvas.jsx). See docs/UI_DESIGN.md for the
+// full layout rationale.
 export default function App() {
    const [selectedId, setSelectedId] = useState(REGISTRY[0].id);
    const selectedEntry = REGISTRY.find((e) => e.id === selectedId);
    const [paramValues, setParamValues] = useState(() => defaultParams(selectedEntry));
-   // 0 = the pattern's first node, so the Documentation Panel always has a
-   // concrete stage to explain by default rather than opening on its empty
-   // "select a node" state. -1 (pattern-level overview, GENERATOR_DOCS) is
-   // still reachable via Prev. Not just an initial value: switching pattern
-   // resets back to 0 too, so the first node is selected again for every
-   // newly-selected pattern, not only on first load.
+   // 0 = the pattern's first node, so Documentation Panel always has a
+   // concrete stage by default. -1 (pattern overview) is reachable via Prev.
+   // Resets to 0 whenever the pattern selection changes, not just on load.
    const [selectedIndex, setSelectedIndex] = useState(0);
-   // Main canvas zoom: 1 = "min(100% of the panel, the pattern's actual
-   // pixel size)" — the canvas is always fully visible with no scrolling
-   // needed at the default. Zooming in beyond that is an explicit choice,
-   // and scrolling only appears then (see .canvas-zoom-wrap). The Render
-   // Preview panel deliberately has no zoom control of its own — just
-   // responsive scaling, the same min() sizing with no interactive part.
+   // 1 = fits the panel at the pattern's actual pixel size, no scrolling.
+   // Zooming past that is explicit; scrolling only appears then.
    const [canvasZoom, setCanvasZoom] = useState(1);
    const CANVAS_ZOOM_MIN = 0.5;
    const CANVAS_ZOOM_MAX = 3;
-   const [showTest, setShowTest] = useState(false);
+   const [showTest1, setShowTest1] = useState(false);
    const [showTest2, setShowTest2] = useState(false);
    const [showEvaluationMenu, setShowEvaluationMenu] = useState(false);
    const evaluationMenuRef = useRef(null);
    const [showNodeLibrary, setShowNodeLibrary] = useState(false);
-   // Welcome (app intro) and Onboarding (panel-by-panel tour) are one
-   // combined first-visit flow gated by the same "seen" flag: Welcome
-   // shows first, its own "Take the tour" hands off into Onboarding, and
-   // "Skip" dismisses both for good. The menu bar's "Replay Tutorial"
-   // button re-opens the same combined flow from the start.
+   // Welcome and Onboarding are one combined first-visit flow gated by the
+   // same "seen" flag: Welcome's "Take the tour" hands off into Onboarding,
+   // "Skip" dismisses both. "Replay Tutorial" re-opens the same flow.
    const [showWelcome, setShowWelcome] = useState(() => !hasSeenOnboarding());
    const [showOnboarding, setShowOnboarding] = useState(false);
-   // Starts collapsed: a pattern is always selected by default, so the full
-   // list isn't needed on screen until a learner actively wants to change
-   // it. Expanding this and Pattern Documentation being shown are mutually
-   // exclusive in the left column — only one needs the space at a time.
+   // Starts collapsed; expanding this and showing Pattern Documentation are
+   // mutually exclusive in the left column.
    const [generatorPanelExpanded, setGeneratorPanelExpanded] = useState(false);
 
-   // Evaluation dropdown: close on outside click, same as any standard menu.
+   // Evaluation dropdown: close on outside click.
    useEffect(() => {
       if (!showEvaluationMenu) return;
       function handleClickOutside(e) {
@@ -131,9 +109,8 @@ export default function App() {
       setCanvasZoom(1);
    }, [selectedId]);
 
-   // Depends on paramValues too: some params change the graph's own shape
-   // (e.g. recursive's depth controls how many Subdivide nodes appear), not
-   // just the rendered pattern — see buildWorkflow's liveParams doc comment.
+   // Depends on paramValues too: some params reshape the graph itself (e.g.
+   // recursive's depth changes how many Subdivide nodes appear).
    const { nodes: rawNodes, edges } = useMemo(
       () => buildWorkflow(selectedId, paramValues),
       [selectedId, paramValues]
@@ -145,7 +122,11 @@ export default function App() {
             ...node,
             data: {
                ...node.data,
-               params: node.data.params.map((p) => ({ ...p, value: paramValues[p.param] ?? p.value })),
+               params: node.data.params.map((p) => ({
+                  ...p,
+                  value: paramValues[p.param] ?? p.value,
+                  ...(p.onValue ? { onValue: p.onValue(paramValues) } : {}),
+               })),
                onParamChange: (key, value) => setParamValues((prev) => ({ ...prev, [key]: value })),
                selected: index === selectedIndex,
                exportActions:
@@ -160,11 +141,8 @@ export default function App() {
       [rawNodes, paramValues, selectedIndex, selectedEntry]
    );
 
-   // Directional arrows on every edge (App-UX-Quickwins.md item 1) — data
-   // flows source -> target, but the default ReactFlow edge is just an
-   // unlabelled line with no cue which way. The edge feeding the currently
-   // selected node is also animated, a lightweight second cue tying the
-   // step-through control to the graph without needing a text label.
+   // Directional arrows show data flow source -> target; the edge feeding
+   // the currently selected node is animated as a second visual cue.
    const styledEdges = useMemo(
       () =>
          edges.map((edge, i) => ({
@@ -177,10 +155,8 @@ export default function App() {
 
    const selectedNode = nodes[selectedIndex] ?? null;
    const isRenderStep = selectedNode?.data.nodeType === "render";
-   // No node selected yet is visually the same case as the render step
-   // itself: both show the pattern's actual final output on the main
-   // canvas, just for different reasons (nothing picked yet, vs. having
-   // stepped all the way to the last stage).
+   // No selection and the final render step both show the pattern's actual
+   // final output.
    const showingFinalRender = isRenderStep || !selectedNode;
 
    function selectByNodeId(nodeId) {
@@ -217,11 +193,11 @@ export default function App() {
                            className="menu-bar-dropdown-item"
                            role="menuitem"
                            onClick={() => {
-                              setShowTest(true);
+                              setShowTest1(true);
                               setShowEvaluationMenu(false);
                            }}
                         >
-                           Test
+                           Test 1
                         </button>
                         <button
                            className="menu-bar-dropdown-item"
@@ -288,7 +264,7 @@ export default function App() {
          </header>
 
          {showNodeLibrary && <NodeLibraryOverlay onClose={() => setShowNodeLibrary(false)} />}
-         {showTest && <EvaluationOverlay study={1} onClose={() => setShowTest(false)} />}
+         {showTest1 && <EvaluationOverlay study={1} onClose={() => setShowTest1(false)} />}
          {showTest2 && <EvaluationOverlay study={2} onClose={() => setShowTest2(false)} />}
          {showWelcome && (
             <Welcome
@@ -343,10 +319,8 @@ export default function App() {
                   )}
                </section>
 
-               {/* Doubles as the former separate "Render Preview" panel — its
-                   own Visual Example already shows the pattern's actual final
-                   render (PatternDocumentation.jsx), so a second, separate
-                   panel showing the same image was redundant. */}
+               {/* Also serves as the final-render preview (Visual Example
+                   already shows it — see PatternDocumentation.jsx). */}
                <PatternDocumentation
                   entry={selectedEntry}
                   generator={selectedEntry.generator}
@@ -358,25 +332,16 @@ export default function App() {
             <DocumentationPanel selectedNode={selectedNode} generator={selectedEntry.generator} />
 
             <section className="layout-panel canvas-panel">
-               {/* Header condensed onto a single sticky line: title, size,
-                   "Showing" status, and zoom controls all share one row now,
-                   grouped left (title/size/status, wrapping among themselves
-                   at narrow widths) vs. right (zoom controls, pinned). */}
+               {/* Title, size, "Showing" status, and zoom controls share one
+                   sticky row: left group wraps, zoom controls stay pinned right. */}
                <div className="canvas-header-sticky">
                   <div className="canvas-header-row">
                      <div className="canvas-header-left">
                         <h2 className="panel-title">Canvas</h2>
                         <span className="canvas-size-inline">{CANVAS_LABEL}</span>
-                        {/* Nielsen's "visibility of system status": this canvas's
-                            image changes for two different reasons (a parameter
-                            edit, or selecting a different node below), and
-                            nothing previously stated which stage is currently
-                            displayed — a Study 1 participant reported mistaking
-                            one cause for the other
-                            (docs/evaluation/study1-participant-post-session-notes.md
-                            #4). Deliberately styled less prominently than the
-                            "Canvas" title, not more — a live status line
-                            shouldn't outrank the panel's own header. */}
+                        {/* States which stage is displayed, since the canvas
+                            image changes both from param edits and node
+                            selection — styled subtly, below the panel title. */}
                         <span className="canvas-showing-label">
                            Showing: {showingFinalRender ? "Final Render" : `${selectedNode.data.label} stage output`}
                            {!showingFinalRender && (
@@ -421,12 +386,8 @@ export default function App() {
                </div>
 
                <div className="algorithm-workflow">
-                  {/* Condensed from three stacked rows (title, "pattern name — N
-                      nodes (file.js)" subtitle, legend) to two — the pattern's own
-                      name is already shown in the (collapsed) Generator Selection
-                      panel, so repeating it here was redundant; node count moved
-                      inline next to the title instead, the same treatment as the
-                      Canvas header's size label above. */}
+                  {/* Pattern name already shown in Generator Selection, so only
+                      node count is repeated here, inline next to the title. */}
                   <div className="workflow-header-row">
                      <h2 className="panel-title">
                         Visual Algorithm Workflow <span className="panel-title-note">(NODES)</span>
@@ -453,17 +414,20 @@ export default function App() {
                      nodesConnectable={false}
                      elementsSelectable={false}
                      onNodeClick={(_, node) => selectByNodeId(node.id)}
+                     // fitView (above) only fits once, synchronously on init —
+                     // on the very first mount the .algorithm-workflow strip's
+                     // sticky/flex layout can still be settling, so ReactFlow
+                     // measures a not-yet-final container size and fits nodes
+                     // outside the visible area. Re-fitting one frame later
+                     // (after layout has settled) is what a pattern switch
+                     // already does implicitly by remounting via `key`.
+                     onInit={(instance) => requestAnimationFrame(() => instance.fitView())}
                   >
                      <Background />
                      <Controls />
                   </ReactFlow>
 
-                  {/* Moved from a standalone full-width footer — these controls
-                      only ever act on this graph and this pattern's parameters,
-                      so a bar spanning the whole app (including the Generator
-                      Selection and Documentation Panel columns) read as
-                      disconnected from what it actually controlled. Now sits
-                      directly with the thing it controls instead. */}
+                  {/* Sits with the graph it controls, not a full-width footer. */}
                   <div className="workflow-controls-bar">
                      <div className="status-section step-controls">
                         <button

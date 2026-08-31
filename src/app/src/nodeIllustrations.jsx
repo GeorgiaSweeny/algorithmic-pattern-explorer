@@ -1,29 +1,14 @@
-// Small, generic diagrams for the Documentation Panel and Reference
-// overlay's "Visual Example" block — one per node type in workflows.js's
-// NODE_LIBRARY, illustrating what the OPERATION does in the abstract (a
-// dashed reference shape next to/behind a solid accent shape showing the
-// result), not what the currently-selected pattern's own render looks
-// like. Previously this slot reused PatternCanvas at thumbnail size (the
-// exact same image as the main canvas, just smaller) — genuinely
-// uninformative once you'd already seen the main canvas, and tied to
-// whichever specific pattern happened to be selected rather than
-// explaining the node type itself. Hand-drawn with plain SVG primitives
-// (no illustration library) since each diagram is a handful of shapes,
-// not production art.
-//
-// Colours match the app's own palette throughout (App.css's Tailwind-gray
-// + #2563eb blue — the same accent used for buttons, the selected-pattern
-// highlight, and the Render Preview canvas border), not an invented
-// separate palette.
-//
-// Checked against how each concept is conventionally drawn (distance
-// fields as concentric rings, Escher-style tessellation edges as a
-// bump/matching notch, Voronoi seed points as bare scattered sites) —
-// noise was the one mismatch found: Perlin/procedural noise is
-// conventionally shown as a soft organic blob/cloud texture, not discrete
-// bars (which reads as plain random sampling, a different concept this
-// project already distinguishes via the Randomness vs Emergence CT
-// concepts) — see NOISE_BLUR_FILTER_ID below for how that's drawn.
+/*
+========================================
+NODE ILLUSTRATIONS
+========================================
+* Small, generic diagrams for the "Visual Example" block — one per node
+* type in workflows.js's NODE_LIBRARY, illustrating what the OPERATION does
+* in the abstract (dashed reference shape + solid accent result shape), not
+* a render of the currently-selected pattern. Hand-drawn plain SVG, colours
+* matched to App.css's palette.
+*/
+
 const STROKE = "#374151";
 const STROKE_SOFT = "#9ca3af";
 const ACCENT = "#2563eb";

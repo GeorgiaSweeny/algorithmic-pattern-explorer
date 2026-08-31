@@ -1,20 +1,28 @@
+/*
+========================================
+EVALUATION OVERLAY
+========================================
+* Full-screen research-instrument quiz overlay (dissertation evaluation, not
+* a learner-facing assessment) — pre/post administration of the same
+* question bank, with no score shown until the whole session is downloaded
+* as JSON. See docs/APP_IMPLEMENTATION_NOTES.md for the full rationale.
+* `study` (1 or 2) selects which instrument/question bank/storage key this
+* instance runs — App.jsx mounts one instance per study.
+*/
+
 import { useState } from "react";
 import { STUDY1_QUESTIONS, STUDY2_QUESTIONS } from "./quizContent.js";
 import {
    recordQuizPass,
    getAllRecords,
    clearAllRecords,
+   hasStoredPhase,
    STUDY1_STORAGE_KEY,
    STUDY2_STORAGE_KEY,
 } from "./evaluationStorage.js";
 import QuizPatternImage from "./QuizPatternImage.jsx";
 import "./EvaluationOverlay.css";
 
-// `study` (1 or 2) selects which instrument this overlay instance runs —
-// App.jsx mounts one instance per study ("Test" / "Test 2" menu items),
-// each with its own question bank and its own localStorage key, so the
-// two studies' responses, scores, and "Clear Stored Responses" actions
-// can never collide (see evaluationStorage.js's own header comment).
 const STUDY_CONFIG = {
    1: {
       questions: STUDY1_QUESTIONS,
@@ -32,46 +40,42 @@ const STUDY_CONFIG = {
       storageKey: STUDY2_STORAGE_KEY,
       label: "Study 2",
       filenamePrefix: "study2-evaluation-results",
+      // The "Responses are stored..." line further down is deliberately not
+      // repeated here — it's already rendered once, identically, for every
+      // study by the shared paragraph right below {config.intro} in JSX.
       intro:
-         "This is Study 2's own research instrument — a separate quiz from " +
-         "Study 1's, testing compositional reasoning and using image-based " +
-         "questions alongside text ones (see dissertation/Study2-Design-Plan.md). " +
-         "Image-based and multi-select items are a materially different task " +
-         "from a short text quiz — by continuing, you're confirming that's " +
-         "covered by what you already agreed to for this project's next study.",
+         "This is a separate quiz from Study 1's, testing compositional " +
+         "reasoning, using image-based questions alongside text ones.",
    },
 };
 
-/*
-* Full-screen overlay, opened from App.jsx's menu bar, kept entirely
-* separate from node/pattern selection state — closing it returns to
-* whatever the explorer was showing, unchanged. This is a *research
-* instrument* for the dissertation's secondary RQ (does the demonstration
-* layer measurably help), not a learner-facing gamified assessment — the
-* latter is explicitly Out of Scope (PROJECT_SPECIFICATION.md: "assessment,
-* grading or progress tracking"). The distinction is who it's for: this
-* screen exists to collect data for the study runner, not to score or
-* gate the learner's own use of the explorer.
-*
-* Scope, stated plainly: this builds the instrument and the local data
-* capture docs/plan-checklist.md's Aug-11/12 entry calls for — not the
-* study itself. Running a real pre/post comparison with real participants,
-* and writing up the results, is separate work for after this instrument
-* exists and works.
-*
-* Same-instrument pre/post design (see quizContent.js's own header
-* comment for the methodology note): one question bank, administered
-* twice. `download()` mirrors export.js's own Blob-download pattern
-* rather than a second implementation of the same few lines.
-*
-* Deliberately no score shown after either pass — not even "you got N
-* right." Telling a participant their pre-quiz score would let them infer
-* which answers were wrong and go looking for the right ones before the
-* post-quiz, or re-pick answers on the post-quiz just to see the number
-* move, contaminating the within-subject comparison this instrument
-* exists to measure. Scores only surface in the downloaded JSON, for the
-* study runner, after the whole session is over.
-*/
+// One dot per phase — pre and post are tracked (and shown) separately, since
+// a participant can easily have taken one but not the other. Green = that
+// phase has at least one stored pass; empty/hollow = none yet. Shown on both
+// the intro screen (before taking either quiz, and again immediately after
+// Clear Stored Responses) and the post-submit summary screen (right after a
+// pass is recorded), so "is my pre/post result stored?" never requires
+// downloading the file to find out.
+function StorageStatus({ hasPre, hasPost }) {
+   return (
+      <ul className="eval-storage-status" role="status">
+         <li>
+            <span
+               className={`eval-storage-dot${hasPre ? " eval-storage-dot-stored" : " eval-storage-dot-empty"}`}
+               aria-hidden="true"
+            />
+            {hasPre ? "Pre-quiz stored" : "Pre-quiz not stored"}
+         </li>
+         <li>
+            <span
+               className={`eval-storage-dot${hasPost ? " eval-storage-dot-stored" : " eval-storage-dot-empty"}`}
+               aria-hidden="true"
+            />
+            {hasPost ? "Post-quiz stored" : "Post-quiz not stored"}
+         </li>
+      </ul>
+   );
+}
 
 function download(text, filename) {
    const blob = new Blob([text], { type: "application/json" });
@@ -84,11 +88,8 @@ function download(text, filename) {
 }
 
 // A question is "answered" once it has a selection at all — for
-// "node-select" that means at least one node checked, deliberately (not
-// "a key exists, even empty"), since an empty selection is indistinguishable
-// from "hasn't looked at this question yet" and shouldn't let Submit enable
-// itself on an untouched item. "order" requires every node to have a
-// chosen position, for the same reason applied per-node instead of once.
+// "node-select" that means at least one node checked (not just a key
+// existing), and "order" requires every node to have a chosen position.
 function isAnswered(question, answers) {
    const value = answers[question.id];
    if (question.type === "node-select") return Array.isArray(value) && value.length > 0;
@@ -278,22 +279,38 @@ export default function EvaluationOverlay({ onClose, study = 1 }) {
    const config = STUDY_CONFIG[study];
    const [stage, setStage] = useState("intro"); // "intro" | "quiz" | "summary"
    const [phase, setPhase] = useState("pre"); // "pre" | "post"
+   const [hasPre, setHasPre] = useState(() => hasStoredPhase("pre", config.storageKey));
+   const [hasPost, setHasPost] = useState(() => hasStoredPhase("post", config.storageKey));
+   // Set on Clear Stored Responses, cleared again once the user starts a new
+   // quiz pass — a one-off confirmation, not a persistent status like the
+   // pre/post dots above.
+   const [justCleared, setJustCleared] = useState(false);
 
    function startQuiz(nextPhase) {
+      setJustCleared(false);
       setPhase(nextPhase);
       setStage("quiz");
    }
 
    function submitQuiz(answers) {
-      // Score is recorded but never read back here — see this file's own
-      // header comment for why the result stays hidden until download.
+      // Score is recorded but never read back here — kept hidden until
+      // download (see docs/APP_IMPLEMENTATION_NOTES.md).
       recordQuizPass(phase, config.questions, answers, config.storageKey);
+      if (phase === "pre") setHasPre(true);
+      else setHasPost(true);
       setStage("summary");
    }
 
    function downloadResults() {
       const records = getAllRecords(config.storageKey);
       download(JSON.stringify(records, null, 2), `${config.filenamePrefix}-${Date.now()}.json`);
+   }
+
+   function clearResults() {
+      clearAllRecords(config.storageKey);
+      setHasPre(false);
+      setHasPost(false);
+      setJustCleared(true);
    }
 
    return (
@@ -312,6 +329,12 @@ export default function EvaluationOverlay({ onClose, study = 1 }) {
                      you can download them as a file at the end to share with the study
                      runner.
                   </p>
+                  <StorageStatus hasPre={hasPre} hasPost={hasPost} />
+                  {justCleared && (
+                     <p className="eval-cleared-confirmation" role="status">
+                        Stored responses successfully cleared.
+                     </p>
+                  )}
                   <div className="eval-actions">
                      <button className="btn" onClick={() => startQuiz("pre")}>
                         Take Pre-Quiz
@@ -322,7 +345,7 @@ export default function EvaluationOverlay({ onClose, study = 1 }) {
                      <button className="btn" onClick={downloadResults}>
                         Download My Results
                      </button>
-                     <button className="btn" onClick={() => clearAllRecords(config.storageKey)}>
+                     <button className="btn" onClick={clearResults}>
                         Clear Stored Responses
                      </button>
                   </div>
@@ -338,6 +361,7 @@ export default function EvaluationOverlay({ onClose, study = 1 }) {
                      {phase === "pre" ? "Pre-quiz" : "Post-quiz"} recorded. Results aren't
                      shown here — download your results at the end to see them.
                   </p>
+                  <StorageStatus hasPre={hasPre} hasPost={hasPost} />
                   {phase === "pre" && (
                      <p>Now go explore a few generators, then come back and take the post-quiz.</p>
                   )}

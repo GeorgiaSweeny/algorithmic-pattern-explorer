@@ -1,26 +1,16 @@
+/*
+========================================
+ONBOARDING TOUR
+========================================
+* Skippable first-run walkthrough that spotlights each panel in turn via a
+* fixed step sequence (STEPS below) — a UI-orientation tour ("here's where
+* things are"), not concept-teaching (that's the Documentation Panel's job).
+* No third-party tour library — hand-rolled to avoid a dependency for one
+* fixed sequence. Mirrors EvaluationOverlay.jsx's mount pattern.
+*/
+
 import { useEffect, useLayoutEffect, useState } from "react";
 import "./Onboarding.css";
-
-/*
-* Skippable first-run walkthrough (docs/evaluation/pre-study2-feature-plans.md
-* §1) — corroborated independently by both the original 5-educator
-* consultation ("Guided Onboarding", inital-educator-stakeholder-consulation-
-* summary.md §3.5) and a Study 1 participant's own post-session note
-* (docs/evaluation/study1-participant-post-session-notes.md #2).
-*
-* Deliberately a UI-orientation tour ("here's where things are"), not a
-* concept-teaching one — that's what the Documentation Panel already does
-* once a node is selected, and duplicating it here would be Mayer's
-* redundancy principle working against itself. Modelled on the named
-* examples (Word, creative-software onboarding): skip is always visible,
-* never buried.
-*
-* No third-party tour library — this app has exactly three runtime
-* dependencies (@xyflow/react, react, react-dom); adding one for a single,
-* fixed seven-step sequence would be a heavier change than the feature
-* itself. Structurally mirrors EvaluationOverlay.jsx's own pattern: one
-* component, own CSS file, mounted conditionally from App.jsx.
-*/
 
 const STORAGE_KEY = "algorithmic-pattern-explorer.onboarding-dismissed";
 
@@ -36,19 +26,14 @@ export function markOnboardingSeen() {
    try {
       localStorage.setItem(STORAGE_KEY, "true");
    } catch {
-      // Private-browsing/quota failure: onboarding just replays next visit
-      // rather than the app breaking — same fallback shape as
-      // evaluationStorage.js's own read/write try/catch.
+      // Private-browsing/quota failure: onboarding just replays next visit.
    }
 }
 
-// One entry per step: `selector` is queried against the live DOM (all seven
-// targets are always mounted, never conditionally rendered away, so this is
-// reliable without needing refs threaded down from App.jsx). `selector` can
-// also be an array — every matching element gets its own spotlight, for a
-// step that explains a relationship between two panels (e.g. clicking a
-// node in the diagram vs. where its explanation shows up), with the
-// callout itself still anchored to the first entry.
+// One entry per step: `selector` is queried against the live DOM (all
+// targets stay mounted, so no refs need threading from App.jsx). `selector`
+// can be an array — every match gets its own spotlight, callout anchored
+// to the first entry.
 const STEPS = [
    {
       selector: ".generator-selection",
@@ -87,10 +72,8 @@ const STEPS = [
    },
 ];
 
-// Returns one rect per selector (null for any that don't match), in the
-// same order as `selectors` — so the first entry is always the "primary"
-// target a step's callout anchors to, even when later entries are also
-// spotlighted.
+// Returns one rect per selector (null if unmatched), same order as
+// `selectors`, so the first entry is always the callout's anchor target.
 function useTargetRects(selectors, active) {
    const [rects, setRects] = useState(() => selectors.map(() => null));
    const key = selectors.join("|");
@@ -102,8 +85,8 @@ function useTargetRects(selectors, active) {
       }
       measure();
       window.addEventListener("resize", measure);
-      // Layout can also shift from panel content changes (e.g. a node's
-      // param body expanding) without a resize event firing.
+      // Polls too: layout can shift from content changes (e.g. a param body
+      // expanding) without a resize event firing.
       const interval = setInterval(measure, 300);
       return () => {
          window.removeEventListener("resize", measure);
@@ -148,12 +131,9 @@ export default function Onboarding({ onClose }) {
       setStepIndex((i) => Math.max(0, i - 1));
    }
 
-   // Callout placed below the highlighted region by default, above it when
-   // there isn't room, and clamped into the viewport either way — a target
-   // that spans nearly the whole viewport height (e.g. the doc panel, which
-   // can be taller than the window) has room on *neither* side, so always
-   // computing a single "top" value and clamping it is more robust than
-   // trying to pick above-vs-below and hoping one of the two fits.
+   // Callout placed below the highlight by default, above it if no room,
+   // then clamped into the viewport either way — needed since a tall
+   // target (e.g. the doc panel) can leave no room on either side.
    const calloutStyle = (() => {
       if (!rect) return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
       const calloutWidth = 340;
@@ -174,17 +154,10 @@ export default function Onboarding({ onClose }) {
       return { top, left };
    })();
 
-   // A single dim layer, not one box-shadow-based overlay per target: two
-   // independent "dim everything but my own box" shadows (the old approach)
-   // stack on top of each other, so each one's dim also darkens over the
-   // *other* one's cutout wherever they don't overlap — a multi-target step
-   // (e.g. Documentation Panel + node diagram) ended up visibly dimmer than
-   // a single-target one. An SVG path with one closed subpath for the full
-   // viewport and one more per target rect, combined with fill-rule
-   // "evenodd", punches every target out of the same single fill in one
-   // pass instead, so cutouts are always full brightness regardless of how
-   // many there are. The highlight border itself is still a separate plain
-   // div per rect, drawn on top.
+   // Single dim layer via one SVG path (full-viewport rect + one hole per
+   // target, fill-rule "evenodd") rather than a box-shadow per target —
+   // stacked box-shadows would double-darken where multiple targets overlap.
+   // The highlight border is still a separate div per rect, drawn on top.
    const padding = 6;
    const dimPath =
       `M0,0H${window.innerWidth}V${window.innerHeight}H0Z ` +

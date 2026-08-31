@@ -2,36 +2,11 @@
 ========================================
 STAR POLYGON
 ========================================
-* Builds the classic {n/k} star-polygon edge set: join every point of a
-* Radial Divisions ring to the one `skip` steps around, instead of asking
-* which point is nearest (that's Distance Field's job). Straight chords
-* between non-adjacent points self-intersect into sharp outward rays — the
-* traditional construction real Islamic star motifs use — rather than the
-* flat Voronoi cells a nearest-point search gives.
-*
-* Not sourced from docs/references/Maths to Magic...pdf — that paper's own
-* Figures 17-19 ("Motif A"/"Motif B") are screenshots of its reference
-* Houdini tool's output, not a chord/skip specification (the paper's actual
-* method is translate-rotate-boolean CSG on copies of a shape, described in
-* its Figures 3-5; see docs/ISLAMIC_PATTERN_CONSTRUCTION.md for the full
-* comparison). The {n/k} skip formula and rationale below are this
-* codebase's own reading of the general star-polygon construction.
-*
-* starOutline() below is islamic.js's construction: instead of using the
-* raw chords directly (each one crossing the whole ring, as starEdges
-* gives you), it derives the star polygon's own *silhouette* — n sharp tip
-* vertices (the ring points themselves) alternating with n concave waist
-* vertices, each waist being the actual point where two of the star's own
-* chords cross near that gap. This is standard "fill a self-intersecting
-* star polygon" geometry (the same shape a 5-pointed star icon traces),
-* not sourced from any reference doc — see docs/ISLAMIC_PATTERN_CONSTRUCTION.md
-* for why: the user-supplied compass-and-straightedge source
-* (drawingislamicgeometricdesigns.com, Anthony Lee's rosette method) could
-* not be transcribed reliably from two independent WebFetch passes, so
-* this implements the piece of real, independently-verifiable geometry his
-* method and this one share (one proportioning relationship deriving the
-* whole star+petal shape as a single silhouette) rather than guessing at
-* his exact labelled steps.
+* Builds the classic {n/k} star-polygon silhouette: join every point of a
+* Radial Divisions ring to the one `skip` steps around, then derive the
+* self-intersecting outline (tip vertices alternating with waist vertices
+* at the actual chord crossings). See docs/generators/islamic.md for the
+* construction and its golden-ratio sanity check.
 */
 
 export function starSkip(n) {
@@ -51,23 +26,13 @@ export function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
    };
 }
 
-// The star polygon's own silhouette: ring points (tips) alternating with
-// waist points, giving a closed 2n-vertex polygon
-// [tip_0, waist_0, tip_1, waist_1, ..., tip_{n-1}, waist_{n-1}].
-//
+// The star's silhouette: ring points (tips) alternating with waist points,
+// giving a closed 2n-vertex polygon [tip_0, waist_0, tip_1, waist_1, ...].
 // waist_i is where chord(tip_i, tip_{i+skip}) crosses chord(tip_{i+1},
-// tip_{i+1-skip}) — the two chords nearest the gap between tip_i and
-// tip_{i+1}. By the ring's rotational symmetry these two chords are exact
-// mirror images of each other about the bisector angle between tip_i and
-// tip_{i+1}, so they're guaranteed to cross somewhere on that bisector
-// (not an approximation — a line and its own mirror image about an axis
-// only ever meet on that axis, except in the degenerate near-parallel
-// case guarded below).
-//
-// Falls back to waist = midpoint(tip_i, tip_{i+1}) for whichever gaps
-// produce a degenerate (near-parallel) chord pair — keeps this total for
-// every n rather than producing NaN/Infinity for small n where `skip`
-// isn't geometrically meaningful.
+// tip_{i+1-skip}) — the two chords nearest the tip_i/tip_{i+1} gap, which
+// by rotational symmetry are mirror images about that gap's bisector and so
+// always cross on it. Falls back to the tip midpoint for degenerate
+// (near-parallel) chord pairs at small n, so this stays total for every n.
 export function starOutline(points, skip) {
    const n = points.length / 2;
    const tip = (i) => {

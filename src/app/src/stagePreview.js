@@ -2,40 +2,14 @@
 ========================================
 STAGE PREVIEW
 ========================================
-* Per-node intermediate canvas state (docs/PROJECT_SPECIFICATION.md calls
-* this "the core contribution of the demonstration layer specifically";
-* previously deferred — the canvas always showed the final render
-* regardless of selected node). One generic mechanism, not nine bespoke
-* rendering paths: a declarative table mapping (generator, nodeType) to
-* either a *params override* — re-run the pattern's own existing
-* generator/SVG-renderer function with a modified param, reusing it
-* unchanged rather than adding a second code path into the pure
-* `generator(x, y, params)` contract GENERATOR_CONTRACT.md protects — or,
-* for the few stages with no reducing param, a small dedicated preview
-* renderer (seed points as dots, raw pre-waveform distance as rings).
-*
-* Six of nine generators need only a params override, since the generator
-* already exposes the exact knob that stage's own intermediate state
-* needs:
-*   - recursive.js / recursiveNoise.js: each repeated Subdivide node
-*     shows { depth: <that step's own occurrence number> } — the
-*     fractal building up level by level, using `depth` exactly the way
-*     every registry entry that exposes it already does.
-*   - escher.js: Base Geometry shows { bumpAmp: 0 } — the undeformed
-*     tile grid before edge deformation.
-*   - grid.js: Lattice Index shows { tones: "2" } — the raw partition
-*     structure before the pattern's own chosen tone count is applied.
-*   - islamic.js: Grid shows { scale: 0.03 } (tile centroids as
-*     near-dots); Construction Circle/Radial Divisions show
-*     { frequency: 1 } (silhouette, minimal echo rings).
-* Three stages (voronoi.js's and voronoiIslamic.js's Seed Points, wave.js's
-* rings-mode Distance Field) have no such reducing param, so they get a
-* small dedicated preview renderer instead, reusing lib/seedPoints.js's
-* existing generateSeedPoints — not a re-derivation of point placement.
-* noise.js and any stage already identical to final (Workspace, Seed, ...)
-* have no rule below, so they fall through to the pattern's real current
-* output — correct, not a placeholder, just not maximally illustrative.
+* Per-node intermediate canvas state: a declarative table mapping
+* (generator, nodeType) to either a *params override* — re-run the
+* pattern's existing generator/SVG function with a modified param — or,
+* for stages with no reducing param (seed points, wave's rings-mode
+* distance field), a small dedicated preview renderer. Stages with no rule
+* below fall through to the pattern's real current output.
 */
+
 import { generateSeedPoints } from "../../generators/lib/seedPoints.js";
 
 function override(overrides) {

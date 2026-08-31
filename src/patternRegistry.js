@@ -16,17 +16,8 @@ PATTERN REGISTRY
 -----------------------------------------
 */
 
-// Shared `tones` + `colour1`..`colour5` param block for every vector
-// generator whose renderer reads discrete tone-indexed colours via
-// lib/colourMapping.js's `toneSet`/`svgFillsFor` (voronoi, grid, escher,
-// islamic) — added so every such pattern exposes the full 2-5 tone range
-// and per-tone colour pickers the same way islamic-rosette originally
-// did, rather than each entry hand-copying (and drifting from) the same
-// six-param block. `colourN` only shown once `tones` declares that many;
-// defaults are a monotonic white-to-black ramp (islamic-svg.js's
-// DEFAULT_COLOURS, now lib/colourMapping.js's, shared by every SVG
-// renderer this feeds) so every tones count still renders greyscale
-// until a user picks otherwise — see docs/ISLAMIC_PATTERN_CONSTRUCTION.md.
+// Shared tones + colour1..colour5 block for tone-indexed vector generators
+// (voronoi, grid, escher, islamic) — see docs/PATTERN_REGISTRY_NOTES.md.
 function tonesAndColourParams(defaultTones = "2") {
    return [
       { param: "tones", control: "select", label: "Tones",
@@ -42,19 +33,8 @@ function tonesAndColourParams(defaultTones = "2") {
    ];
 }
 
-// colour1 (light/background, value = +1) + colour2 (dark/primary,
-// value = -1) — for every pattern whose output is inherently two-valued
-// or a continuous gradient rather than a 2-5 declared `tones` count
-// (which uses tonesAndColourParams() above instead): raster patterns
-// with no SVG renderer to read colour1..colour5 (Perlin/Ridge Noise,
-// Perlin Sierpinski, Voronoi Islamic — read by render.js's mapColour,
-// a 2-stop linear interpolation shared by every raster pattern, see its
-// own header comment for why one gradient primitive covers both
-// continuous and discrete/binary output), and vector patterns whose
-// underlying generator has no `tones` concept at all (Wave Stripes,
-// Concentric Rings — a continuous sine value; Sierpinski Carpet,
-// Recursive Grid — a binary filled/empty test), read directly by each
-// pattern's own SVG renderer.
+// colour1 (light, +1) + colour2 (dark, -1) for patterns with no `tones`
+// concept — see docs/PATTERN_REGISTRY_NOTES.md.
 function twoColourParams() {
    return [
       { param: "colour1", control: "color", label: "Colour 1 (light)", value: "#ffffff" },
@@ -62,16 +42,8 @@ function twoColourParams() {
    ];
 }
 
-// Ordered simplest → most complex (docs/MOSCOW_PRIORITIES.md's open
-// "core/intermediate/advanced difficulty ordering" item): categories run
-// from the fewest/most-familiar workflow stages (Wave: one periodic
-// function) up through recursion (Fractal) — see docs/nodes/WORKFLOWS.md's
-// own section order, kept in sync with this file. The two Hybrid entries
-// are deliberately separated out and listed last, after every
-// single-concept pattern, since each one only makes sense once its own
-// two ingredient generators (Noise+Fractal, Voronoi+Islamic) are already
-// understood on their own — see App.jsx's groupByCategory, which renders
-// Generator Selection in this exact array order.
+// Ordered simplest -> most complex; Hybrid entries listed last, after both
+// of their ingredient generators — see docs/PATTERN_REGISTRY_NOTES.md.
 export const REGISTRY = [
 
    // ── Wave — mostly deterministic ───────────────────────────────────────────
@@ -217,8 +189,7 @@ export const REGISTRY = [
    },
 
    // ── Escher Type I — translation tessellation ──────────────────────────────
-   // A single tile shape repeated across the plane by pure X/Y translation.
-   // Opposite edges are congruent so tiles interlock with no rotation or reflection.
+   // See docs/generators/escher.md.
 
    {
       id:           "escher-translation",
@@ -256,9 +227,7 @@ export const REGISTRY = [
    },
 
    // ── Islamic Geometric Patterns — deterministic radial symmetry ────────────
-   // Distance to a deterministic ring of construction points (Construction
-   // Circle + Radial Divisions), reusing Voronoi's nearest-point search with a
-   // fixed angular point set instead of a random one — see src/generators/islamic.js.
+   // See docs/generators/islamic.md.
 
    {
       id:           "islamic-rosette",
@@ -276,12 +245,13 @@ export const REGISTRY = [
          { param: "segments",  archetype: "Complexity", value: 8,   map: [3, 16]   },
          { param: "frequency", archetype: "Detail",     value: 3,    map: [1, 6] },
          { param: "lineWidth", archetype: "Threshold",  value: 0.06, map: [0.01, 0.15] },
-         // Snapped internally to 180/segments (see islamic.js's
-         // snapRotation) — the slider itself stays a plain 0-360 degree
-         // range so any two adjacent 180/segments positions are always
-         // reachable regardless of segments, rather than a segments-
-         // dependent max that would need recomputing per segments value.
-         { param: "rotation",  archetype: "Rotation",   value: 0,   map: [0, 360] },
+         // Snapped internally to 180/segments, which is exactly half the
+         // shape's own 360/segments rotational period — so, regardless of
+         // segments, there are only ever 2 distinct snapped appearances
+         // (0 and 180/segments) — see docs/PATTERN_REGISTRY_NOTES.md.
+         { param: "rotation",  control: "toggle", label: "Rotation",
+           onLabel: "Flipped", offLabel: "Not flipped",
+           onValue: (p) => 180 / Math.max(3, Math.round(p.segments ?? 8)), value: 0 },
       ],
    },
 
@@ -296,21 +266,10 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "mode",         value: "sierpinski" },
-         // Fixed at 3 in the classic carpet, but recursive.js's construction
-         // doesn't actually require that — recursive-grid (below) already
-         // exposes the same param for its own mode, and sierpinski mode
-         // handles any subdivisions >= 2 exactly as generically (see
-         // recursive.js: `mid = Math.floor(subdivisions / 2)` isn't
-         // special-cased to 3), so there's a real off-canonical variant
-         // here worth letting a user explore rather than hiding it.
+         // Classic carpet uses 3, but the construction generalises to any
+         // subdivisions >= 2 (see recursive.js), so it's exposed rather than fixed.
          { param: "subdivisions", archetype: "Detail", value: 3, map: [2, 6] },
-         // firstOccurrenceOnly: this generator's node graph repeats one
-         // Subdivide node per depth level (workflows.js's STEP_DEFS), so
-         // `depth` would otherwise show as an editable slider on every one
-         // of them — editing it from any of them changes the whole repeat
-         // count, not just that step, which reads as broken rather than a
-         // real per-node control. Shown only on the first occurrence;
-         // subsequent ones get an explanatory note instead (WorkflowNode.jsx).
+         // firstOccurrenceOnly: see docs/PATTERN_REGISTRY_NOTES.md.
          { param: "depth",        archetype: "Complexity", value: 4, map: [1, 6], firstOccurrenceOnly: true },
          ...twoColourParams(),
       ],
@@ -325,7 +284,7 @@ export const REGISTRY = [
       nativeFormat: "vector",
       params: [
          { param: "mode",         value: "grid" },
-         // See sierpinski's own `depth` entry above for why firstOccurrenceOnly.
+         // firstOccurrenceOnly: see docs/PATTERN_REGISTRY_NOTES.md.
          { param: "depth",        archetype: "Complexity", value: 3, map: [1, 6], firstOccurrenceOnly: true },
          { param: "subdivisions", archetype: "Detail",     value: 4, map: [2, 9] },
          ...twoColourParams(),
@@ -333,13 +292,7 @@ export const REGISTRY = [
    },
 
    // ── Hybrid — stochastic/deterministic composition ─────────────────────────
-   // A single generator whose `amplitude` param sweeps continuously from
-   // fully deterministic (0, byte-identical to Sierpinski Carpet) toward
-   // noise-dominated — see docs/ALGORITHMIC_COMPOSITION_RESEARCH.md's
-   // secondary research question and recursiveNoise.js's header comment.
-   // Listed after every single-concept pattern (see this file's own header
-   // comment) since it only makes sense once Noise and Fractal are already
-   // understood separately.
+   // See docs/generators/recursive-noise.md.
 
    {
       id:           "perlin-sierpinski",
@@ -349,13 +302,10 @@ export const REGISTRY = [
       spectrum:     0.5,
       nativeFormat: "raster",
       params: [
-         // See sierpinski's own `depth` entry (above, recursive.js) for why
-         // firstOccurrenceOnly — same node-count-per-depth-level structure.
+         // firstOccurrenceOnly: see docs/PATTERN_REGISTRY_NOTES.md.
          { param: "depth",     archetype: "Complexity", value: 4,   map: [1, 6],   firstOccurrenceOnly: true },
          { param: "amplitude", archetype: "Randomness",  value: 0,   map: [0, 0.5] },
-         // noise.js's own scale/octaves, passed straight through to the
-         // same noise() calls — same params, same registry ranges as
-         // noise.js's own entries, not a re-derived pair. Gives a second
+         // Passed straight through to noise.js's own scale/octaves — a second
          // axis (warp texture) independent of amplitude (warp strength).
          { param: "scale",     archetype: "Density",     value: 0.01, map: [0.001, 0.05] },
          { param: "octaves",   archetype: "Detail",      value: 2,    map: [1, 8] },
@@ -366,16 +316,7 @@ export const REGISTRY = [
    },
 
    // ── Hybrid — Voronoi-seeded Islamic tiling ─────────────────────────────────
-   // Seed Points (stochastic) feeding straight into islamic.js's own
-   // silhouette/banding pipeline (deterministic) — see
-   // src/generators/voronoiIslamic.js and docs/VORONOI_ISLAMIC_HYBRID_PLAN.md.
-   // Params are exactly islamic.js's construction params plus voronoi.js's
-   // point-source params (numCells, seed) plus the shared raster
-   // colour1/colour2 gradient (this hybrid is raster-only, so it uses
-   // that convention rather than colour1..colour5 — see
-   // twoColourParams() above). Listed last, after Voronoi Islamic's own
-   // two ingredient patterns (Voronoi Cells, Islamic Rosette) — see this
-   // file's own header comment.
+   // See docs/generators/voronoi-islamic.md.
 
    {
       id:           "voronoi-islamic",
@@ -386,26 +327,28 @@ export const REGISTRY = [
       nativeFormat: "raster",
       params: [
          { param: "numCells",  archetype: "Density",    value: 15,   map: [5, 80]   },
+         // Colour block placed right after the first param, before the rest
+         // of this entry's archetype sliders — same position as every other
+         // tones-based pattern (e.g. islamic-rosette above), so the Colour
+         // Mapping node's control order stays consistent across patterns.
+         // render.js's mapColour() now blends across however many colourN
+         // stops `tones` declares, so 3-5 tones here map to real distinct
+         // colours, not just a finer 2-colour gradient.
+         ...tonesAndColourParams(),
          { param: "segments",  archetype: "Complexity", value: 7,    map: [3, 16]   },
          { param: "scale",     archetype: "Size",       value: 0.35, map: [0.2, 0.48] },
          { param: "frequency", archetype: "Detail",     value: 2,    map: [1, 6]    },
          { param: "lineWidth", archetype: "Threshold",  value: 0.05, map: [0.01, 0.15] },
-         { param: "tones",     control: "select", label: "Tones",
-           options: ["2", "3", "4", "5"], value: "2" },
-         // Reused from islamic.js's own construction unchanged (see
-         // voronoiIslamic.js's header comment, section 3.3: segments/
-         // rotation/scale are held uniform across cells) — snapped
-         // internally to 180/segments (islamic.js's snapRotation), same
-         // 0-360 slider convention as islamic-rosette's own rotation.
-         { param: "rotation",  archetype: "Rotation",   value: 0,   map: [0, 360] },
-         // Opt-in, default 0 (exact uniform-construction baseline — see
-         // voronoiIslamic.js's cellVariation): above 0, each cell's own
-         // segments/rotation independently diverge from the base values
-         // above, for a more organic, less repetitive result. Reuses the
-         // "Randomness" archetype perlin-sierpinski's amplitude already
-         // uses, not a new one.
+         // Reused from islamic.js's construction, held uniform across cells
+         // by default — see docs/PATTERN_REGISTRY_NOTES.md. Only 2 distinct
+         // snapped appearances regardless of segments (see islamic-rosette's
+         // own rotation param above).
+         { param: "rotation",  control: "toggle", label: "Rotation",
+           onLabel: "Flipped", offLabel: "Not flipped",
+           onValue: (p) => 180 / Math.max(3, Math.round(p.segments ?? 8)), value: 0 },
+         // Opt-in per-cell divergence from the base segments/rotation above —
+         // see docs/PATTERN_REGISTRY_NOTES.md.
          { param: "variation", archetype: "Randomness", value: 0,   map: [0, 1] },
-         ...twoColourParams(),
          { param: "seed",      archetype: "Seed",       value: 1337 },
       ],
       actions: [{ label: "Randomize Seed", method: "randomize" }],

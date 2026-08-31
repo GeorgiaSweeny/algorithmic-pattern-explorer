@@ -4,30 +4,24 @@ import App from "./App.jsx";
 import { REGISTRY } from "../../patternRegistry.js";
 
 /*
-* Integration tests for the MVP interaction loop
-* PROJECT_SPECIFICATION.md protects as Must: select generator / view
-* graph / adjust params / canvas updates. Selecting a ReactFlow node by
-* clicking its rendered DOM node (rather than driving App's internal
-* state directly) exercises the real onNodeClick wiring, not a
-* re-implementation of it.
+* Integration tests for the MVP interaction loop (PROJECT_SPECIFICATION.md's
+* Must: select generator / view graph / adjust params / canvas updates).
+* Selects ReactFlow nodes by clicking their rendered DOM, exercising the
+* real onNodeClick wiring rather than driving App's internal state directly.
 */
 
 function selectPatternByName(container, name) {
-   // Generator Selection starts collapsed (App.jsx's generatorPanelExpanded),
-   // showing only the currently-selected pattern's own name — expand it
-   // first via "Change Pattern", then click the target name scoped to the
-   // list itself, since the same pattern's name can also appear in
-   // PatternDocumentation's "Pattern" field at the same time.
+   // Generator Selection starts collapsed, showing only the current
+   // pattern's name — expand it via "Change Pattern" first, then click the
+   // target name scoped to the list (it can also appear elsewhere on the page).
    fireEvent.click(within(container.querySelector(".generator-selection")).getByText("Change Pattern"));
    const list = container.querySelector(".generator-selection");
    fireEvent.click(within(list).getByText(name));
 }
 
 function selectWorkflowNodeByLabel(container, label) {
-   // Scoped to the ReactFlow graph itself, not the whole app — "Noise" (say)
-   // is also a Generator Selection category tag elsewhere on the page, and
-   // that's a different button with different behaviour (re-selects a
-   // pattern, doesn't select a workflow node).
+   // Scoped to the ReactFlow graph, not the whole app — a label like "Noise"
+   // can also appear as an unrelated category tag elsewhere on the page.
    const graph = container.querySelector(".react-flow");
    const nodeEl = within(graph).getAllByText(label, { exact: false })[0];
    fireEvent.click(nodeEl);
@@ -52,12 +46,8 @@ describe("App: pattern selection", () => {
 describe("App: node selection and the Documentation Panel", () => {
    it("selecting a workflow node updates the Documentation Panel's Operation field", () => {
       const { container } = render(<App />);
-      // perlin-noise's own sequence (workflows.test.js's EXPECTED table) is
-      // workspace, seed, noise, colourMapping, render — Seed is unambiguous
-      // text elsewhere in the initial render. Selected explicitly by name
-      // rather than relying on it being REGISTRY[0]: the registry is
-      // ordered simplest-to-most-complex for the Generator Selection UI
-      // (docs/MOSCOW_PRIORITIES.md), not to suit this test.
+      // Selected explicitly by id, not relied on being REGISTRY[0] — the
+      // registry is ordered for the Generator Selection UI, not this test.
       selectPatternByName(container, REGISTRY.find((e) => e.id === "perlin-noise").name);
       selectWorkflowNodeByLabel(container, "Seed");
       const docPanel = container.querySelector(".doc-panel");
@@ -81,8 +71,7 @@ describe("App: Reset to Defaults", () => {
 
       // input[type="range"] directly, not getByRole("slider") — this
       // jsdom/testing-library combination doesn't reliably compute the
-      // implicit ARIA role for range inputs, confirmed by direct DOM
-      // inspection finding the same elements a role query missed.
+      // implicit ARIA role for range inputs.
       const slider = container.querySelectorAll('input[type="range"]')[0];
       const defaultValue = slider.value;
       fireEvent.change(slider, { target: { value: String(Number(defaultValue) + 1) } });
@@ -94,12 +83,12 @@ describe("App: Reset to Defaults", () => {
 });
 
 describe("App: Evaluation menu / Test overlay", () => {
-   it("opens the Evaluation dropdown, launches Test from it, and closes via its own close control", () => {
+   it("opens the Evaluation dropdown, launches Test 1 from it, and closes via its own close control", () => {
       render(<App />);
       expect(screen.queryByText("Study 1", { selector: "h2" })).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
-      fireEvent.click(screen.getByText("Test", { selector: "button" }));
+      fireEvent.click(screen.getByText("Test 1", { selector: "button" }));
       expect(screen.getByText("Study 1", { selector: "h2" })).toBeInTheDocument();
 
       fireEvent.click(screen.getByLabelText("Close evaluation"));
@@ -118,10 +107,10 @@ describe("App: Evaluation menu / Test overlay", () => {
       expect(screen.queryByText("Study 2", { selector: "h2" })).not.toBeInTheDocument();
    });
 
-   it("dropdown lists Test, Test 2, Dry Run, Study Results, and Study 2 Results", () => {
+   it("dropdown lists Test 1, Test 2, Dry Run, Study Results, and Study 2 Results", () => {
       render(<App />);
       fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
-      expect(screen.getByText("Test", { selector: "button" })).toBeInTheDocument();
+      expect(screen.getByText("Test 1", { selector: "button" })).toBeInTheDocument();
       expect(screen.getByText("Test 2", { selector: "button" })).toBeInTheDocument();
       expect(screen.getByText("Dry Run")).toBeInTheDocument();
       expect(screen.getByText("Study Results")).toBeInTheDocument();

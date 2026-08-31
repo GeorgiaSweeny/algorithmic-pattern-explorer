@@ -51,13 +51,9 @@ describe("islamic-svg: colour params", () => {
    });
 
    it("every declared tones count (2-5) renders without throwing, uses the background and primary slots, and never a slot beyond `tones`", () => {
-      // Doesn't assert every one of the `tones` slots necessarily appears:
-      // the SVG renderer caps how many echo bands it draws per segments
-      // (_maxBands, a documented self-intersection-safety limit), so at
-      // high tones counts an echo tone deep in the cycle (e.g. the 3rd of
-      // 3 echo tones at tones = "5") may genuinely never be reached within
-      // that band cap — a real, pre-existing renderer limitation, not
-      // something this colour feature should assert away.
+      // Doesn't assert every `tones` slot appears: the SVG renderer caps how
+      // many echo bands it draws per segments (_maxBands), so a deep echo
+      // tone may genuinely never be reached — a pre-existing renderer limit.
       const custom = ["#ffffff", "#ff0000", "#00ff00", "#0000ff", "#111111"];
       for (const tones of ["2", "3", "4", "5"]) {
          const params = {

@@ -21,6 +21,10 @@ src/app/dist/
 
 # Real participant study data — keep generate.js/README.md tracked, not the raw responses.
 docs/evaluation/exports/*.json
+/study2results/
+/Study2_Participant_Instructions.pdf
+docs/Study2_Participant_Instructions.docx
+/study intruction pics/
 
 # Third-party reference material kept locally, not redistributed from this repo.
 docs/references/combinator.md

@@ -2,13 +2,12 @@
 ========================================
 EVALUATION DATA CAPTURE — TESTS
 ========================================
-* Doesn't need jsdom (the app-side component test infrastructure, Phase 2
-* of docs/plan-checklist.md's Aug-21 evaluation entry) — a plain in-memory
-* object satisfying localStorage's own get/set/remove interface is enough
-* to test this module's pure data-shape logic in isolation.
+* Doesn't need jsdom — a plain in-memory object satisfying localStorage's
+* get/set/remove interface is enough to test this module's pure data-shape
+* logic in isolation.
 */
 import { describe, it, expect, beforeEach } from "vitest";
-import { recordQuizPass, getAllRecords, clearAllRecords } from "./evaluationStorage.js";
+import { recordQuizPass, getAllRecords, clearAllRecords, hasStoredPhase } from "./evaluationStorage.js";
 
 function makeLocalStorageStub() {
    const store = new Map();
@@ -134,5 +133,39 @@ describe("evaluationStorage: clearAllRecords", () => {
       recordQuizPass("pre", QUESTIONS, { q1: 1, q2: 0 });
       clearAllRecords();
       expect(getAllRecords()).toEqual([]);
+   });
+});
+
+describe("evaluationStorage: hasStoredPhase", () => {
+   it("is false for both phases before any quiz pass is recorded", () => {
+      expect(hasStoredPhase("pre")).toBe(false);
+      expect(hasStoredPhase("post")).toBe(false);
+   });
+
+   it("tracks pre and post independently — recording one doesn't mark the other stored", () => {
+      recordQuizPass("pre", QUESTIONS, { q1: 1, q2: 0 });
+      expect(hasStoredPhase("pre")).toBe(true);
+      expect(hasStoredPhase("post")).toBe(false);
+   });
+
+   it("is true for both once both phases have been recorded", () => {
+      recordQuizPass("pre", QUESTIONS, { q1: 1, q2: 0 });
+      recordQuizPass("post", QUESTIONS, { q1: 1, q2: 1 });
+      expect(hasStoredPhase("pre")).toBe(true);
+      expect(hasStoredPhase("post")).toBe(true);
+   });
+
+   it("is false again for both phases after clearAllRecords", () => {
+      recordQuizPass("pre", QUESTIONS, { q1: 1, q2: 0 });
+      recordQuizPass("post", QUESTIONS, { q1: 1, q2: 1 });
+      clearAllRecords();
+      expect(hasStoredPhase("pre")).toBe(false);
+      expect(hasStoredPhase("post")).toBe(false);
+   });
+
+   it("keeps Study 1 and Study 2 independent, per their own storageKey", () => {
+      recordQuizPass("pre", QUESTIONS, { q1: 1, q2: 0 }, "study2-key");
+      expect(hasStoredPhase("pre", "study2-key")).toBe(true);
+      expect(hasStoredPhase("pre")).toBe(false); // Study 1's default key untouched
    });
 });

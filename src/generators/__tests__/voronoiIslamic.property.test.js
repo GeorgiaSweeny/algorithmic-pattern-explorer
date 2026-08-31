@@ -6,14 +6,9 @@ VORONOI-SEEDED ISLAMIC TILING — ALGORITHM-SPECIFIC PROPERTIES
 * plus the second-nearest distance for the cell-boundary line test) ->
 * local coordinates -> islamic.js's own silhouette/banding pipeline reused
 * verbatim, with radius scaled to each cell's own nearest-neighbour
-* distance rather than a fixed tileSize — see the file's header comment
-* and docs/VORONOI_ISLAMIC_HYBRID_PLAN.md. The property that matters most
-* for a hybrid built by composition (the same standard this project held
-* recursiveNoise.js to) is the first one below: an independent oracle,
-* built directly from the same lib/ primitives rather than importing
-* voronoiIslamic.js's internals, must match exactly — the "does the shared
-* pipeline actually compose" claim, checked rather than assumed. Extended
-* 2026-08-21 for the cell-boundary line Fork branch added that day.
+* distance rather than a fixed tileSize. The property that matters most for
+* a hybrid built by composition is the first one below: an independent
+* oracle, built directly from the same lib/ primitives, must match exactly.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
@@ -40,14 +35,9 @@ const pointArb = fc.record({
    y: fc.double({ min: 0, max: CANVAS.HEIGHT, noNaN: true }),
 });
 
-// Independent oracle: re-derives cell membership and the silhouette/
-// banding pipeline directly from lib/ primitives, mirroring
-// islamic.property.test.js's own oracle() style. Uses the exported
-// cellVariation() (not a re-derivation of it) the same way this whole
-// oracle reuses every other exported primitive — the property under test
-// is "does voronoiIslamic() actually call these pieces the way its own
-// header comment claims", not "is cellVariation itself correct" (that's
-// cellVariation's own dedicated unit tests, below).
+// Independent oracle: re-derives cell membership and the silhouette/banding
+// pipeline directly from lib/ primitives. Uses the exported cellVariation()
+// rather than re-deriving it — cellVariation has its own dedicated tests below.
 function oracle(x, y, numCells, seed, segments, scale, frequency, lineWidth, tones, rotation = 0, variation = 0) {
    const points = generateSeedPoints(numCells, seed);
    const nnDist = nearestNeighbourDistances(points);
@@ -85,8 +75,7 @@ function oracle(x, y, numCells, seed, segments, scale, frequency, lineWidth, ton
    const distToLine = Math.abs(bandPos - nearestBand) * step;
    const onStarLine = distToLine < lineWidth * radius;
 
-   // Second Fork branch (2026-08-21 follow-up): the cell-boundary line
-   // test, re-derived independently rather than assumed to match.
+   // The cell-boundary line test, re-derived independently rather than assumed to match.
    const boundaryGap = Math.sqrt(secondDistSq) - Math.sqrt(distSq);
    const onBoundaryLine = boundaryGap < lineWidth * radius;
 
@@ -126,24 +115,8 @@ describe("voronoiIslamic: algorithm-specific invariants", () => {
       );
    });
 
-   it("is deterministic: repeated calls at the same point/params agree", () => {
-      fc.assert(
-         fc.property(
-            pointArb, numCellsArb, seedArb, segmentsArb,
-            (p, numCells, seed, segments) => {
-               const params = { numCells, seed, segments };
-               const a = voronoiIslamic(p.x, p.y, params);
-               const b = voronoiIslamic(p.x, p.y, params);
-               expect(a).toBe(b);
-            }
-         )
-      );
-   });
-
    it("a different seed produces a different cell layout (the point source is actually stochastic)", () => {
-      // Mirrors recursiveNoise.property.test.js's own "seed actually
-      // matters" regression guard — contract.generic.test.js only checks
-      // range/determinism, not that a declared param has any effect.
+      // Same "seed actually matters" regression guard as recursiveNoise.property.test.js.
       let anyDifference = false;
       const params = { numCells: 20, segments: 8 };
       for (let x = 0; x < CANVAS.WIDTH && !anyDifference; x += 20) {
@@ -157,9 +130,7 @@ describe("voronoiIslamic: algorithm-specific invariants", () => {
    });
 
    it("stays total (finite, in range) across the full canvas at the registry's declared numCells extremes", () => {
-      // Mirrors this session's own "check the full declared param range,
-      // not just spot-checked values" lesson from the Islamic rebuild's
-      // segments 3-16 bugs (docs/ISLAMIC_PATTERN_CONSTRUCTION.md).
+      // Checks the full declared param range, not just spot-checked values.
       for (const numCells of [5, 80]) {
          for (let x = 0; x < CANVAS.WIDTH; x += 15) {
             for (let y = 0; y < CANVAS.HEIGHT; y += 15) {
@@ -173,11 +144,8 @@ describe("voronoiIslamic: algorithm-specific invariants", () => {
    });
 
    it("variation = 0 reproduces the exact result of omitting it (uniform-construction baseline)", () => {
-      // The default this hybrid's original research question (docs/
-      // VORONOI_ISLAMIC_HYBRID_PLAN.md §3.3) was checked against — every
-      // pre-existing test in this file relies on this holding exactly,
-      // not approximately. Mirrors islamic.js's own "rotation = 0
-      // reproduces the exact pre-rotation-param default" regression test.
+      // Mirrors islamic.js's own "rotation = 0 reproduces the exact
+      // pre-rotation-param default" regression test.
       fc.assert(
          fc.property(
             pointArb, numCellsArb, seedArb, segmentsArb,
@@ -205,12 +173,6 @@ describe("voronoiIslamic: algorithm-specific invariants", () => {
    });
 
    it("every pixel's signed distance is computed against its own nearest seed (no cross-cell leakage)", () => {
-      // For every sampled pixel, the cell nearestPoint assigns it to (via
-      // the oracle's own identical nearestPoint call) must be the same
-      // cell voronoiIslamic() itself used — checked indirectly by the
-      // oracle-matching test above holding for *every* sampled point
-      // (each of which lands in a different, effectively random cell
-      // across the fast-check runs), plus this direct membership check.
       const points = generateSeedPoints(20, 7);
       for (let x = 0; x < CANVAS.WIDTH; x += 25) {
          for (let y = 0; y < CANVAS.HEIGHT; y += 25) {
@@ -226,34 +188,19 @@ describe("voronoiIslamic: algorithm-specific invariants", () => {
       }
    });
 
-   it("traces the Voronoi cell boundary as a line (2026-08-21 follow-up): points on the perpendicular bisector between two adjacent seeds read as on-line", () => {
-      // Two seeds placed directly, bypassing generateSeedPoints, so the
-      // exact bisector location is known rather than searched for.
-      // lib.distanceField.test.js already checks nearestTwoPoints' own
-      // boundary-gap arithmetic in isolation — this checks voronoiIslamic()
-      // actually wires that primitive into a visible line, at a lineWidth
-      // wide enough that floating-point placement on the bisector reliably
-      // falls inside the threshold.
+   it("traces the Voronoi cell boundary as a line: points on the perpendicular bisector between two adjacent seeds read as on-line", () => {
       const params = {
          numCells: 2, seed: 1, segments: 6, scale: 0.1, frequency: 3,
          lineWidth: 0.3, tones: "2",
       };
-      // Force a known two-seed layout: monkey-patch isn't available (the
-      // module caches by (numCells, seed)), so instead pick a seed/numCells
-      // pair, read the seeds generateSeedPoints actually produces, then
-      // sample points near their own true bisector.
+      // Read the seeds generateSeedPoints actually produces (module caches
+      // by numCells/seed), then sample the exact bisector midpoint.
       const points = generateSeedPoints(params.numCells, params.seed);
       const midX = (points[0] + points[2]) / 2;
       const midY = (points[1] + points[3]) / 2;
-      // A point equidistant from both seeds lies on their perpendicular
-      // bisector; the segment midpoint is the simplest such point when a
-      // line test with generous lineWidth is all that's needed here.
       const value = voronoiIslamic(midX, midY, params);
-      // tones = "2" means any on-line pixel (star or boundary) reads as
-      // shades[last] = -1 regardless of which branch fired (bandTone
-      // collapses to the darkest tone whenever there are fewer than 3
-      // declared tones) — off-line would be shades[0] = 1. The midpoint
-      // of two seeds is exactly equidistant, so this must read as on-line.
+      // tones = "2" collapses any on-line pixel to shades[last] = -1;
+      // off-line would be shades[0] = 1. The midpoint is exactly equidistant.
       expect(value).toBe(-1);
    });
 });
@@ -273,12 +220,8 @@ describe("cellVariation: primitive-level invariants", () => {
    });
 
    it("variation = 1 is actually reachable: scanning indices produces more than one distinct segments value", () => {
-      // Regression style: a jitter formula that compiles but never actually
-      // moves segments away from its base value would be exactly as inert
-      // as the pre-fix bandTone bug this project already found once
-      // (tones = 3 silently had no visible effect). Scans enough indices
-      // that a jitter range of +-5 (this file's own maxSegJitter) should
-      // produce at least one different value somewhere.
+      // Regression guard: a jitter formula that compiles but never actually
+      // moves segments away from its base value would be silently inert.
       const seen = new Set();
       for (let index = 0; index < 40; index++) {
          seen.add(cellVariation(1337, index, 8, 0, 1).segments);

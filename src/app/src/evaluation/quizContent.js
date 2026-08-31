@@ -4,92 +4,20 @@ import { REGISTRY } from "../../../patternRegistry.js";
 ========================================
 COMPUTATIONAL-THINKING QUIZ CONTENT
 ========================================
-* The instrument for docs/plan-checklist.md's "Aug 11-12: Lightweight
-* evaluation" deliverable and docs/MOSCOW_PRIORITIES.md §5's evaluation
-* row — the *instrument*, not a completed study (see
-* EvaluationOverlay.jsx's own header comment for the full scope note).
-*
-* Methodology: a single question bank, administered twice (once before
-* exploring the app, once after) — a single-group pre/post design, the
-* standard, simplest valid design for measuring a within-subject learning
-* gain on one instrument, rather than two separately-authored equivalent
-* forms (which would need their own difficulty-equivalence justification
-* this project has no capacity to establish). Citable directly in the
-* dissertation methodology section.
-*
-* Questions cover the nine computational-thinking concepts named as this
-* project's own Educational Objectives (README.md, PROJECT_SPECIFICATION.md):
-* Randomness, Iteration, Transformation, Symmetry, Rule-based generation,
-* Parameterisation, Emergence, Procedural modelling, Computational
-* creativity — plus two bonus questions on this app's own specific
-* vocabulary (node = computational stage; hybrid = stochastic +
-* deterministic composition), useful for a "did the interface's own
-* terminology land" secondary read, not required for the CT-concept score.
-*
-* Four further questions (concept tags "Sequence of operations" and "Stage
-* role") cover two of PROJECT_SPECIFICATION.md's Success Criteria the nine
-* named concepts don't, on their own, actually test: "understand the
-* sequence of computational operations within each algorithm" and "explain
-* the role of individual computational stages" — the original nine ask
-* learners to define a concept in the abstract, not to read an actual
-* pipeline. Grounded in docs/nodes/WORKFLOWS.md's verified stage sequences
-* (Perlin Noise, Grid Tessellation, Wave/Rings), not invented workflows.
-*
-* Distractor design: every question has exactly 5 options, built to one
-* fixed structure rather than picked freely — 1 correct, 1 clearly-wrong
-* option an average person can eliminate immediately, 1 "near-miss" a
-* plausible misconception would pick (the one doing the real
-* discriminating work), and 2 mid-plausibility options that are neither a
-* giveaway nor a trap. Chance alone is 20% (vs 25% at 4 options), and the
-* near-miss keeps a confident-but-wrong guesser from coasting on
-* elimination — the calibration this project has capacity for without a
-* full item-response-theory pass.
-*
-* ----------------------------------------------------------------------
-* STUDY 2 ADDITIONS — image-bearing item types
-* ----------------------------------------------------------------------
-* The items above are all `type: "mc"` (the implicit default — omitted on
-* every existing entry so Study 1's own data format needs no migration).
-* Every item below sets an explicit `type` and adds fields QuizForm
-* (EvaluationOverlay.jsx) reads to render an image alongside/instead of
-* plain text. Images are never pre-rendered files: `entryId` + `overrides`
-* (or `startOverrides`/`paramsBefore`/`paramsAfter`/each candidate's own
-* `overrides`) name a real `patternRegistry.js` entry and a partial params
-* override, resolved live by `quizPatterns.js` and rendered by the app's
-* own `PatternCanvas` (`QuizPatternImage.jsx`) — see docs/evaluation/
-* study2-quiz-implementation-plan.md for the full rationale.
-*
-* - "cause" — two renders of the same generator (`paramsBefore`/
-*   `paramsAfter`), one real parameter changed between them; text options
-*   name the possible causes, same 1-correct-plus-distractors shape as
-*   `type: "mc"`, scored identically (a single `correctIndex`).
-* - "predict" — one starting render (`startOverrides`) plus a stated
-*   change (`changeDescription`), then `candidates[]` — each a real render
-*   of a different, plausible parameter change — select the one matching
-*   the stated change. Scored the same way: `correctIndex` into
-*   `candidates`.
-* - "concept-match" — `candidates[]` drawn from *different* generators;
-*   pick which pattern best demonstrates the named concept (`concept`/
-*   `prompt`). Same single-`correctIndex` scoring.
-* - "spectrum" — one render; place it on the stochastic <-> deterministic
-*   scale already surfaced elsewhere in the app (`SpectrumBar.jsx`'s
-*   `SPECTRUM_LABELS`, reused here verbatim as `SPECTRUM_OPTIONS` so the
-*   quiz's five bins are the exact same categories the app itself shows,
-*   not a second taxonomy) — `correctIndex` is that entry's own
-*   `patternRegistry.js` `spectrum` value binned the same way
-*   `describeSpectrum()` does.
-* - "node-select" — one target render plus `nodeOptions[]` (a mix of real
-*   nodes from that generator's own workflow and plausible intruders from
-*   a *different* generator's workflow); multi-select which nodes are
-*   required. Scored differently from every type above — see
-*   `evaluationStorage.js`'s `recordQuizPass()` for the exact-match +
-*   partial-credit path `correctNodeSet` drives.
+* Question bank for the evaluation instrument: single-group pre/post design,
+* one bank administered twice. Covers the project's nine CT-concept
+* Educational Objectives plus sequence/stage-role questions grounded in
+* docs/nodes/WORKFLOWS.md. Every question has 5 options in a fixed
+* distractor structure (1 correct, 1 easy-eliminate, 1 near-miss, 2 mid).
+* Study 1 items are `type: "mc"` (implicit default); Study 2 adds
+* image-bearing types ("cause", "predict", "concept-match", "spectrum",
+* "node-select") whose images render live via quizPatterns.js + PatternCanvas
+* rather than pre-rendered files. See docs/APP_IMPLEMENTATION_NOTES.md for
+* full methodology and per-type detail.
 */
 
-// The app's own stochastic <-> deterministic bins (SpectrumBar.jsx's
-// SPECTRUM_LABELS, values only) — shared verbatim rather than
-// re-declared, so a "spectrum" item's options can never drift out of
-// sync with what the Documentation Panel's own spectrum bar shows.
+// Mirrors SpectrumBar.jsx's SPECTRUM_LABELS (values only) so a "spectrum"
+// item's options can't drift from what the app's own bar shows.
 export const SPECTRUM_OPTIONS = [
    "Predominantly stochastic",
    "Mostly stochastic",
@@ -98,8 +26,8 @@ export const SPECTRUM_OPTIONS = [
    "Highly deterministic",
 ];
 
-// Bin thresholds mirror SpectrumBar.jsx's own SPECTRUM_LABELS exactly
-// (max value per bin, in the same order as SPECTRUM_OPTIONS above).
+// Bin thresholds mirror SpectrumBar.jsx's SPECTRUM_LABELS (same order as
+// SPECTRUM_OPTIONS above).
 const SPECTRUM_BIN_MAX = [0.2, 0.4, 0.6, 0.8, 1.01];
 
 function spectrumCorrectIndex(spectrumValue) {
@@ -110,12 +38,9 @@ function spectrumValue(entryId) {
    return REGISTRY.find((e) => e.id === entryId).spectrum;
 }
 
-// Study 1's own 16-item instrument, unchanged — kept as its own export
-// (rather than folded into Study 2's below) because the two are separate
-// instruments given to separate cohorts (dissertation/Study2-Design-Plan.md
-// §1: Study 2 is diagnostic depth on the mechanism, not a re-run of Study
-// 1's own effect measurement) — App.jsx's "Test" menu item uses this array;
-// "Test 2" uses STUDY2_QUESTIONS below.
+// Study 1's 16-item instrument. Kept as its own export (not folded into
+// Study 2's below) since the two are separate instruments for separate
+// cohorts — App.jsx's "Test 1" menu uses this; "Test 2" uses STUDY2_QUESTIONS.
 export const STUDY1_QUESTIONS = [
    {
       id: "randomness",
@@ -321,17 +246,10 @@ export const STUDY1_QUESTIONS = [
    },
 ];
 
-// Okabe & Ito's (2008) colorblind-safe qualitative palette, paired here
-// with a pale background rather than used as hue-only pairs — each
-// colourway keeps a strong *lightness* gap (not just a hue difference)
-// between colour1 and colour2, so every image stays distinguishable under
-// protanopia, deuteranopia, and tritanopia even before the pattern itself
-// is read. Applied identically to *every* image within one question (both
-// sides of a "cause" pair, every "predict" candidate) so a colour
-// difference can never masquerade as the causal change a question is
-// actually testing — colour here is variety across questions, never the
-// signal within one. Different questions get different colourways purely
-// so the quiz isn't all default grey/white.
+// Okabe & Ito's (2008) colorblind-safe palette, each pair kept at a strong
+// lightness gap so images stay distinguishable under any colour vision
+// deficiency. Applied identically to every image within one question, so a
+// colour difference never masquerades as the actual change being tested.
 const COLORWAYS = {
    amber:  { colour1: "#FDF6E3", colour2: "#E69F00" },
    teal:   { colour1: "#FDF6E3", colour2: "#009E73" },
@@ -340,21 +258,15 @@ const COLORWAYS = {
    dark:   { colour1: "#F0E442", colour2: "#111111" },
 };
 
-// 4-tone extensions of two colourways above, for the one "predict"
-// distractor per item that deliberately also changes the tone count
-// (testing whether a participant notices *that* change, not colour
-// perception) — colour3/colour4 stay inside the same Okabe-Ito set so the
-// extra tones stay colorblind-distinguishable too.
+// 4-tone extensions of two colourways above, for "predict" distractors that
+// also change the tone count — stays inside the same Okabe-Ito set.
 const FOUR_TONE_TEAL = { colour1: "#FDF6E3", colour2: "#009E73", colour3: "#E69F00", colour4: "#111111" };
 const FOUR_TONE_PURPLE = { colour1: "#FDF6E3", colour2: "#CC79A7", colour3: "#0072B2", colour4: "#111111" };
 
-// Study 2's own instrument — a separate, single-group pre/post quiz
-// (dissertation/Study2-Design-Plan.md), diagnosing four gaps Study 1's
-// text-only "mc" format couldn't: no test of compositional reasoning, no
-// visual/interactive item, no triangulation between item formats, and a
-// specific weak-item result ("sequence of operations"/"stage role") with
-// no diagnostic power. See this file's own header comment above for what
-// each `type` renders and how it's scored.
+// Study 2's instrument — diagnoses gaps Study 1's text-only "mc" format
+// couldn't reach: compositional reasoning, visual/interactive items, and
+// cross-format triangulation. See the file header for what each `type`
+// renders and how it's scored.
 export const STUDY2_QUESTIONS = [
 
    // ── "cause" — image pair, which change produced Image 2? ──────────────

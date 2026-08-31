@@ -1,31 +1,21 @@
+/*
+========================================
+DOCUMENTATION PANEL
+========================================
+* Explains the currently-selected workflow node: operation name, a generic
+* visual example, conceptual explanation, purpose, params, and CT concepts.
+* No editable controls — param editing lives in the workflow column itself.
+* Node-level only; pattern-level explanation lives in PatternDocumentation.jsx.
+*/
+
 import { NODE_LIBRARY } from "./workflows.js";
 import { NODE_DOCS, paramDoc } from "./nodeDocs.js";
 import NodeIllustration, { hasIllustration } from "./nodeIllustrations.jsx";
 import "./DocumentationPanel.css";
 
-// Explanatory only — no editable controls here (docs/UI_DESIGN.md's
-// Documentation Panel section: parameter editing lives in the workflow
-// column, this panel is purely operation name / visual example / conceptual
-// explanation / purpose / computational thinking concepts / per-parameter
-// effect descriptions).
-//
-// Node-level explanation only — pattern-level ("what is this generator, and
-// why does it matter") explanation lives in its own PatternDocumentation.jsx
-// panel in the left column instead. The two used to be combined in this
-// panel's empty state, which read as confusing: a learner couldn't tell
-// whether a given block of text was about the whole pattern or just the
-// currently-selected stage.
-//
 // "Visual Example" is a small generic diagram of what this node TYPE does
-// (nodeIllustrations.jsx) — not a render of the currently-selected
-// pattern. An earlier version reused PatternCanvas at thumbnail size here,
-// the same image the main canvas already shows just smaller; once you'd
-// seen the main canvas that told you nothing new, and it explained
-// whichever pattern happened to be selected rather than the operation
-// itself. A hand-drawn abstract diagram (dashed reference shape next to a
-// solid accent shape showing the result — the same visual language for
-// every node type) explains the concept independent of which pattern
-// you're looking at.
+// (nodeIllustrations.jsx), not a render of the currently-selected pattern —
+// it explains the concept independent of which pattern is selected.
 export default function DocumentationPanel({ selectedNode, generator }) {
    if (!selectedNode) {
       return (

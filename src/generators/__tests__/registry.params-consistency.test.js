@@ -6,16 +6,10 @@ REGISTRY PARAM CONSISTENCY CHECK
 * read by the generator function that renders it. Otherwise the UI exposes
 * a control that silently does nothing.
 *
-* "Renders it" depends on nativeFormat: "raster" patterns are drawn by
-* GENERATORS[generator] (see ui.js _showRaster), "vector" patterns are
-* drawn exclusively by SVG_GENERATORS[generator] (see ui.js _renderSvg) —
-* the raster twin, if one exists, is never invoked for that pattern. One
-* exception: a raster pattern's `colour1`/`colour2` (added 2026-08-21) are
-* read by render.js's `mapColour`, not the generator itself — the same
-* "Colour Mapping is a separate stage from the generator's own math" split
-* every vector pattern's colourN/SVG renderer already embodies, just made
-* visible for raster patterns too (see render.js's mapColour header
-* comment) — so those two params are checked against mapColour instead.
+* "raster" patterns are checked against GENERATORS[generator]; "vector"
+* patterns against SVG_GENERATORS[generator]. A raster pattern's own
+* colour1/colour2 are checked against render.js's mapColour instead,
+* since those are read there, not by the generator itself.
 *
 * This is a lightweight source-text check (fn.toString() + word-boundary
 * regex), not a data-flow analysis — it catches the common case of a
@@ -28,7 +22,12 @@ import { SVG_GENERATORS } from "../svg/index.js";
 import { mapColour }      from "../../render.js";
 
 function isReadByFn(fn, paramName) {
-   return new RegExp(`\\b${paramName}\\b`).test(fn.toString());
+   const src = fn.toString();
+   if (new RegExp(`\\b${paramName}\\b`).test(src)) return true;
+   // colourN stops (mapColour's tones>2 path) are read via a template
+   // literal (`colour${i}`), not a literal identifier — no single colourN
+   // token to match, so fall back to checking for that dynamic access.
+   return /^colour\d+$/.test(paramName) && /colour\$\{/.test(src);
 }
 
 describe.each(REGISTRY)("registry params vs generator: $id", (entry) => {
@@ -41,7 +40,7 @@ describe.each(REGISTRY)("registry params vs generator: $id", (entry) => {
    });
 
    for (const { param } of entry.params) {
-      const isRasterColour = entry.nativeFormat === "raster" && (param === "colour1" || param === "colour2");
+      const isRasterColour = entry.nativeFormat === "raster" && /^colour\d+$/.test(param);
       const checkFn = isRasterColour ? mapColour : fn;
       const readBy = isRasterColour ? "render.js's mapColour" : `the ${entry.nativeFormat} generator`;
 

@@ -2,24 +2,12 @@
 ========================================
 EVALUATION DATA CAPTURE
 ========================================
-* localStorage-backed, anonymous, fully local — no backend, no accounts,
-* consistent with this project's own System Constraint (PROJECT_SPECIFICATION.md:
-* "shall not... provide user accounts or cloud synchronisation"). The study
-* runner (the dissertation author) collects the exported JSON file from
-* each participant's machine after their session, rather than this needing
-* a server anywhere.
-*
-* Storage shape: one record per submitted quiz pass (pre or post),
-* appended to a single array under one localStorage key so a
-* participant's whole session is one downloadable file.
-*
-* Study 1 and Study 2 are separate instruments given to separate cohorts
-* (dissertation/Study2-Design-Plan.md §1/§2) — every function below takes
-* an explicit `storageKey` (defaulting to Study 1's own, unchanged key, so
-* nothing about Study 1's data shape or app behaviour needed migrating)
-* rather than one shared key, so a participant's Study 1 and Study 2
-* responses can never land in the same array, get summed into the same
-* score, or have one study's "Clear Stored Responses" wipe the other's.
+* localStorage-backed, anonymous, fully local — no backend, no accounts.
+* One record per submitted quiz pass (pre/post), appended to an array under
+* one localStorage key per study, so a session exports as one JSON file.
+* Study 1 and Study 2 use separate storage keys (every function takes an
+* explicit `storageKey`, defaulting to Study 1's) so responses and scores
+* from the two studies can never mix or overwrite each other.
 */
 
 export const STUDY1_STORAGE_KEY = "algorithmic-pattern-explorer.evaluation";
@@ -44,15 +32,10 @@ function append(storageKey, record) {
    writeAll(storageKey, records);
 }
 
-// "node-select" items answer with an array of chosen node names rather
-// than a single option index, and are graded two ways at once (Study 2
-// design plan §5): `exactMatch` (every required node picked, no
-// intruders) is what counts toward the headline `score` below, so it
-// stays comparable to every other item type's binary correct/incorrect;
-// `partialScore` (correct picks minus incorrect picks, floored at 0) is
-// recorded alongside for the richer per-item-type breakdown, since a
-// participant who picks 3 of 4 correct nodes plus one intruder is
-// meaningfully different from one who picks none.
+// "node-select" answers with an array of chosen node names, graded two
+// ways: `correct` (exact match, no intruders) counts toward the headline
+// binary score; `partialScore` (correct minus incorrect picks, floored at
+// 0) is kept alongside for a richer per-item breakdown.
 function scoreNodeSelect(question, selected) {
    const picked = Array.isArray(selected) ? selected : [];
    const correctSet = question.correctNodeSet;
@@ -69,15 +52,9 @@ function scoreNodeSelect(question, selected) {
    };
 }
 
-// "order" items answer with { [nodeName]: selectedPositionNumber } rather
-// than a single option index — each node gets its own independent 1..N
-// dropdown (the design plan's own "numbered-dropdown per node" low-effort
-// substitute for true drag-and-drop). `correct` requires every node to
-// land on its own correct 1-based position; `positionsCorrect` is kept
-// alongside as a partial measure — a participant who gets 4 of 5 stages in
-// the right place is meaningfully different from one who gets none, the
-// same reasoning `scoreNodeSelect()` above already applies to compositional
-// items.
+// "order" answers with { [nodeName]: selectedPositionNumber } — each node
+// gets its own 1..N dropdown. `correct` requires every node in its exact
+// position; `positionsCorrect` is kept as a partial measure.
 function scoreOrder(question, selected) {
    const answer = selected && typeof selected === "object" ? selected : {};
    const positionsCorrect = question.nodeSequence.filter(
@@ -96,16 +73,10 @@ function scoreOrder(question, selected) {
 
 export function recordQuizPass(phase, questions, answers, storageKey = STUDY1_STORAGE_KEY) {
    // phase: "pre" | "post". answers: { [questionId]: selectedOptionIndex },
-   // except "node-select" (array of selected node names — see
-   // scoreNodeSelect() above) and "order" (per-node position map — see
-   // scoreOrder() above). Every other type (including Study 2's
-   // "cause"/"predict"/"concept-match"/"spectrum" additions) scores
-   // identically to Study 1's original "mc" items: a single selected index
-   // compared against a single correctIndex.
-   //
-   // Per-item breakdown (not just the total) so a per-concept *and*
-   // per-type pre/post comparison can be built straight from the exported
-   // JSON, without re-joining against quizContent.js by hand.
+   // except "node-select" and "order" (scored above). Every other type
+   // scores identically: a selected index compared against correctIndex.
+   // Per-item breakdown kept (not just the total) so pre/post comparisons
+   // can be built straight from the exported JSON.
    const items = questions.map((q) => {
       if (q.type === "node-select") return scoreNodeSelect(q, answers[q.id]);
       if (q.type === "order") return scoreOrder(q, answers[q.id]);
@@ -136,4 +107,11 @@ export function getAllRecords(storageKey = STUDY1_STORAGE_KEY) {
 
 export function clearAllRecords(storageKey = STUDY1_STORAGE_KEY) {
    localStorage.removeItem(storageKey);
+}
+
+// Backs EvaluationOverlay's per-phase stored/not-stored indicators — pre and
+// post are tracked separately (not just "any record exists") since a
+// participant can easily have taken one but not the other.
+export function hasStoredPhase(phase, storageKey = STUDY1_STORAGE_KEY) {
+   return readAll(storageKey).some((record) => record.phase === phase);
 }

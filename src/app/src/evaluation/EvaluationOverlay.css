@@ -45,6 +45,49 @@
    margin-top: 0;
 }
 
+.eval-storage-status {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 6px 18px;
+   list-style: none;
+   margin: 0;
+   padding: 0;
+   font-size: 13px;
+   font-weight: 600;
+   color: #374151;
+}
+
+.eval-storage-status li {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+}
+
+.eval-storage-dot {
+   width: 10px;
+   height: 10px;
+   border-radius: 50%;
+   flex: none;
+}
+
+.eval-storage-dot-stored {
+   background: #16a34a;
+   border: 1px solid #16a34a;
+}
+
+.eval-storage-dot-empty {
+   background: transparent;
+   border: 1px solid #9ca3af;
+}
+
+.eval-cleared-confirmation {
+   margin: 8px 0 0;
+   font-size: 13px;
+   font-weight: 600;
+   color: #16a34a;
+}
+
 .eval-actions {
    display: flex;
    flex-wrap: wrap;

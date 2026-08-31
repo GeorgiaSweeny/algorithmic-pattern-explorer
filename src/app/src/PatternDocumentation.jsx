@@ -1,32 +1,24 @@
+/*
+========================================
+PATTERN DOCUMENTATION
+========================================
+* Pattern-level ("what is this generator, and why does it matter")
+* explanation, shown for the currently-selected pattern — kept separate from
+* the node-level Documentation Panel so the two don't read as one confused
+* explanation of "the whole pattern" vs. "just this stage".
+* Also serves as the Render Preview (final-output canvas) and hosts the
+* Stochastic <-> Deterministic spectrum bar, since both describe the whole
+* pattern rather than a single node.
+*/
+
 import { GENERATOR_DOCS } from "./nodeDocs.js";
 import PatternCanvas from "./PatternCanvas.jsx";
 import SpectrumBar from "./SpectrumBar.jsx";
 import "./DocumentationPanel.css";
 import "./App.css";
 
-/*
-* Pattern-level ("what is this generator, and why does it matter")
-* explanation, separated out from the node-level Documentation Panel —
-* mixing the two in one panel read as confusing, since a learner couldn't
-* tell whether a given block of text was about the whole pattern or just
-* the currently-selected computational stage. This panel always shows the
-* currently-selected pattern's own overview; DocumentationPanel.jsx now
-* handles node-level explanation only.
-*
-* `minimised` (true while Generator Selection is expanded, so the two
-* panels don't compete for the same vertical space in the left column at
-* once) collapses this to a one-line note instead of full content.
-*
-* "Render Preview" shows the pattern's own actual output — this panel now
-* doubles as what used to be a separate Render Preview section in App.jsx,
-* removed as redundant once this block started showing the same image.
-* Reuses that removed section's own width-only sizing technique
-* (.final-preview-canvas-* classes) so it scales correctly without being
-* cut off, the same fix already applied to the main canvas. The Stochastic
-* ↔ Deterministic spectrum bar sits directly under it — moved here from
-* the (node-level) Documentation Panel, since it describes the whole
-* pattern, not whichever node happens to be selected.
-*/
+// `minimised`: true while Generator Selection is expanded, so the two
+// panels don't compete for the same vertical space in the left column.
 export default function PatternDocumentation({ entry, generator, params, minimised }) {
    if (minimised) {
       return (

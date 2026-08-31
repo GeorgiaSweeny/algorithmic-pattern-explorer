@@ -22,18 +22,10 @@ export function generateSeedPoints(numPoints, seed) {
    return points;
 }
 
-// For each point in a flat [x0, y0, x1, y1, ...] set, the distance to its
-// own nearest *other* point — a generic "how close is my nearest neighbour"
-// query, not specific to any one generator's meaning (see
-// docs/GENERATOR_CONTRACT.md's precedent of extracting anything reusable
-// out of a single generator's file). Added for voronoiIslamic.js
-// (docs/VORONOI_ISLAMIC_HYBRID_PLAN.md's design decision 3.2, "v2"): a
-// Voronoi cell has no fixed size the way a Grid tile does, so a rosette
-// seeded at that cell needs a per-cell radius estimate rather than one
-// constant shared by every cell — this is that estimate's raw input.
-// O(n^2) brute force, same cost class as generateSeedPoints's own n and
-// distanceField.js's nearestPoint search; fine at the point counts these
-// generators use (tens to low hundreds).
+// For each point, the distance to its nearest other point — the raw input
+// for voronoiIslamic.js's per-cell radius estimate (see
+// docs/generators/voronoi-islamic.md). O(n^2) brute force; fine at the
+// point counts these generators use.
 export function nearestNeighbourDistances(points) {
    const n = points.length / 2;
    const dist = new Float32Array(n);

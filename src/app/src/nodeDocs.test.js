@@ -3,11 +3,10 @@
 PARAM DOCS — COVERAGE CHECK
 ========================================
 * Every param any REGISTRY entry declares should resolve to an actual
-* description via paramDoc(), the same way registry.params-consistency.test.js
-* (src/generators/__tests__/) checks that every declared param is actually
-* read by its generator — this is the documentation-side equivalent: a
-* param a user can see and edit but that the Documentation Panel has
-* nothing to say about would leave "what does this do?" unanswered.
+* description via paramDoc() — the documentation-side equivalent of
+* registry.params-consistency.test.js's "is it actually read" check. A
+* param the user can edit but nothing documents would leave "what does
+* this do?" unanswered.
 */
 import { describe, it, expect } from "vitest";
 import { REGISTRY } from "../../patternRegistry.js";

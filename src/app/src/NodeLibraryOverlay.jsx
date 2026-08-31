@@ -6,30 +6,21 @@ import { CONCEPT_TERMS, CATEGORY_TERMS, PROPERTY_TERMS } from "./glossary.js";
 import { renderMarkdown } from "./markdown.jsx";
 import NodeIllustration, { hasIllustration } from "./nodeIllustrations.jsx";
 import SpectrumBar from "./SpectrumBar.jsx";
-import "./NodeLibraryOverlay.css";
+/*
+========================================
+NODE LIBRARY OVERLAY (DOCUMENTATION LIBRARY)
+========================================
+* Standing reference library, browsable independent of current selection:
+* every node in extended detail, every pattern's algorithm write-up, and a
+* glossary of Computational Thinking Concepts terms. Opened from the menu bar.
+* User-facing label is "Documentation Library" — covers patterns and the
+* glossary too, not just nodes; component/file name (`NodeLibraryOverlay`)
+* is unchanged internally.
+* Nodes/Patterns tabs render docs/nodes/*.md and WORKFLOWS.md directly via
+* docsContent.js, so this can't drift from the canonical documentation.
+*/
 
-// Full-reference companion to DocumentationPanel.jsx's inline, per-selection
-// explanations: DocumentationPanel shows only the currently-selected node's
-// contextual explanation, this overlay is a standing library a learner can
-// browse freely — every node in extended detail, every pattern's own
-// algorithm write-up, and a glossary of the Computational Thinking Concepts
-// terms used throughout. Opened from the menu bar (App.jsx), independent of
-// node/pattern selection state, the same way EvaluationOverlay is.
-//
-// User-facing label is "Documentation Library" (the menu button and this
-// overlay's own title), not "Node Library" — it covers patterns and the
-// CT-concept glossary too, not just nodes, so the old name undersold it;
-// "Documentation Library" also reads as distinct from
-// DocumentationPanel.jsx's "Documentation Panel" heading elsewhere in the
-// app, which plain "Documentation" alone would have collided with.
-// Component name/file/CSS class prefix (`lib-*`) stay as
-// `NodeLibraryOverlay`/`lib-` unchanged — internal, not user-visible, and
-// renaming it doesn't change what a reader sees.
-//
-// Content is not re-authored here: Nodes and Patterns tabs render
-// docs/nodes/*.md and docs/nodes/WORKFLOWS.md directly (via docsContent.js's
-// raw imports + markdown.jsx), so this overlay can never drift from the
-// project's own canonical node-model documentation.
+import "./NodeLibraryOverlay.css";
 
 function groupPatternsByGenerator(entries) {
    const groups = new Map();
@@ -51,10 +42,8 @@ function groupNodesByCategory(library) {
 }
 const NODES_BY_CATEGORY = groupNodesByCategory(NODE_LIBRARY);
 
-// Same shape as NODES_BY_CATEGORY/PATTERNS_BY_GENERATOR above — grouped
-// entries the Key Terms tab's sidebar renders identically to the Nodes and
-// Patterns tabs (a term list to pick from, a detail pane on the right),
-// rather than the term/definition list this tab rendered inline before.
+// Grouped the same way as NODES_BY_CATEGORY/PATTERNS_BY_GENERATOR, so the
+// Key Terms tab renders with the same sidebar-list + detail-pane layout.
 const TERM_GROUPS = [
    { label: "Node Categories", terms: CATEGORY_TERMS },
    { label: "Pattern Properties", terms: PROPERTY_TERMS },

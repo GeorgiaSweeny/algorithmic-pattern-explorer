@@ -1,25 +1,14 @@
-// Key Terms glossary for the Documentation Library overlay, in three groups.
-//
-// CONCEPT_TERMS: one entry per Computational Thinking Concept tagged
-// somewhere in nodeDocs.js's NODE_DOCS (checked against every `concepts`
-// array there 2026-08-23) — so every tag a learner sees on a node's
-// Documentation Panel resolves to a definition here, rather than being an
-// unexplained label.
-//
-// CATEGORY_TERMS: one entry per `category` value in workflows.js's
-// NODE_LIBRARY (checked against every entry there 2026-08-23) — these are
-// the six sidebar group headings ("Environment", "Initialisation", …) the
-// Documentation Library's own Nodes tab groups nodes under, so a learner
-// browsing that tab can look up what a heading itself means, not just the
-// nodes under it.
-//
-// PROPERTY_TERMS: one entry, defined just above its own export below —
-// the Stochastic ↔ Deterministic spectrum, a per-pattern property rather
-// than a per-node concept tag.
-//
-// Definitions throughout are written against this app's own domain
-// (procedural pattern generation), not generic CS-textbook phrasing, since
-// that's the context a learner encounters each term in.
+/*
+========================================
+GLOSSARY
+========================================
+* Key Terms glossary for the Documentation Library overlay, in three groups:
+* CONCEPT_TERMS (one per CT-concept tagged in nodeDocs.js), CATEGORY_TERMS
+* (one per NODE_LIBRARY `category` value), and PROPERTY_TERMS (the
+* Stochastic <-> Deterministic spectrum). Definitions are written against
+* this app's own domain, not generic CS-textbook phrasing.
+*/
+
 export const CONCEPT_TERMS = [
    {
       term: "Abstraction",
@@ -128,15 +117,8 @@ export const CONCEPT_TERMS = [
    },
 ];
 
-// One entry, its own group rather than folded into CONCEPT_TERMS — the
-// spectrum is a property of a whole PATTERN (patternRegistry.js's own
-// `spectrum` field, 0-1, fixed per generator), not a per-NODE
-// Computational Thinking Concept tag the way everything in CONCEPT_TERMS
-// is. Distinct enough to warrant distinct treatment, and previously
-// missing here entirely even though the bar itself (SpectrumBar.jsx)
-// appears throughout the app — Documentation Panel, Render Preview,
-// Documentation Library's own Nodes tab — with no explanation of what it
-// means or how to read it.
+// Own group rather than folded into CONCEPT_TERMS — a per-PATTERN property
+// (patternRegistry.js's `spectrum` field), not a per-node CT-concept tag.
 export const PROPERTY_TERMS = [
    {
       term: "Stochastic ↔ Deterministic Spectrum",

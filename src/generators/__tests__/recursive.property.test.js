@@ -3,23 +3,18 @@
 RECURSIVE (SIERPINSKI / GRID) — ALGORITHM-SPECIFIC PROPERTIES
 ========================================
 * Sierpinski mode's construction — remove the centre cell of an n x n
-* subdivision, recurse into the remaining n^2 - 1 cells — is the direct
-* generalisation (to arbitrary `subdivisions`, not just 3) of the carpet
-* Sierpinski, W. (1916). "Sur une courbe cantorienne qui contient une image
-* biunivoque et continue de toute courbe donnée." Comptes Rendus Hebdomadaires
-* des Séances de l'Académie des Sciences, 162, 629-632, first constructed.
-* "is scale-invariant" below already checks the construction's defining
-* self-similarity directly (depth d matches depth d-1 on the remapped
-* sub-cell) rather than only checking output range. The "expected fill
-* fraction" test adds the complementary, statistical side of the same
-* claim: Mandelbrot, B.B. (1982). *The Fractal Geometry of Nature*. W.H.
-* Freeman — the standard reference for treating self-similar constructions
-* like this one through their limiting density/dimension rather than only
-* their exact recursive rule — predicts that removing 1 of every n^2 cells
-* at each of `depth` independent levels leaves a fraction
-* ((n^2 - 1) / n^2)^depth of the area filled, a falsifiable numeric
-* prediction distinct from (though implied by) the exact recursive
-* self-similarity property already tested.
+* subdivision, recurse into the remaining n^2 - 1 cells — generalises (to
+* arbitrary `subdivisions`) the carpet Sierpinski, W. (1916). "Sur une
+* courbe cantorienne..." Comptes Rendus Hebdomadaires des Séances de
+* l'Académie des Sciences, 162, 629-632, first constructed.
+*
+* "is scale-invariant" below checks the construction's defining
+* self-similarity directly. "expected fill fraction" checks the
+* complementary statistical claim: Mandelbrot, B.B. (1982). *The Fractal
+* Geometry of Nature*. W.H. Freeman — treating self-similar constructions
+* through their limiting density predicts that removing 1 of every n^2
+* cells at each of `depth` independent levels leaves a fraction
+* ((n^2 - 1) / n^2)^depth of the area filled.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
@@ -51,8 +46,8 @@ describe("recursive: algorithm-specific invariants", () => {
                fc.double({ min: 0, max: 0.999, noNaN: true }),
                fc.double({ min: 0, max: 0.999, noNaN: true }),
                (depth, sub, u, v) => {
-                  // Map (u, v) into the sub-cell one level down from the origin and
-                  // confirm it matches recursing directly to depth - 1 on the mapped point.
+                  // Map (u, v) into the sub-cell one level down and confirm it
+                  // matches recursing directly to depth - 1 on the mapped point.
                   const mid = Math.floor(sub / 2);
                   const gx = Math.floor(u * sub);
                   const gy = Math.floor(v * sub);
@@ -72,12 +67,9 @@ describe("recursive: algorithm-specific invariants", () => {
          );
       });
 
-      // R2 low-discrepancy sequence (Roberts, 2018 — a well-known,
-      // easily-reproduced quasi-random sequence) rather than a plain evenly-
-      // spaced grid: a grid sampled at multiples of 1/subdivisions would
-      // systematically land on cell boundaries and bias the empirical fill
-      // fraction below. Deterministic (no Math.random), so the test is
-      // reproducible across runs.
+      // R2 low-discrepancy sequence (Roberts, 2018) rather than an evenly-
+      // spaced grid, which would systematically land on cell boundaries and
+      // bias the empirical fill fraction below. Deterministic, reproducible.
       function r2Sample(i) {
          const a1 = 0.7548776662466927;
          const a2 = 0.5698402909980532;
@@ -103,9 +95,8 @@ describe("recursive: algorithm-specific invariants", () => {
                   }
                   const empirical = filled / n;
                   const expected = ((sub * sub - 1) / (sub * sub)) ** depth;
-                  // Binomial standard error at p = expected, generous
-                  // multiplier for a low-discrepancy (not i.i.d. random)
-                  // sequence, which converges faster than this bound assumes.
+                  // Binomial standard error at p = expected, with generous
+                  // multiplier since a low-discrepancy sequence converges faster.
                   const stderr = Math.sqrt((expected * (1 - expected)) / n);
                   expect(Math.abs(empirical - expected)).toBeLessThan(8 * stderr + 0.01);
                }

@@ -19,19 +19,11 @@ export function nearestPoint(x, y, points) {
    return { index: nearestIndex, distSq: minDistSq };
 }
 
-// Generalises nearestPoint to also track the second-nearest distance, in
-// the same single brute-force pass rather than a second search. Added for
-// voronoiIslamic.js (2026-08-21 follow-up, docs/VORONOI_ISLAMIC_HYBRID_PLAN.md):
-// a pixel is exactly on its Voronoi cell's own boundary where
-// secondDistSq and distSq are equal (equidistant from the two nearest
-// seeds, by definition of a Voronoi edge), so
-// sqrt(secondDistSq) - sqrt(distSq) is a standard, cheap per-pixel proxy
-// for "distance to the nearest cell edge" — zero exactly on the boundary,
-// growing toward a cell's own interior — without ever constructing a real
-// cell polygon. Kept separate from nearestPoint (not nearestPoint
-// reimplemented in terms of this) since most callers — voronoi.js,
-// islamic.js's own membership lookup — never need the second-nearest
-// distance and shouldn't pay the extra tracking for it.
+// Like nearestPoint, but also tracks the second-nearest distance in the
+// same pass: sqrt(secondDistSq) - sqrt(distSq) is a cheap per-pixel proxy
+// for distance to a Voronoi cell's boundary (zero exactly on the edge),
+// with no cell-polygon construction — see docs/generators/voronoi-islamic.md.
+// Kept separate from nearestPoint since most callers don't need it.
 export function nearestTwoPoints(x, y, points) {
    let minDistSq = Infinity, secondDistSq = Infinity, nearestIndex = 0;
    for (let i = 0; i < points.length; i += 2) {

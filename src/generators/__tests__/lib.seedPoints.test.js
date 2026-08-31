@@ -2,12 +2,9 @@
 ========================================
 SEED POINTS — PRIMITIVE-LEVEL TESTS
 ========================================
-* nearestNeighbourDistances was added for voronoiIslamic.js (see that
-* file's header comment and docs/VORONOI_ISLAMIC_HYBRID_PLAN.md section
-* 3.2) as a generic "for each point, how close is its nearest neighbour"
-* query — tested here on its own, independent of any generator that
-* consumes it, matching this project's per-primitive test convention
-* (lib.starPolygon.test.js, lib.colourMapping.test.js).
+* Tests nearestNeighbourDistances (a generic "how close is each point's
+* nearest neighbour" query, used by voronoiIslamic.js) in isolation,
+* independent of any generator that consumes it.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";

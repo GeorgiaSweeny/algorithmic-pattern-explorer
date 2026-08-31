@@ -1,17 +1,15 @@
+/*
+========================================
+WELCOME
+========================================
+* First-run landing popup shown once before Onboarding.jsx's tour — same
+* "onboarding-dismissed" localStorage flag gates both, as one combined flow.
+* Calls out the Hybrid pattern category by name since it's easy to miss at
+* the bottom of Generator Selection's list.
+*/
+
 import "./Welcome.css";
 
-/*
-* First-run landing popup, shown once before Onboarding.jsx's own tour
-* (same "algorithmic-pattern-explorer.onboarding-dismissed" localStorage
-* flag gates both — this and the tour are one combined first-visit flow,
-* not two separate dismissals to track). Names the app and gives a short
-* orientation before the tour starts pointing at specific panels, and
-* calls out the Hybrid category by name — patternRegistry.js's two Hybrid
-* entries (stochastic input composed with deterministic construction) are
-* easy to miss sitting at the bottom of Generator Selection's pattern
-* list, and worth surfacing directly rather than leaving a learner to
-* stumble onto them.
-*/
 export default function Welcome({ onStartTour, onSkip }) {
    return (
       <div className="welcome-root">

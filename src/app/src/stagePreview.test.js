@@ -2,14 +2,10 @@
 ========================================
 STAGE PREVIEW — TESTS
 ========================================
-* Pure-logic tests for the per-node intermediate canvas state mechanism
-* (see stagePreview.js's own header comment). Visual correctness was
-* checked by hand (rendered PPM/SVG output for a representative sample —
-* recursive depth truncation, escher bumpAmp=0, grid tones forced to "2",
-* islamic scale/frequency overrides, voronoi seed points as dots, wave's
-* raw pre-sine distance) — these tests lock in the *rules table* itself:
-* which stages get which kind of override, and that param-override rules
-* actually merge onto the base params rather than replacing them.
+* Pure-logic tests for the per-node intermediate canvas state mechanism.
+* Visual correctness was checked by hand; these tests lock in the *rules
+* table* itself — which stages get which kind of override, and that
+* param-override rules actually merge onto the base params.
 */
 import { describe, it, expect } from "vitest";
 import { resolvePreview, seedPointsRasterValue, seedPointsSvg, rawDistanceSvg } from "./stagePreview.js";

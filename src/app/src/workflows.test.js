@@ -115,19 +115,9 @@ describe("buildWorkflow", () => {
       expect(colourParams({ tones: "5" })).not.toEqual(colourParams({ tones: "2" }));
    });
 
-   // Regression guard for the bug found 2026-08-21: several patterns had a
-   // Colour Mapping node in their graph with zero params ever routed to
-   // it (PARAM_NODE_MAP simply had no branch sending them there) — the
-   // node was visible and clickable but never opened, since
-   // WorkflowNode.jsx's hasBody check is `params.length > 0`. Checks the
-   // general property directly, for every pattern and every node type,
-   // rather than only the one node type that happened to be reported:
-   // every param a REGISTRY entry declares (that isn't currently hidden
-   // by its own visibleIf) must be attached to *some* node in that
-   // pattern's own graph. A param that resolves (via PARAM_NODE_MAP) to a
-   // node type absent from that generator's own STEP_DEFS sequence would
-   // silently vanish from the UI entirely — strictly worse than an empty
-   // node, since there'd be nowhere to even notice it's missing.
+   // Regression guard: every visible param of every pattern must be
+   // attached to some node in its own graph, or it silently vanishes
+   // from the UI with no indication anything is missing.
    it("every declared, currently-visible param of every registered pattern is attached to some node in its own graph", () => {
       for (const entry of REGISTRY) {
          const defaults = Object.fromEntries(entry.params.map((p) => [p.param, p.value]));

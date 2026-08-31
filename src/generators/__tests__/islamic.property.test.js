@@ -5,25 +5,17 @@ ISLAMIC — ALGORITHM-SPECIFIC PROPERTIES
 * islamic.js is a Grid/hex-lattice lookup (tile centroid) feeding a signed
 * Distance Field search against a single star-polygon silhouette
 * (lib/starPolygon.js's starOutline, built from a Radial Divisions ring) —
-* no RNG anywhere, and no `mode` branch: one construction, banded by
-* frequency/tones. The properties below check what that construction
-* should guarantee: n-fold rotational symmetry about each tile centroid
-* (the silhouette itself has exact n-fold symmetry, and each tile is
-* self-contained — no neighbour-tile interaction), exact periodicity
-* across tile boundaries, and that islamic() is exactly the signed-
-* distance line test its composition claims — for both tile shapes, and
-* down to segments = 3 (the smallest valid Radial Divisions count), since
-* segments 3 and 4 are degenerate cases of starPolygon.js's starSkip(n)
-* construction that must still render validly, not collapse to nothing.
+* one construction, banded by frequency/tones, no RNG. The properties below
+* check what that construction should guarantee: n-fold rotational symmetry
+* about each tile centroid, exact periodicity across tile boundaries, and
+* that islamic() is exactly the signed-distance line test its composition
+* claims — for both tile shapes, down to segments = 3.
 *
-* The rigorous academic source for this "polygons in contact" construction
-* (already established in docs/ISLAMIC_PATTERN_CONSTRUCTION.md and
-* docs/VORONOI_ISLAMIC_HYBRID_PLAN.md §8, backfilled here so the property
-* test file itself states it too): Kaplan, C.S. & Salesin, D.H. (2004).
-* "Islamic Star Patterns in Absolute Geometry." ACM Transactions on
-* Graphics, 23(2), 97-119. The n-fold rotational symmetry property tested
-* below is exactly that paper's own defining property of a single
-* construction-circle-derived star motif.
+* Kaplan, C.S. & Salesin, D.H. (2004). "Islamic Star Patterns in Absolute
+* Geometry." ACM Transactions on Graphics, 23(2), 97-119 — the academic
+* source for this "polygons in contact" construction. The n-fold rotational
+* symmetry property tested below is that paper's own defining property of
+* a single construction-circle-derived star motif.
 */
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
@@ -49,18 +41,15 @@ function tileCentroid(tileShape, tileSize, col, row) {
       : [(col + 0.5) * tileSize, (row + 0.5) * tileSize];
 }
 
-// A point safely inside a square tile — used for the square-only
-// periodicity test, which relies on floor(x / tileSize) tile boundaries
-// (a hex lattice has no such simple period in x alone).
+// A point safely inside a square tile, for the square-only periodicity test.
 function squareTilePoint(tileSize, col, row, offsetX, offsetY) {
    const cx = (col + 0.5) * tileSize;
    const cy = (row + 0.5) * tileSize;
    return { x: cx + offsetX, y: cy + offsetY };
 }
 
-// Independent oracle re-deriving the silhouette + signed-distance line
-// test, mirroring islamic.js's own construction but built directly from
-// the lib/ primitives rather than importing islamic.js's internals.
+// Independent oracle re-deriving the silhouette + signed-distance line test
+// from the lib/ primitives, rather than importing islamic.js's internals.
 function oracle(lx, ly, tileSize, segments, frequency, lineWidth, tones, scale = 0.42, rotation = 0) {
    const shades = toneSet(tones);
    const radius = tileSize * scale;
@@ -115,14 +104,9 @@ describe("islamic: algorithm-specific invariants", () => {
 
    it("every declared tone (2-5) is actually reachable, not just the first and last (regression: middle tones used to never be read)", () => {
       // A prior version always returned shades[shades.length - 1] for any
-      // line pixel, so toneSet("3")'s middle value was computed and
-      // declared but never actually produced — "3" had no visible effect.
-      // Scanning a whole tile at a segments/frequency combo with several
-      // echo bands should find every declared tone somewhere, for every
-      // declared tone count from 2 to 5, not just 2 and the darkest.
-      // frequency = 6 (max): a small enough echo spacing that every
-      // echoTones index cycles into reach within one tile's scan area,
-      // even for tones = "5" (3 distinct echo tones to cycle through).
+      // line pixel, so toneSet("3")'s middle value was never produced.
+      // frequency = 6 (max) gives small enough echo spacing that every
+      // echoTones index cycles into reach within one tile's scan area.
       const tileSize = 100;
       for (const tones of ["2", "3", "4", "5"]) {
          const params = { tileSize, segments: 8, frequency: 6, tones };
@@ -155,11 +139,9 @@ describe("islamic: algorithm-specific invariants", () => {
    });
 
    it("is rotationally symmetric under a 360/segments turn about the tile centroid (both tile shapes)", () => {
-      // Each tile's medallion is self-contained (radius = scale * tileSize,
-      // capped below 0.5 so it stays well short of the tile's own half-
-      // width), so there's no
-      // neighbouring-tile interaction to break exact n-fold symmetry,
-      // regardless of which lattice places the centroid.
+      // Each tile's medallion is self-contained (radius capped well short of
+      // the tile's own half-width), so there's no neighbouring-tile
+      // interaction to break exact n-fold symmetry.
       fc.assert(
          fc.property(
             fc.integer({ min: -2, max: 2 }), fc.integer({ min: -2, max: 2 }),
@@ -198,10 +180,8 @@ describe("islamic: algorithm-specific invariants", () => {
    });
 
    it("scale resizes the medallion (regression: it used to be a hardcoded 0.42 constant)", () => {
-      // The medallion's own boundary is where signedDist crosses 0, i.e.
-      // where islamic() switches between "inside" and "outside" banding —
-      // approximated here as the first on-line pixel walking outward from
-      // the tile centroid. That crossing distance should grow with scale.
+      // The medallion boundary is where signedDist crosses 0, approximated
+      // here as the first on-line pixel walking outward from the centroid.
       const tileSize = 100;
       function boundaryDistance(scale) {
          const params = { tileSize, segments: 8, frequency: 3, lineWidth: 0.02, scale };
@@ -218,14 +198,10 @@ describe("islamic: algorithm-specific invariants", () => {
    });
 
    it("lineWidth controls line thickness independently of frequency (regression: they used to be coupled)", () => {
-      // Before lineWidth existed, thickness was a fixed fraction of the
-      // echo spacing itself (step = radius / frequency), so dragging
-      // frequency silently changed thickness too. Verify the actual
-      // decoupling: at a fixed frequency, the measured on-line fraction
-      // of a scanline through the medallion's centre should grow with
-      // lineWidth; at a fixed lineWidth, it should stay roughly the same
-      // order of magnitude regardless of frequency (ring count changes,
-      // not per-ring thickness).
+      // Before lineWidth existed, thickness was a fixed fraction of the echo
+      // spacing (step = radius / frequency), so frequency silently changed
+      // thickness too. Checks the on-line fraction of a centre scanline
+      // grows with lineWidth at a fixed frequency.
       const tileSize = 100;
       function onLineFraction(frequency, lineWidth) {
          const params = { tileSize, segments: 8, frequency, lineWidth };
@@ -258,11 +234,9 @@ describe("islamic: algorithm-specific invariants", () => {
    });
 
    it("rotating by an exact multiple of 360/segments is an identity (the shape's own rotational symmetry)", () => {
-      // Confirmed mathematically before implementing: a fully n-fold-
-      // symmetric point set maps onto itself under any multiple of its
-      // own 360/n rotation, so this is the reason `rotation` is snapped
-      // to 180/segments, not 360/segments (that snap would be a visible
-      // no-op control).
+      // A fully n-fold-symmetric point set maps onto itself under any
+      // multiple of its own 360/n rotation — why `rotation` is snapped to
+      // 180/segments, not 360/segments (that would be a visible no-op).
       const tileSize = 100;
       fc.assert(
          fc.property(
@@ -282,11 +256,8 @@ describe("islamic: algorithm-specific invariants", () => {
    });
 
    it("rotating by 180/segments visibly changes the medallion (tip-up vs waist-up), except where the two look alike", () => {
-      // The one genuinely new position within a rotational period — see
-      // islamic.js's header comment. Scans a whole tile for at least one
-      // pixel that differs, rather than asserting it at a single sampled
-      // point (which could land in a spot the two orientations happen to
-      // agree, e.g. right at the shared centre).
+      // Scans a whole tile for at least one differing pixel, rather than a
+      // single sampled point that could land where the two happen to agree.
       const tileSize = 100;
       for (const segments of [4, 5, 6, 7, 8]) {
          const base = { tileSize, segments, frequency: 3, lineWidth: 0.03 };
@@ -319,11 +290,9 @@ describe("islamic: algorithm-specific invariants", () => {
    });
 
    it("hex tiling: pixels an exact hex lattice period apart agree", () => {
-      // hexagonCentroid's own lattice period, not a simple tileSize shift —
-      // see lib/latticeIndex.js's hexagonCentroid: translating by exactly
-      // one lattice basis vector maps every hex cell onto another hex cell
-      // of the same shape, so islamic() (a pure function of offset from the
-      // nearest centroid) must agree at the two points.
+      // hexagonCentroid's own lattice period, not a simple tileSize shift:
+      // translating by one lattice basis vector maps every hex cell onto
+      // another of the same shape, so islamic() must agree at both points.
       fc.assert(
          fc.property(
             fc.double({ min: -18, max: 18, noNaN: true }),
