@@ -1,0 +1,143 @@
+.gallery-overlay {
+   position: fixed;
+   inset: 0;
+   background: rgba(17, 24, 39, 0.6);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 1000;
+}
+
+.gallery-panel {
+   position: relative;
+   background: #fff;
+   border-radius: 10px;
+   padding: 28px 32px;
+   width: min(920px, 94vw);
+   height: min(700px, 88vh);
+   display: flex;
+   flex-direction: column;
+   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.gallery-close {
+   position: absolute;
+   top: 12px;
+   right: 14px;
+   border: none;
+   background: none;
+   font-size: 22px;
+   line-height: 1;
+   cursor: pointer;
+   color: #6b7280;
+}
+
+.gallery-close:hover {
+   color: #111827;
+}
+
+.gallery-title {
+   margin: 0 0 12px;
+   flex: 0 0 auto;
+}
+
+.gallery-tabs {
+   flex: 0 0 auto;
+   display: flex;
+   gap: 8px;
+   border-bottom: 1px solid #e5e7eb;
+   margin-bottom: 16px;
+}
+
+.gallery-tab {
+   background: none;
+   border: none;
+   border-bottom: 2px solid transparent;
+   padding: 8px 4px;
+   font-size: 14px;
+   font-weight: 500;
+   color: #6b7280;
+   cursor: pointer;
+}
+
+.gallery-tab:hover {
+   color: #111827;
+}
+
+.gallery-tab.selected {
+   color: #111827;
+   border-bottom-color: #111827;
+}
+
+.gallery-body {
+   flex: 1;
+   overflow-y: auto;
+   min-height: 0;
+}
+
+.gallery-empty {
+   color: #6b7280;
+   font-size: 14px;
+   line-height: 1.6;
+   max-width: 520px;
+}
+
+.gallery-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+   gap: 16px;
+}
+
+.gallery-card {
+   position: relative;
+   border: 1px solid #e5e7eb;
+   border-radius: 8px;
+   padding: 10px;
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+}
+
+.gallery-thumb {
+   width: 100%;
+   aspect-ratio: 1 / 1;
+   object-fit: cover;
+   border-radius: 6px;
+   background: #fafafa;
+   border: 1px solid #e5e7eb;
+}
+
+.gallery-card-title {
+   font-size: 13px;
+   font-weight: 600;
+   color: #111827;
+}
+
+.gallery-card-desc {
+   font-size: 12px;
+   color: #6b7280;
+   line-height: 1.4;
+}
+
+.gallery-load {
+   margin-top: auto;
+}
+
+.gallery-card-remove {
+   position: absolute;
+   top: 6px;
+   right: 6px;
+   border: none;
+   background: rgba(255, 255, 255, 0.9);
+   border-radius: 50%;
+   width: 22px;
+   height: 22px;
+   line-height: 1;
+   font-size: 15px;
+   color: #6b7280;
+   cursor: pointer;
+}
+
+.gallery-card-remove:hover {
+   color: #dc2626;
+}

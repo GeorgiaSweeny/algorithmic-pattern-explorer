@@ -30,6 +30,26 @@
    border: 2px solid #2563eb;
    transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
    pointer-events: none;
+   /* The transition above only animates a box that's already on screen
+      moving to a new position/size (same React key carried over from the
+      previous step, e.g. .algorithm-workflow reappearing in steps 3 and 5).
+      A step whose target wasn't highlighted on the previous step (e.g. the
+      Render node, new in step 7) mounts a brand-new element with no prior
+      position to transition from, so it would otherwise just pop in. This
+      keyframe animation plays once on every mount, giving new targets the
+      same kind of appear motion instead of an abrupt pop. */
+   animation: onboarding-spotlight-in 0.2s ease;
+}
+
+@keyframes onboarding-spotlight-in {
+   from {
+      opacity: 0;
+      transform: scale(0.92);
+   }
+   to {
+      opacity: 1;
+      transform: scale(1);
+   }
 }
 
 .onboarding-callout {
@@ -63,6 +83,7 @@
    font-size: 13.5px;
    line-height: 1.5;
    color: #374151;
+   white-space: pre-line;
 }
 
 .onboarding-callout-actions {

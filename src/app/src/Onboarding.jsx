@@ -66,6 +66,11 @@ const STEPS = [
       body: "Prev and Next move you through the steps one at a time. If you've changed any settings, Reset to Defaults puts them all back to how they started.",
    },
    {
+      selector: [".menu-bar-gallery", ".workflow-node-type-render"],
+      title: "Save and Export Patterns",
+      body: "You can browse and load preconfigured patterns from the gallery and save your own too!\n\nTo save or export a pattern\n– Select the last node (Render) in the diagram below to reveal Export SVG/PNG buttons – use these to download your pattern.\n– Click Add to Gallery to save a pattern to your gallery – it will be stored here for the rest of this session.",
+   },
+   {
       selector: ".menu-bar-doc-library",
       title: "Want to know more?",
       body: "The Documentation Library has more detail on every pattern, node, and key terms. You can open it any time.",

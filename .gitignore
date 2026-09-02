@@ -21,6 +21,7 @@ src/app/dist/
 
 # Real participant study data — keep generate.js/README.md tracked, not the raw responses.
 docs/evaluation/exports/*.json
+docs/evaluation/exports/study2/*.json
 /study2results/
 /Study2_Participant_Instructions.pdf
 docs/Study2_Participant_Instructions.docx

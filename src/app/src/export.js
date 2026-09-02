@@ -5,6 +5,10 @@ PATTERN EXPORT
 * SVG/PNG export actions for the Render node. Rebuilds the image from
 * GENERATORS/SVG_GENERATORS directly rather than reading a live DOM canvas,
 * so it works independently of whichever node is currently selected.
+* Every SVG/PNG download also drops a sidecar {entryId, params} JSON file —
+* pixels/markup alone can't be reverse-engineered back into exact param
+* values (especially seed/noise-driven ones), so the sidecar is what makes a
+* folder of exported favourites re-importable into the gallery later.
 */
 
 import { GENERATORS } from "../../generators/index.js";
@@ -21,32 +25,32 @@ function download(blob, filename) {
    URL.revokeObjectURL(url);
 }
 
-export function exportSvg(entry, params) {
-   const fn = SVG_GENERATORS[entry.generator];
-   if (!fn) return;
-   const svg = fn(CANVAS.WIDTH, CANVAS.HEIGHT, params);
-   download(new Blob([svg], { type: "image/svg+xml" }), `${entry.id}.svg`);
+function downloadConfigSidecar(entry, params) {
+   const json = JSON.stringify({ entryId: entry.id, params }, null, 2);
+   download(new Blob([json], { type: "application/json" }), `${entry.id}.json`);
 }
 
-export function exportPng(entry, params) {
+// Shared by exportPng (download) and capturePngDataUrl (My Gallery capture)
+// so the two rasterisation paths (SVG-generator-via-<img>, raw-pixel
+// GENERATORS) aren't duplicated.
+function renderToCanvas(entry, params) {
    const svgFn = SVG_GENERATORS[entry.generator];
 
    if (svgFn) {
-      const svg = svgFn(CANVAS.WIDTH, CANVAS.HEIGHT, params);
-      const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
-      const img = new Image();
-      img.onload = () => {
-         const canvas = document.createElement("canvas");
-         canvas.width = CANVAS.WIDTH;
-         canvas.height = CANVAS.HEIGHT;
-         canvas.getContext("2d").drawImage(img, 0, 0);
-         canvas.toBlob((blob) => {
-            download(blob, `${entry.id}.png`);
+      return new Promise((resolve) => {
+         const svg = svgFn(CANVAS.WIDTH, CANVAS.HEIGHT, params);
+         const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+         const img = new Image();
+         img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = CANVAS.WIDTH;
+            canvas.height = CANVAS.HEIGHT;
+            canvas.getContext("2d").drawImage(img, 0, 0);
             URL.revokeObjectURL(url);
-         }, "image/png");
-      };
-      img.src = url;
-      return;
+            resolve(canvas);
+         };
+         img.src = url;
+      });
    }
 
    const genFn = GENERATORS[entry.generator];
@@ -66,5 +70,26 @@ export function exportPng(entry, params) {
       }
    }
    ctx.putImageData(image, 0, 0);
+   return Promise.resolve(canvas);
+}
+
+export function exportSvg(entry, params) {
+   const fn = SVG_GENERATORS[entry.generator];
+   if (!fn) return;
+   const svg = fn(CANVAS.WIDTH, CANVAS.HEIGHT, params);
+   download(new Blob([svg], { type: "image/svg+xml" }), `${entry.id}.svg`);
+   downloadConfigSidecar(entry, params);
+}
+
+export async function exportPng(entry, params) {
+   const canvas = await renderToCanvas(entry, params);
    canvas.toBlob((blob) => download(blob, `${entry.id}.png`), "image/png");
+   downloadConfigSidecar(entry, params);
+}
+
+// Renders a pattern to a PNG data URL without triggering a download — used
+// by the "Add to Gallery" action to capture a My Gallery thumbnail.
+export async function capturePngDataUrl(entry, params) {
+   const canvas = await renderToCanvas(entry, params);
+   return canvas.toDataURL("image/png");
 }

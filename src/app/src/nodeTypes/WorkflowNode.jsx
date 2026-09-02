@@ -142,7 +142,10 @@ export default function WorkflowNode({ data }) {
       data.selected && (data.params.length > 0 || data.exportActions || data.structuralNote || data.dependsOnLabel);
 
    return (
-      <div className={`workflow-node${data.selected ? " selected" : ""}`} style={{ borderColor: colour }}>
+      <div
+         className={`workflow-node workflow-node-type-${data.nodeType}${data.selected ? " selected" : ""}`}
+         style={{ borderColor: colour }}
+      >
          <Handle type="target" position={Position.Left} />
          <div className="workflow-node-header" style={{ background: colour }}>
             {data.label}

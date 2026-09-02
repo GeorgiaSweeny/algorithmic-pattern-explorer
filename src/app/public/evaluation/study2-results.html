@@ -170,24 +170,28 @@
 
 <div class="wrap">
 
-  <p class="kicker">Placeholder · Study 2 not yet run</p>
+  <p class="kicker">Study 2 · 5 participants, 2026-08-31</p>
   <h1>Study 2 results</h1>
   <p class="dek">
-    This page is a placeholder for Study 2's own results — the diagnostic-depth instrument
-    described in <code>dissertation/Study2-Design-Plan.md</code>, separate from Study 1's
-    <a href="/evaluation/study-results.html">own results</a>. It shows the shape the real
-    write-up will take once the ~10-participant session runs; every number below is a
-    placeholder, not simulated or real data (see <code>evaluation-dry-run.html</code> for
-    what a simulated preview looks like).
+    Real results for Study 2 — the diagnostic-depth instrument described in
+    <code>dissertation/Study2-Design-Plan.md</code>, separate from Study 1's
+    <a href="/evaluation/study-results.html">own results</a>. Same-instrument pre/post,
+    single group, no control (design plan §2). Recruitment reached 5 of the ~10
+    participants the design plan targeted — read the numbers below as indicative, not
+    powered (see <code>evaluation-dry-run.html</code> for a simulated preview of what a
+    larger, fabricated cohort would look like, for comparison only).
   </p>
 
   <div class="flag pending">
-    <b>No data collected yet.</b> This page will be filled in from the real exported JSON
-    the same way <code>study-results.html</code> was for Study 1 — one
-    <code>{ type: "quiz", phase, score, total, items, timestamp }</code> record per quiz
-    pass per participant, downloaded via the app's own "Test 2" → "Download My Results"
-    button and collected into <code>docs/evaluation/exports/study2/</code> (not yet
-    created).
+    <b>N = 5, underpowered.</b> One shared laptop, sequential turns, 2026-08-31
+    18:23-20:04 BST — see <code>docs/evaluation/exports/study2/README.md</code> for
+    session detail, including a corrected transcription for P2's pre-test (originally
+    exported as 10/17; the participant's physical answer sheet records 4/17, so the
+    stored export has been corrected to match). Overall score moved from 6.6/17 pre to
+    7.2/17 post — with n=5 this is not a reliable effect estimate, and per-type
+    breakdown below (design plan §5) shows it isn't uniform across item types. Treat
+    this study as the diagnostic read the design plan frames it as, not a replication
+    of Study 1's effect.
   </div>
 
   <section id="status">
@@ -205,11 +209,12 @@
         <code>STUDY2_STORAGE_KEY</code>).</li>
       <li class="done">Scoring — per-type breakdown, plus exact-match and partial-credit
         scoring for compositional (node-select) items.</li>
-      <li>Consent addendum reviewed with participants (image-based/multi-select items are a
-        materially different task from Study 1's text-only quiz).</li>
-      <li>~10-participant session run.</li>
-      <li>Real exports collected into <code>docs/evaluation/exports/study2/</code> and this
-        page rebuilt from them.</li>
+      <li class="done">Consent addendum reviewed with participants (image-based/multi-select
+        items are a materially different task from Study 1's text-only quiz).</li>
+      <li class="done">Session run — 5 participants (design plan targeted ~10; recruitment
+        fell short), single laptop, sequential turns, 2026-08-31.</li>
+      <li class="done">Real exports collected into
+        <code>docs/evaluation/exports/study2/</code> and this page rebuilt from them.</li>
     </ul>
   </section>
 
@@ -271,10 +276,10 @@
   </section>
 
   <section id="summary">
-    <h2>Cohort summary (pending)</h2>
+    <h2>Cohort summary</h2>
     <p class="lede">
       Single group, no control (see design plan §2) — mean score before and after
-      exploration, once collected.
+      exploration, n=5.
     </p>
     <div class="table-scroll">
       <table>
@@ -284,9 +289,9 @@
         <tbody>
           <tr>
             <td>Overall score (/17)</td>
-            <td class="placeholder-cell">—</td>
-            <td class="placeholder-cell">—</td>
-            <td class="placeholder-cell">—</td>
+            <td>6.6</td>
+            <td>7.2</td>
+            <td>+0.6</td>
           </tr>
         </tbody>
       </table>
@@ -294,11 +299,15 @@
   </section>
 
   <section id="by-type">
-    <h2>Per-item-type breakdown (pending)</h2>
+    <h2>Per-item-type breakdown</h2>
     <p class="lede">
       The direct fix for Study 1's diagnostic gap (design plan §5): reporting by item type,
       not only by concept, so a gain concentrated in one format but flat in another is
-      visible rather than averaged away.
+      visible rather than averaged away. It is: <code>concept-match</code> and
+      <code>spectrum</code> gained, <code>cause</code> held flat, <code>predict</code>
+      dropped, and the two new compositional formats (<code>node-select</code>,
+      <code>order</code>) started and stayed near floor on exact match, with only partial
+      credit showing any post-exploration movement.
     </p>
     <div class="table-scroll">
       <table>
@@ -306,17 +315,25 @@
           <tr><th>Type</th><th>Pre mean %</th><th>Post mean %</th><th>Gain</th></tr>
         </thead>
         <tbody>
-          <tr><td><span class="type-pill">cause</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
-          <tr><td><span class="type-pill">predict</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
-          <tr><td><span class="type-pill">concept-match</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
-          <tr><td><span class="type-pill">spectrum</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
-          <tr><td><span class="type-pill">node-select (exact match)</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
-          <tr><td><span class="type-pill">node-select (partial credit)</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
-          <tr><td><span class="type-pill">order (exact match)</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
-          <tr><td><span class="type-pill">order (positions correct)</span></td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td><td class="placeholder-cell">—</td></tr>
+          <tr><td><span class="type-pill">cause</span></td><td>46.7</td><td>46.7</td><td>0.0</td></tr>
+          <tr><td><span class="type-pill">predict</span></td><td>40.0</td><td>33.3</td><td>&minus;6.7</td></tr>
+          <tr><td><span class="type-pill">concept-match</span></td><td>73.3</td><td>86.7</td><td>+13.3</td></tr>
+          <tr><td><span class="type-pill">spectrum</span></td><td>45.0</td><td>50.0</td><td>+5.0</td></tr>
+          <tr><td><span class="type-pill">node-select (exact match)</span></td><td>0.0</td><td>6.7</td><td>+6.7</td></tr>
+          <tr><td><span class="type-pill">node-select (partial credit)</span></td><td>40.0</td><td>58.5</td><td>+18.5</td></tr>
+          <tr><td><span class="type-pill">order (exact match)</span></td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+          <tr><td><span class="type-pill">order (positions correct)</span></td><td>36.0</td><td>40.0</td><td>+4.0</td></tr>
         </tbody>
       </table>
     </div>
+    <p class="lede" style="margin-top:14px;">
+      <code>node-select</code>/<code>order</code> exact-match scores near zero at both
+      phases aren't a floor-effect data problem — they're the expected shape for a strict
+      full-set/full-sequence match with 3-6 correct elements per item (design plan §5's own
+      rationale for scoring partial credit as a secondary measure alongside exact match).
+      Partial credit is where the compositional items actually show a post-exploration
+      signal; exact match mostly doesn't move at n=5.
+    </p>
   </section>
 
   <section id="raw-shape">

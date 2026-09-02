@@ -107,13 +107,12 @@ describe("App: Evaluation menu / Test overlay", () => {
       expect(screen.queryByText("Study 2", { selector: "h2" })).not.toBeInTheDocument();
    });
 
-   it("dropdown lists Test 1, Test 2, Dry Run, Study Results, and Study 2 Results", () => {
+   it("dropdown lists Test 1, Test 2, Study 1 Results, and Study 2 Results", () => {
       render(<App />);
       fireEvent.click(screen.getByText("Evaluation", { selector: "button" }));
       expect(screen.getByText("Test 1", { selector: "button" })).toBeInTheDocument();
       expect(screen.getByText("Test 2", { selector: "button" })).toBeInTheDocument();
-      expect(screen.getByText("Dry Run")).toBeInTheDocument();
-      expect(screen.getByText("Study Results")).toBeInTheDocument();
+      expect(screen.getByText("Study 1 Results")).toBeInTheDocument();
       expect(screen.getByText("Study 2 Results")).toBeInTheDocument();
    });
 });

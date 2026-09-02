@@ -19,10 +19,12 @@ import PatternCanvas from "./PatternCanvas.jsx";
 import DocumentationPanel from "./DocumentationPanel.jsx";
 import PatternDocumentation from "./PatternDocumentation.jsx";
 import NodeLibraryOverlay from "./NodeLibraryOverlay.jsx";
-import { exportSvg, exportPng } from "./export.js";
+import { exportSvg, exportPng, capturePngDataUrl } from "./export.js";
 import EvaluationOverlay from "./evaluation/EvaluationOverlay.jsx";
 import Onboarding, { hasSeenOnboarding, markOnboardingSeen } from "./Onboarding.jsx";
 import Welcome from "./Welcome.jsx";
+import GalleryOverlay from "./gallery/GalleryOverlay.jsx";
+import { addMyGalleryItem } from "./gallery/myGalleryStorage.js";
 import "./App.css";
 
 const nodeTypes = { workflow: WorkflowNode };
@@ -80,9 +82,17 @@ export default function App() {
    const [showEvaluationMenu, setShowEvaluationMenu] = useState(false);
    const evaluationMenuRef = useRef(null);
    const [showNodeLibrary, setShowNodeLibrary] = useState(false);
+   const [showGallery, setShowGallery] = useState(false);
+   // Brief "Added ✓" confirmation on the render node's Add to Gallery
+   // button, reset after a short delay — no toast system needed for this.
+   const [justAddedToGallery, setJustAddedToGallery] = useState(false);
+   // Set right before setSelectedId when loading a gallery item, so the
+   // paramValues-reset useEffect below (keyed on selectedId) skips its
+   // normal defaults reset instead of clobbering the loaded params.
+   const skipNextParamResetRef = useRef(false);
    // Welcome and Onboarding are one combined first-visit flow gated by the
    // same "seen" flag: Welcome's "Take the tour" hands off into Onboarding,
-   // "Skip" dismisses both. "Replay Tutorial" re-opens the same flow.
+   // "Skip" dismisses both. "Retake Tutorial" re-opens the same flow.
    const [showWelcome, setShowWelcome] = useState(() => !hasSeenOnboarding());
    const [showOnboarding, setShowOnboarding] = useState(false);
    // Starts collapsed; expanding this and showing Pattern Documentation are
@@ -104,10 +114,43 @@ export default function App() {
    // Reset to the new pattern's defaults, first node selected, and default
    // canvas zoom whenever the selection changes.
    useEffect(() => {
+      if (skipNextParamResetRef.current) {
+         skipNextParamResetRef.current = false;
+         return;
+      }
       setParamValues(defaultParams(selectedEntry));
       setSelectedIndex(0);
       setCanvasZoom(1);
    }, [selectedId]);
+
+   // Uniform load path for both gallery tiers: Featured items carry
+   // {overrides} (a partial diff, matching quizPatterns.js's convention),
+   // My Gallery items carry {params} (a full snapshot captured at Add to
+   // Gallery time) — either way the result is merged onto the entry's
+   // defaults so a stale/partial record still produces a valid pattern.
+   function handleLoadGalleryItem(item) {
+      const entry = REGISTRY.find((e) => e.id === item.entryId);
+      if (!entry) return;
+      const merged = { ...defaultParams(entry), ...(item.overrides ?? item.params ?? {}) };
+      skipNextParamResetRef.current = true;
+      setSelectedId(item.entryId);
+      setParamValues(merged);
+      setSelectedIndex(0);
+      setCanvasZoom(1);
+      setShowGallery(false);
+   }
+
+   async function handleAddToGallery() {
+      const thumbnailDataUrl = await capturePngDataUrl(selectedEntry, paramValues);
+      addMyGalleryItem({
+         title: `${selectedEntry.name} — ${new Date().toLocaleTimeString()}`,
+         entryId: selectedId,
+         params: paramValues,
+         thumbnailDataUrl,
+      });
+      setJustAddedToGallery(true);
+      setTimeout(() => setJustAddedToGallery(false), 1500);
+   }
 
    // Depends on paramValues too: some params reshape the graph itself (e.g.
    // recursive's depth changes how many Subdivide nodes appear).
@@ -134,11 +177,15 @@ export default function App() {
                      ? [
                           { label: "Export SVG", onClick: () => exportSvg(selectedEntry, paramValues) },
                           { label: "Export PNG", onClick: () => exportPng(selectedEntry, paramValues) },
+                          {
+                             label: justAddedToGallery ? "Added ✓" : "Add to Gallery",
+                             onClick: handleAddToGallery,
+                          },
                        ]
                      : undefined,
             },
          })),
-      [rawNodes, paramValues, selectedIndex, selectedEntry]
+      [rawNodes, paramValues, selectedIndex, selectedEntry, justAddedToGallery]
    );
 
    // Directional arrows show data flow source -> target; the edge feeding
@@ -175,8 +222,11 @@ export default function App() {
                >
                   Documentation Library
                </button>
+               <button className="btn menu-bar-node-library menu-bar-gallery" onClick={() => setShowGallery(true)}>
+                  Gallery
+               </button>
                <button className="btn menu-bar-node-library" onClick={() => setShowWelcome(true)}>
-                  Replay Tutorial
+                  Retake Tutorial
                </button>
                <div className="menu-bar-dropdown" ref={evaluationMenuRef}>
                   <button
@@ -212,22 +262,12 @@ export default function App() {
                         <a
                            className="menu-bar-dropdown-item"
                            role="menuitem"
-                           href="/evaluation/evaluation-dry-run.html"
-                           target="_blank"
-                           rel="noreferrer"
-                           onClick={() => setShowEvaluationMenu(false)}
-                        >
-                           Dry Run
-                        </a>
-                        <a
-                           className="menu-bar-dropdown-item"
-                           role="menuitem"
                            href="/evaluation/study-results.html"
                            target="_blank"
                            rel="noreferrer"
                            onClick={() => setShowEvaluationMenu(false)}
                         >
-                           Study Results
+                           Study 1 Results
                         </a>
                         <a
                            className="menu-bar-dropdown-item"
@@ -264,6 +304,9 @@ export default function App() {
          </header>
 
          {showNodeLibrary && <NodeLibraryOverlay onClose={() => setShowNodeLibrary(false)} />}
+         {showGallery && (
+            <GalleryOverlay onClose={() => setShowGallery(false)} onLoad={handleLoadGalleryItem} />
+         )}
          {showTest1 && <EvaluationOverlay study={1} onClose={() => setShowTest1(false)} />}
          {showTest2 && <EvaluationOverlay study={2} onClose={() => setShowTest2(false)} />}
          {showWelcome && (
@@ -417,11 +460,23 @@ export default function App() {
                      // fitView (above) only fits once, synchronously on init —
                      // on the very first mount the .algorithm-workflow strip's
                      // sticky/flex layout can still be settling, so ReactFlow
-                     // measures a not-yet-final container size and fits nodes
-                     // outside the visible area. Re-fitting one frame later
-                     // (after layout has settled) is what a pattern switch
-                     // already does implicitly by remounting via `key`.
-                     onInit={(instance) => requestAnimationFrame(() => instance.fitView())}
+                     // measures a not-yet-final (sometimes zero-size) container
+                     // and fits nodes outside the visible area or scales them
+                     // away entirely. A warm pattern switch (remounting via
+                     // `key`) settles within one frame, but a genuinely cold
+                     // load (first open, a duplicated tab — CSS/fonts not
+                     // necessarily applied yet when this JS runs) isn't
+                     // guaranteed to, and how long it takes isn't predictable
+                     // (network/CPU dependent) — a page refresh "fixes" it
+                     // simply because the browser cache makes the next load
+                     // warm. Rather than guess a single delay, retry fitView
+                     // at several increasing intervals so it self-corrects
+                     // once layout actually has settled, whenever that is.
+                     onInit={(instance) => {
+                        const refit = () => instance.fitView();
+                        requestAnimationFrame(refit);
+                        [100, 300, 800, 1500].forEach((ms) => setTimeout(refit, ms));
+                     }}
                   >
                      <Background />
                      <Controls />

@@ -107,6 +107,22 @@ delivered interface). As of 2026-08-18:
   component, at thumbnail size, driven by the mechanism above) — no
   longer a static placeholder.
 
+**Built 2026-09-01** — a Gallery, opened from a new menu-bar button:
+
+* **Featured tab** — a hand-curated set of favourite outputs
+  (`src/app/src/gallery/galleryPatterns.js`), each loadable with one click
+  via the same `{entryId, overrides}` → full-params resolution the
+  evaluation quiz already used (`evaluation/quizPatterns.js`).
+* **My Gallery tab** — session-local (`sessionStorage`, cleared on tab
+  close), populated via a new "Add to Gallery" action alongside the Render
+  node's existing Export SVG/PNG buttons.
+* Export actions also now download a `{entryId, params}` JSON sidecar
+  alongside the image, so a favourite output can be re-imported into the
+  Featured tab later without guessing its params back out of the pixels.
+
+See `docs/plan-checklist.md`'s Sep 1 entry for the full build (including a
+`fitView` cold-load reliability fix found while testing this) and rationale.
+
 **Still deliberately deferred** (tracked in `docs/plan-checklist.md`'s
 priorities, not a gap in this pass):
 

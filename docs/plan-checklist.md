@@ -1279,6 +1279,84 @@ Both flagged directly from using the app, not found by testing.
 - [x] Full suite unaffected in scope, one test added: 293/293 core (up
       from 292), 199/199 app.
 
+## Sep 1: Gallery feature — curated + session-local pattern galleries, export metadata, onboarding polish (post-schedule)
+
+Requested directly from using the app ("it would be fun to have a way to
+save your outputs or browse preconfigured patterns"), not a scheduled MVP
+item.
+
+- [x] **Featured gallery** (`src/app/src/gallery/galleryPatterns.js`) — a
+      hand-curated `{id, title, description, entryId, overrides, thumbnail}`
+      array, resolved into full params the same way
+      `evaluation/quizPatterns.js` already resolves `{entryId, overrides}`
+      into a render-ready params object, so no new resolution logic was
+      needed. 24 entries populated from real exports in
+      `dissertation/screenshots/gallery outputs/` (gitignored, not part of
+      the repo) — a handful predating the sidecar-JSON change below (see
+      next item) were approximate recreations instead, tuned by eye and by
+      colour-sampling the original PNG with Pillow; each is marked inline
+      with a comment rather than presented as an exact reproduction. Order
+      is deliberately non-adjacent by `entryId` (`islamic-rosette` alone is
+      11 of the 24 entries) so browsing doesn't hit a long run of the same
+      pattern family — noted at the top of the file so future entries get
+      added the same way, not appended as a block.
+- [x] **My Gallery** — a session-local counterpart
+      (`src/app/src/gallery/myGalleryStorage.js`, `sessionStorage`, cleared
+      on tab close — deliberately not `localStorage`, unlike
+      `evaluationStorage.js`, since this data has no reason to outlive the
+      session). An "Add to Gallery" action sits next to the Render node's
+      existing Export SVG/PNG buttons (`App.jsx`'s `exportActions`),
+      capturing a live PNG thumbnail via a new `capturePngDataUrl()` in
+      `export.js` (factored out of `exportPng`'s existing canvas-rasterising
+      path — `renderToCanvas()` — rather than a second implementation).
+      `GalleryOverlay.jsx` presents both tiers as Featured/My Gallery tabs;
+      loading either normalises to the same `{entryId, params}` shape
+      `App.jsx`'s `handleLoadGalleryItem` merges onto the entry's defaults,
+      same pattern as the Featured tier.
+- [x] **Export sidecar JSON.** `exportSvg`/`exportPng` now also download a
+      `{entryId, params}` `.json` file alongside the image — pixels/markup
+      alone can't be reverse-engineered back into exact param values
+      (especially seed/noise-driven ones), so this is what makes a future
+      "here's a folder of my favourites" handoff mechanically re-importable
+      into the Featured gallery instead of guesswork. Confirmed with the
+      user: build the capability now, defer an automated folder-import
+      script until there's an actual folder of sidecar-JSON exports to
+      import (still deferred — hasn't come up since).
+- [x] **`fitView` reliability on a cold load.** Reported directly from use:
+      "when the page is duplicated or opened for the first time the nodes
+      are not visible," fixed by a refresh. Root cause not conclusively
+      pinned down (not reproducible locally across several attempts —
+      fresh browser contexts, the actual production build served at its
+      real `/algorithmic-pattern-explorer/` path, 5 viewport sizes, and
+      8x CPU / slow-network throttling all rendered correctly), but "fixed
+      by refresh" is the signature of a cache-cold-vs-warm layout race, and
+      the single `requestAnimationFrame` re-fit `App.jsx`'s ReactFlow
+      `onInit` already relied on (Aug 21, see the Should-tier entry above)
+      was only ever verified against a warm pattern-switch remount, not a
+      genuinely cold first load. Hardened rather than left as a single
+      guessed delay: `fitView()` now retries at the next frame, then 100,
+      300, 800 and 1500ms, so it self-corrects whenever layout actually
+      finishes settling instead of assuming one frame is enough.
+- [x] **Onboarding**: new step ("Save and Export Patterns") spotlighting
+      both the Gallery button and the Render node together — the latter
+      needed a new stable `.workflow-node-type-{nodeType}` class on
+      `WorkflowNode.jsx`'s root element, since nodes were previously only
+      targetable by ReactFlow-internal structure, not a plain CSS selector.
+      A step whose target wasn't highlighted on the previous step (true of
+      the Render node here, new in this step) mounted with no prior
+      position to transition from and just popped in, unlike a target that
+      carries over between steps (e.g. `.algorithm-workflow`, reused
+      directly) — added a `onboarding-spotlight-in` fade/scale keyframe so
+      a first-time target animates in too, not just repositions.
+- [x] Menu bar: Gallery and Retake Tutorial (renamed from "Replay
+      Tutorial") swapped order; Study Results renamed to "Study 1 Results"
+      to match "Study 2 Results"; Dry Run removed from the Evaluation menu
+      and its page moved to `archive/evaluation-dry-run/` (`git mv`,
+      history preserved) rather than deleted.
+- [x] Full suite unaffected in scope, no new tests needed (existing
+      `App.test.jsx` assertions updated for the renamed menu labels):
+      294/294 core, 234/234 app.
+
 ## Priorities if time runs short
 
 This ranks what to defer *out of the 14-day coding window* first — it is not
