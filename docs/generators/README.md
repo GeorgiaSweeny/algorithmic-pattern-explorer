@@ -16,8 +16,8 @@ by `DocumentationPanel.jsx`'s currently-empty `!selectedNode` state
 diverge from what's written here, the same rule `docs/nodes/README.md`
 states for node docs.
 
-Nine files, one per `generator` value (`patternRegistry.js`'s fourteen
-registry entries collapse to nine distinct generators — `wave`, `noise`,
+Ten files, one per `generator` value (`patternRegistry.js`'s fifteen
+registry entries collapse to ten distinct generators — `wave`, `noise`,
 `grid`, and `recursive` each cover multiple registry entries/modes with one
 shared write-up, since the underlying construction is identical):
 
@@ -29,6 +29,7 @@ shared write-up, since the underlying construction is identical):
 - [islamic.md](islamic.md) — Islamic Geometric Rosette
 - [recursive.md](recursive.md) — Sierpinski, Recursive Grid
 - [voronoi-islamic.md](voronoi-islamic.md) — Voronoi-Seeded Islamic Tiling (hybrid)
+- [voronoi-islamic-v2.md](voronoi-islamic-v2.md) — Voronoi-Seeded Islamic Tiling (Improved) (hybrid)
 - [recursive-noise.md](recursive-noise.md) — Perlin Sierpinski (hybrid)
 
 ## Grounding

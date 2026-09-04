@@ -364,15 +364,21 @@ export const STUDY2_QUESTIONS = [
       concept: "Procedural modelling",
       type: "predict",
       entryId: "perlin-sierpinski",
-      startOverrides: { amplitude: 0, ...COLORWAYS.purple },
+      // recursiveNoise.js gives every level its own independent amplitude
+      // (amplitude1..amplitude6, one per Noise node) rather than one shared
+      // value — this item asks about raising all of them together (a
+      // uniform, pattern-wide warp increase), the closest equivalent to the
+      // old single-amplitude concept, at the registry's default depth (4
+      // levels, so amplitude1..amplitude4).
+      startOverrides: { amplitude1: 0, amplitude2: 0, amplitude3: 0, amplitude4: 0, ...COLORWAYS.purple },
       prompt: "Image 1 shows the starting pattern below. Given the stated change, which of the following is the correct result?",
-      changeDescription: "Amplitude increased from 0 to 0.4. Nothing else changed.",
+      changeDescription: "Amplitude increased from 0 to 0.4 at every level. Nothing else changed.",
       candidates: [
-         { overrides: { amplitude: 0.4, ...COLORWAYS.purple } },
+         { overrides: { amplitude1: 0.4, amplitude2: 0.4, amplitude3: 0.4, amplitude4: 0.4, ...COLORWAYS.purple } },
          { overrides: { depth: 6, ...COLORWAYS.purple } },
          { overrides: { scale: 0.03, ...COLORWAYS.purple } },
          { overrides: { octaves: 6, ...COLORWAYS.purple } },
-         { overrides: { amplitude: 0, ...COLORWAYS.purple } },
+         { overrides: { amplitude1: 0, amplitude2: 0, amplitude3: 0, amplitude4: 0, ...COLORWAYS.purple } },
       ],
       correctIndex: 0,
    },

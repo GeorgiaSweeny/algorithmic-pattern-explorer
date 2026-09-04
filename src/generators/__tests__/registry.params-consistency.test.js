@@ -24,10 +24,17 @@ import { mapColour }      from "../../render.js";
 function isReadByFn(fn, paramName) {
    const src = fn.toString();
    if (new RegExp(`\\b${paramName}\\b`).test(src)) return true;
-   // colourN stops (mapColour's tones>2 path) are read via a template
-   // literal (`colour${i}`), not a literal identifier — no single colourN
-   // token to match, so fall back to checking for that dynamic access.
-   return /^colour\d+$/.test(paramName) && /colour\$\{/.test(src);
+   // colourN stops (mapColour's tones>2 path) and recursiveNoise.js's
+   // per-level amplitudeN/scaleN/octavesN are all read via a template
+   // literal (`colour${i}`, `amplitude${i + 1}`), not a literal identifier —
+   // no single colourN/amplitudeN/scaleN/octavesN token to match, so fall
+   // back to checking for that dynamic access.
+   return (
+      (/^colour\d+$/.test(paramName) && /colour\$\{/.test(src)) ||
+      (/^amplitude\d+$/.test(paramName) && /amplitude\$\{/.test(src)) ||
+      (/^scale\d+$/.test(paramName) && /scale\$\{/.test(src)) ||
+      (/^octaves\d+$/.test(paramName) && /octaves\$\{/.test(src))
+   );
 }
 
 describe.each(REGISTRY)("registry params vs generator: $id", (entry) => {

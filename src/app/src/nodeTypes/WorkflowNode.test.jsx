@@ -58,6 +58,22 @@ describe("WorkflowNode", () => {
       expect(onParamChange).toHaveBeenCalledWith("octaves", 4);
    });
 
+   it("a 0-1 archetype range (e.g. jitter) renders as a continuous slider with a fine step, not a checkbox stuck at 0 or 1", () => {
+      const onParamChange = vi.fn();
+      renderNode({
+         nodeType: "seedPoints",
+         label: "Seed Points",
+         params: [{ param: "jitter", archetype: "Randomness (Seed Placement)", value: 0.7, map: [0, 1] }],
+         selected: true,
+         onParamChange,
+      });
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+      const slider = screen.getByRole("slider");
+      expect(slider).toHaveAttribute("step", "0.01");
+      fireEvent.change(slider, { target: { value: "0.35" } });
+      expect(onParamChange).toHaveBeenCalledWith("jitter", 0.35);
+   });
+
    it("a select control calls onParamChange with the param name and the new string value", () => {
       const onParamChange = vi.fn();
       renderNode({

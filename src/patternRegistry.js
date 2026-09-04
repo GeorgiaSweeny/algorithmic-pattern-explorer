@@ -302,15 +302,47 @@ export const REGISTRY = [
       spectrum:     0.5,
       nativeFormat: "raster",
       params: [
-         // firstOccurrenceOnly: see docs/PATTERN_REGISTRY_NOTES.md.
-         { param: "depth",     archetype: "Complexity", value: 4,   map: [1, 6],   firstOccurrenceOnly: true },
-         { param: "amplitude", archetype: "Randomness",  value: 0,   map: [0, 0.5] },
-         // Passed straight through to noise.js's own scale/octaves — a second
-         // axis (warp texture) independent of amplitude (warp strength).
-         { param: "scale",     archetype: "Density",     value: 0.01, map: [0.001, 0.05] },
-         { param: "octaves",   archetype: "Detail",      value: 2,    map: [1, 8] },
+         // firstOccurrenceOnly: see docs/PATTERN_REGISTRY_NOTES.md — depth
+         // and seed are single shared values, so editing them from a later
+         // Noise/Subdivide node would silently rewrite the whole pattern;
+         // they're shown (and only editable) on the first occurrence, with
+         // an explanatory note on the rest.
+         //
+         // amplitudeN/scaleN/octavesN are the opposite: recursiveNoise.js
+         // reads each level's own warp strength *and* texture independently
+         // (N for level N - 1), so each is its own free control, pinned via
+         // `occurrenceOnly` to exactly the one Noise node it belongs to —
+         // the *1 params only show on Noise (1/D), *2 only on Noise (2/D),
+         // and so on. `visibleIf` hides a level beyond the current `depth`
+         // (same reasoning as tones-gated colour3..colour5 above), since it
+         // has no Noise node to attach to at all.
+         { param: "depth", archetype: "Complexity", value: 4, map: [1, 6], firstOccurrenceOnly: true },
+
+         { param: "amplitude1", archetype: "Randomness (Level 1)", value: 0,    map: [0, 0.5],      occurrenceOnly: 1 },
+         { param: "scale1",     archetype: "Density (Level 1)",    value: 0.01, map: [0.001, 0.05], occurrenceOnly: 1 },
+         { param: "octaves1",   archetype: "Detail (Level 1)",     value: 2,    map: [1, 8],         occurrenceOnly: 1 },
+
+         { param: "amplitude2", archetype: "Randomness (Level 2)", value: 0,    map: [0, 0.5],      occurrenceOnly: 2, visibleIf: (p) => Number(p.depth) >= 2 },
+         { param: "scale2",     archetype: "Density (Level 2)",    value: 0.01, map: [0.001, 0.05], occurrenceOnly: 2, visibleIf: (p) => Number(p.depth) >= 2 },
+         { param: "octaves2",   archetype: "Detail (Level 2)",     value: 2,    map: [1, 8],         occurrenceOnly: 2, visibleIf: (p) => Number(p.depth) >= 2 },
+
+         { param: "amplitude3", archetype: "Randomness (Level 3)", value: 0,    map: [0, 0.5],      occurrenceOnly: 3, visibleIf: (p) => Number(p.depth) >= 3 },
+         { param: "scale3",     archetype: "Density (Level 3)",    value: 0.01, map: [0.001, 0.05], occurrenceOnly: 3, visibleIf: (p) => Number(p.depth) >= 3 },
+         { param: "octaves3",   archetype: "Detail (Level 3)",     value: 2,    map: [1, 8],         occurrenceOnly: 3, visibleIf: (p) => Number(p.depth) >= 3 },
+
+         { param: "amplitude4", archetype: "Randomness (Level 4)", value: 0,    map: [0, 0.5],      occurrenceOnly: 4, visibleIf: (p) => Number(p.depth) >= 4 },
+         { param: "scale4",     archetype: "Density (Level 4)",    value: 0.01, map: [0.001, 0.05], occurrenceOnly: 4, visibleIf: (p) => Number(p.depth) >= 4 },
+         { param: "octaves4",   archetype: "Detail (Level 4)",     value: 2,    map: [1, 8],         occurrenceOnly: 4, visibleIf: (p) => Number(p.depth) >= 4 },
+
+         { param: "amplitude5", archetype: "Randomness (Level 5)", value: 0,    map: [0, 0.5],      occurrenceOnly: 5, visibleIf: (p) => Number(p.depth) >= 5 },
+         { param: "scale5",     archetype: "Density (Level 5)",    value: 0.01, map: [0.001, 0.05], occurrenceOnly: 5, visibleIf: (p) => Number(p.depth) >= 5 },
+         { param: "octaves5",   archetype: "Detail (Level 5)",     value: 2,    map: [1, 8],         occurrenceOnly: 5, visibleIf: (p) => Number(p.depth) >= 5 },
+
+         { param: "amplitude6", archetype: "Randomness (Level 6)", value: 0,    map: [0, 0.5],      occurrenceOnly: 6, visibleIf: (p) => Number(p.depth) >= 6 },
+         { param: "scale6",     archetype: "Density (Level 6)",    value: 0.01, map: [0.001, 0.05], occurrenceOnly: 6, visibleIf: (p) => Number(p.depth) >= 6 },
+         { param: "octaves6",   archetype: "Detail (Level 6)",     value: 2,    map: [1, 8],         occurrenceOnly: 6, visibleIf: (p) => Number(p.depth) >= 6 },
          ...twoColourParams(),
-         { param: "seed",      archetype: "Seed",        value: 1337 },
+         { param: "seed",      archetype: "Seed",        value: 1337, firstOccurrenceOnly: true },
       ],
       actions: [{ label: "Randomize Seed", method: "randomize" }],
    },
@@ -349,6 +381,48 @@ export const REGISTRY = [
          // Opt-in per-cell divergence from the base segments/rotation above —
          // see docs/PATTERN_REGISTRY_NOTES.md.
          { param: "variation", archetype: "Randomness", value: 0,   map: [0, 1] },
+         { param: "seed",      archetype: "Seed",       value: 1337 },
+      ],
+      actions: [{ label: "Randomize Seed", method: "randomize" }],
+   },
+
+   // ── Hybrid — Voronoi-seeded Islamic tiling v2 (minimal cell-lookup swap) ──
+   // See docs/generators/voronoi-islamic-v2.md and voronoiIslamicV2.js's own
+   // header. Reuses islamic-rosette's own tileSize/scale/segments/frequency/
+   // lineWidth/rotation params unchanged — everything downstream of cell
+   // lookup is islamic.js's construction, unmodified, so its own params
+   // still mean exactly what they mean there. `numCells` is a plain
+   // Poisson-process scatter (voronoi.js/voronoiIslamic.js's own
+   // generateSeedPoints, not any grid-constrained placement) — how many
+   // medallions there are, not how big any one of them is (that's
+   // tileSize, unchanged from islamic.js: tileSize * scale).
+
+   {
+      id:           "voronoi-islamic-v2",
+      name:         "Voronoi Islamic (Improved)",
+      category:     "Hybrid",
+      generator:    "voronoiIslamicV2",
+      spectrum:     0.6,
+      nativeFormat: "raster",
+      params: [
+         { param: "numCells",  archetype: "Density",    value: 15,   map: [5, 80]   },
+         ...tonesAndColourParams(),
+         { param: "tileSize",  archetype: "Size",       value: 100, map: [40, 200] },
+         { param: "scale",     archetype: "Size",       value: 0.42, map: [0.2, 0.48] },
+         { param: "segments",  archetype: "Complexity", value: 8,   map: [3, 16]   },
+         { param: "frequency", archetype: "Detail",     value: 3,    map: [1, 6] },
+         { param: "lineWidth", archetype: "Threshold",  value: 0.06, map: [0.01, 0.15] },
+         { param: "rotation",  control: "toggle", label: "Rotation",
+           onLabel: "Flipped", offLabel: "Not flipped",
+           onValue: (p) => 180 / Math.max(3, Math.round(p.segments ?? 8)), value: 0 },
+         // Independent of Rotation above, not exclusive with it — see
+         // voronoiIslamicV2.js's own header comment. Off: every medallion
+         // shares one rotation (Rotation above still applies normally). On:
+         // each cell's medallion gets its own independently random
+         // rotation, with Rotation's own flip (if also on) applied on top
+         // of that per-cell value rather than replaced by it.
+         { param: "randomRotation", control: "toggle", label: "Random Rotation",
+           onLabel: "Random", offLabel: "Uniform", onValue: () => 1, value: 0 },
          { param: "seed",      archetype: "Seed",       value: 1337 },
       ],
       actions: [{ label: "Randomize Seed", method: "randomize" }],

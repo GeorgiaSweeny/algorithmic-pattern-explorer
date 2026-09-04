@@ -119,8 +119,8 @@ export const NODE_DOCS = {
    },
 };
 
-// Pattern-level overview text, one entry per `generator` id (fourteen
-// registry entries collapse to nine generator values — wave/noise/grid/
+// Pattern-level overview text, one entry per `generator` id (fifteen
+// registry entries collapse to ten generator values — wave/noise/grid/
 // recursive each cover multiple modes/shapes with one shared write-up).
 export const GENERATOR_DOCS = {
    wave: {
@@ -184,6 +184,13 @@ export const GENERATOR_DOCS = {
       objective: "See one construction (a star inside a cell) survive a change from regular to irregular cells, with only one new piece of geometry needed.",
       concepts: ["Composition", "Spatial Reasoning", "Emergence"],
    },
+   voronoiIslamicV2: {
+      explanation: "Places an Islamic star medallion inside each cell of an irregular Voronoi mosaic, using exactly Islamic Rosette's own fixed medallion size rather than adapting it to each cell.",
+      purpose:
+         "Asks a narrower version of the same question as the original Voronoi-Seeded Islamic Tiling: what does the combination look like if nothing at all downstream of cell placement is adapted — medallions from densely-packed cells are left free to overlap, and gaps are left free to open up in sparse regions, as an honest consequence rather than something smoothed over.",
+      objective: "See what happens when a construction built for evenly-spaced cells is dropped unmodified into irregular ones, with no compensating geometry added.",
+      concepts: ["Composition", "Spatial Reasoning", "Decomposition"],
+   },
    recursiveNoise: {
       explanation: "Perturbs a Sierpinski fractal's construction with Perlin noise, nudging each level's split point by a smooth random offset.",
       purpose:
@@ -215,8 +222,26 @@ export const PARAM_DOCS = {
    lineWidth: "How thick the traced lines are, as a fraction of the medallion's own radius — independent of frequency, so changing ring spacing doesn't also change line thickness.",
    subdivisions: "How many cells each recursive step divides its region into along each axis (e.g. 3 = a 3x3 grid per level). Higher values create a finer-grained, busier self-similar structure at every recursion depth.",
    depth: "How many times the recursive rule is reapplied to its own output. Each extra level adds one more, smaller-scale layer of self-similar detail — 0 shows the base shape untouched.",
-   amplitude: "How strongly each recursion level's coordinates are pushed off their exact fractal-lattice position by Perlin noise before subdividing. 0 reproduces the plain fractal exactly; higher values distort the lattice into an increasingly organic, less regular structure.",
+   amplitude1: "How strongly level 1's coordinates are pushed off their exact fractal-lattice position by Perlin noise before subdividing, independent of every other level's own amplitude. 0 reproduces the plain fractal's first level exactly; higher values distort it into an increasingly organic, less regular shape.",
+   amplitude2: "Level 2's own independent warp strength, only shown and used once depth is set to 2 or more — has no effect on any other level.",
+   amplitude3: "Level 3's own independent warp strength, only shown and used once depth is set to 3 or more — has no effect on any other level.",
+   amplitude4: "Level 4's own independent warp strength, only shown and used once depth is set to 4 or more — has no effect on any other level.",
+   amplitude5: "Level 5's own independent warp strength, only shown and used once depth is set to 5 or more — has no effect on any other level.",
+   amplitude6: "Level 6's own independent warp strength, only shown and used once depth is set to 6 — has no effect on any other level.",
+   scale1: "Level 1's own independent noise texture coarseness — larger values sample it more coarsely (bigger, smoother warp features), smaller values more finely (busier warp detail). Independent of every other level's own scale.",
+   scale2: "Level 2's own independent noise texture coarseness, only shown and used once depth is set to 2 or more — has no effect on any other level.",
+   scale3: "Level 3's own independent noise texture coarseness, only shown and used once depth is set to 3 or more — has no effect on any other level.",
+   scale4: "Level 4's own independent noise texture coarseness, only shown and used once depth is set to 4 or more — has no effect on any other level.",
+   scale5: "Level 5's own independent noise texture coarseness, only shown and used once depth is set to 5 or more — has no effect on any other level.",
+   scale6: "Level 6's own independent noise texture coarseness, only shown and used once depth is set to 6 — has no effect on any other level.",
+   octaves1: "Level 1's own independent noise detail — how many layered noise samples are summed for that level's warp. Independent of every other level's own octaves.",
+   octaves2: "Level 2's own independent noise detail, only shown and used once depth is set to 2 or more — has no effect on any other level.",
+   octaves3: "Level 3's own independent noise detail, only shown and used once depth is set to 3 or more — has no effect on any other level.",
+   octaves4: "Level 4's own independent noise detail, only shown and used once depth is set to 4 or more — has no effect on any other level.",
+   octaves5: "Level 5's own independent noise detail, only shown and used once depth is set to 5 or more — has no effect on any other level.",
+   octaves6: "Level 6's own independent noise detail, only shown and used once depth is set to 6 — has no effect on any other level.",
    rotation: "Turns the medallion about its own centre, snapped to the finest increment that preserves its vertical symmetry. At its default (0) the medallion sits in its original orientation.",
+   randomRotation: "Off: every medallion shares the same rotation (Rotation, above, still applies normally). On: each medallion gets its own independently random rotation instead — and if Rotation's own Flipped is also on, that flip is applied on top of each medallion's own random rotation, not replaced by it.",
    segments: "How many-fold rotational symmetry the construction has — e.g. 8 gives an 8-pointed star. Also controls how many radial construction points the downstream geometry is built from.",
    tileSize: "The size, in pixels, of one repeating tile of the pattern. Larger tiles mean fewer, bigger repetitions across the canvas; smaller tiles mean more, smaller repetitions.",
    tileShape: "Which lattice the pattern's tiles are arranged on (square or hexagon) — changes where each tile's centre falls, without changing the motif drawn at each one.",
@@ -234,6 +259,7 @@ export const PARAM_DOCS = {
 export const PARAM_DOC_OVERRIDES = {
    "islamic:scale": "Resizes the medallion within its own tile, as a fraction of the tile's size — capped below half the tile's width so it always stays a self-contained motif with no overlap into neighbouring tiles.",
    "voronoiIslamic:scale": "Resizes each cell's medallion, as a fraction of that specific cell's own distance to its nearest neighbouring seed — so every medallion stays sized appropriately to its own irregular cell rather than one fixed size for every cell.",
+   "voronoiIslamicV2:scale": "Exactly Islamic Rosette's own Scale: every medallion uses the same fixed radius (Tile Size × Scale) regardless of its own cell's size, unlike the original Voronoi-Seeded Islamic Tiling's per-cell scaling — so medallions can overlap in dense regions or leave gaps in sparse ones.",
    "noise:mode": "Fixed per pattern: \"standard\" produces smooth rolling hills; \"ridge\" folds the same field through 1 - 2|value| to turn its zero-crossings into sharp connected ridgelines instead.",
    "wave:mode": "Fixed per pattern: \"wave\" applies the sine function directly to the vertical position (horizontal stripes); \"rings\" applies it to distance from the canvas centre instead (concentric rings).",
    "recursive:mode": "Fixed per pattern: \"sierpinski\" excludes each level's centre cell, carving self-similar holes (a carpet); \"grid\" keeps every cell but colours it by accumulated parity across all levels, producing a self-similar checkerboard with no holes.",

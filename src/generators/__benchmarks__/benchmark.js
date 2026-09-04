@@ -95,7 +95,7 @@ const REPRESENTATIVE_PARAMS = {
    recursive: { mode: "sierpinski", depth: 4, subdivisions: 3 },
    escher:    { tileSize: 60, bumpAmp: 3, bumpType: "wave" },
    islamic:   { tileSize: 100, segments: 8, frequency: 3, tones: "2" },
-   recursiveNoise: { depth: 4, amplitude: 0.25, seed: 1337 },
+   recursiveNoise: { depth: 4, amplitude1: 0.25, seed: 1337 },
    voronoiIslamic: { numCells: 20, segments: 8, scale: 0.42, frequency: 3, tones: "2", seed: 1337 },
 };
 
@@ -106,7 +106,7 @@ const PARAM_SWEEPS = {
    voronoi:   { param: "numCells", values: [10, 20, 40, 80, 160, 320, 1280, 5120], gridSize: 150 },
    recursive: { param: "depth",    values: [1, 2, 3, 4, 6, 12, 24, 48], gridSize: 150 },
    islamic:   { param: "segments", values: [4, 8, 16, 32, 64, 128], gridSize: 150 },
-   recursiveNoise: { param: "amplitude", values: [0, 0.1, 0.25, 0.5, 1.0, 2.0], gridSize: 150 },
+   recursiveNoise: { param: "amplitude1", values: [0, 0.1, 0.25, 0.5, 1.0, 2.0], gridSize: 150 },
    voronoiIslamic: { param: "numCells", values: [5, 10, 20, 40, 80, 160], gridSize: 150 },
 };
 

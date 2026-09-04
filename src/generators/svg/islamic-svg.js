@@ -14,15 +14,15 @@ ISLAMIC GEOMETRIC ROSETTE — SVG RENDERER
 *   interfere into a moire mess.
 * - Each ring is a true perpendicular polygon offset of the silhouette
 *   (edges shifted along their own normal, new vertices from consecutive
-*   shifted edges' intersections — lib/starPolygon.js's lineIntersect).
-*   This naive per-vertex-miter offset only stays valid up to a limited
-*   band count in either direction (an inward waist vertex can invert
-*   through a collapse point; a large outward offset can self-intersect
-*   non-adjacent arms) — `_maxBands` below caps it per `segments`,
-*   confirmed visually rather than derived in closed form. Stroking (not
-*   filling) makes overshoot a soft failure (stray lines, not a solid
-*   mess); the raster renderer has no such limit since it computes true
-*   per-pixel distance directly.
+*   shifted edges' intersections) — lib/polygonOffset.js's offsetPolygon
+*   and buildOffsetBands, shared with voronoiIslamicV2.js's raster reuse
+*   of this same ring construction. This naive per-vertex-miter offset
+*   only stays valid up to a limited band count in either direction (an
+*   inward waist vertex can invert through a collapse point; a large
+*   outward offset can self-intersect non-adjacent arms) —
+*   lib/polygonOffset.js's `maxBandsFor` caps it per `segments`, confirmed
+*   visually rather than derived in closed form. Stroking (not filling)
+*   makes overshoot a soft failure (stray lines, not a solid mess).
 * - "hexagon" cells draw two medallions (one per row phase) at every
 *   offset in a 3x3 super-grid of tile-period shifts, each left to its own
 *   clip — the standard brute-force trick for tiling a hex lattice with a
@@ -31,29 +31,17 @@ ISLAMIC GEOMETRIC ROSETTE — SVG RENDERER
 * API: islamicSvg(width, height, params) → SVG string
 */
 
-import { starOutline, starSkip, lineIntersect } from "../lib/starPolygon.js";
+import { starOutline, starSkip } from "../lib/starPolygon.js";
 import { radialDivisions, constructionCircle } from "../lib/constructionCircle.js";
 import { bandTone, svgFillsFor, DEFAULT_COLOURS } from "../lib/colourMapping.js";
 import { snapRotation } from "../islamic.js";
+import { maxBandsFor, buildOffsetBands } from "../lib/polygonOffset.js";
 
 // Greyscale by default via svgFillsFor's monotonic ramp (lib/colourMapping.js,
 // shared with the other tone-indexed SVG renderers); each slot is
 // independently user-editable via colour1..colour5. Re-exported so existing
 // imports of DEFAULT_COLOURS from this file keep working.
 export { DEFAULT_COLOURS };
-
-// How many offset bands stay clean before the naive per-vertex-miter
-// offset (see header) becomes unreliable, as a function of segments —
-// matched visually against actual rendered output, not derived in closed
-// form. More segments packs more offset edges into the same radius
-// (tangles sooner); segments = 5 is a special case (starSkip(5) gives the
-// sharpest tip angle in the whole range) and is capped tighter still.
-function _maxBands(n) {
-   if (n === 5) return 1;
-   if (n <= 8) return 2;
-   if (n <= 11) return 1;
-   return 0;
-}
 
 export function islamicSvg(width, height, params) {
    const {
@@ -73,7 +61,7 @@ export function islamicSvg(width, height, params) {
    const snappedDeg = snapRotation(rotation, n);
    const points = radialDivisions(circle, n, Math.PI / 2 + (snappedDeg * Math.PI) / 180);
    const outline = starOutline(points, starSkip(n));
-   const rings = _buildRings(outline, radius, frequency, lineWidth, fill, _maxBands(n));
+   const rings = _buildRings(outline, radius, frequency, lineWidth, fill, maxBandsFor(n));
 
    return tileShape === "hexagon"
       ? _hexPattern(width, height, tileSize, rings)
@@ -165,77 +153,15 @@ function _buildRings(outline, radius, frequency, lineWidth, fill, maxBands) {
    // both sides of the line, so the total is double lineWidth * radius.
    const strokeWidth = 2 * lineWidth * radius;
 
-   const outward = [];
-   for (let i = 0; i < maxBands; i++) outward.push(_offset(outline, (i + 1) * step));
-
-   const inward = [];
-   let prevRadius = Infinity;
-   for (let i = 0; i < maxBands; i++) {
-      const poly = _offset(outline, -(i + 1) * step);
-      const r = _minRadius(poly);
-      if (!isFinite(r) || r >= prevRadius) break;
-      inward.push(poly);
-      prevRadius = r;
-   }
+   const bands = buildOffsetBands(outline, step, maxBands);
 
    const rings = [`<rect x="-9999" y="-9999" width="19998" height="19998" fill="${fill[0]}"/>`];
    // bandTone (lib/colourMapping.js): band 0 (the medallion's own
    // boundary) is always the darkest tone; every other echo cycles
    // through whichever tones are left — same rule islamic.js's raster
    // uses, so the two renderers agree band-for-band.
-   rings.push(_strokeTag(outline, bandTone(fill, 0), strokeWidth));
-   outward.forEach((poly, i) => rings.push(_strokeTag(poly, bandTone(fill, i + 1), strokeWidth)));
-   inward.forEach((poly, i) => rings.push(_strokeTag(poly, bandTone(fill, -(i + 1)), strokeWidth)));
+   bands.forEach(({ index, poly }) => rings.push(_strokeTag(poly, bandTone(fill, index), strokeWidth)));
    return rings;
-}
-
-function _minRadius(poly) {
-   let min = Infinity;
-   for (let i = 0; i < poly.length; i += 2) min = Math.min(min, Math.hypot(poly[i], poly[i + 1]));
-   return min;
-}
-
-// Caps how far a vertex offset by d can move from its original position
-// (same idea as SVG's own stroke-miterlimit) — a rosette's acute tip
-// corners (e.g. an 18-degree half-angle at n=5) would otherwise balloon an
-// uncapped miter to several times the medallion's own radius.
-const MITER_LIMIT = 1.8;
-
-// Perpendicular offset of a closed, star-shaped-about-the-origin polygon:
-// shift every edge outward (d > 0) or inward (d < 0) along its own unit
-// normal, then rebuild each vertex as the intersection of its two
-// adjacent shifted edges — falling back to a bevel (the offset edges'
-// own endpoints, unjoined) wherever that intersection would exceed
-// MITER_LIMIT, per the comment above.
-function _offset(outline, d) {
-   const n = outline.length / 2;
-   const shifted = [];
-   for (let i = 0; i < n; i++) {
-      const j = (i + 1) % n;
-      const x1 = outline[i * 2], y1 = outline[i * 2 + 1];
-      const x2 = outline[j * 2], y2 = outline[j * 2 + 1];
-      const dx = x2 - x1, dy = y2 - y1;
-      const len = Math.hypot(dx, dy) || 1;
-      let nx = dy / len, ny = -dx / len;
-      const midx = (x1 + x2) / 2, midy = (y1 + y2) / 2;
-      if (nx * midx + ny * midy < 0) { nx = -nx; ny = -ny; } // point outward
-      shifted.push({ x1: x1 + nx * d, y1: y1 + ny * d, x2: x2 + nx * d, y2: y2 + ny * d });
-   }
-
-   const out = [];
-   const limit = Math.abs(d) * MITER_LIMIT;
-   for (let i = 0; i < n; i++) {
-      const ox = outline[i * 2], oy = outline[i * 2 + 1]; // original vertex
-      const prev = shifted[(i - 1 + n) % n];
-      const cur = shifted[i];
-      const hit = lineIntersect(prev.x1, prev.y1, prev.x2, prev.y2, cur.x1, cur.y1, cur.x2, cur.y2);
-      if (hit && Math.hypot(hit.x - ox, hit.y - oy) <= limit) {
-         out.push(hit.x, hit.y);
-      } else {
-         out.push(prev.x2, prev.y2, cur.x1, cur.y1); // bevel: two points, not one
-      }
-   }
-   return Float32Array.from(out);
 }
 
 function _strokeTag(poly, color, strokeWidth) {

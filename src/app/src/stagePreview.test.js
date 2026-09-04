@@ -8,15 +8,30 @@ STAGE PREVIEW — TESTS
 * param-override rules actually merge onto the base params.
 */
 import { describe, it, expect } from "vitest";
-import { resolvePreview, seedPointsRasterValue, seedPointsSvg, rawDistanceSvg } from "./stagePreview.js";
+import {
+   resolvePreview,
+   seedPointsRasterValue,
+   seedPointsSvg,
+   rawDistanceSvg,
+   baseShapeSvg,
+   baseShapeRasterValue,
+} from "./stagePreview.js";
 import { generateSeedPoints } from "../../generators/lib/seedPoints.js";
 
 describe("resolvePreview: rules table", () => {
-   it("recursive/recursiveNoise: subdivide stage overrides depth to the step's own occurrence", () => {
-      for (const gen of ["recursive", "recursiveNoise"]) {
-         const rule = resolvePreview(gen, "subdivide", { depth: 6 }, { occurrence: 3 });
-         expect(rule).toEqual({ kind: "override", overrides: { depth: 3 } });
-      }
+   it("recursive: subdivide stage overrides depth to the step's own occurrence", () => {
+      const rule = resolvePreview("recursive", "subdivide", { depth: 6 }, { occurrence: 3 });
+      expect(rule).toEqual({ kind: "override", overrides: { depth: 3 } });
+   });
+
+   it("recursiveNoise: subdivide stage overrides depth to the step's own occurrence", () => {
+      const rule = resolvePreview("recursiveNoise", "subdivide", { depth: 6 }, { occurrence: 3 });
+      expect(rule).toEqual({ kind: "override", overrides: { depth: 3 } });
+   });
+
+   it("recursiveNoise: noise stage is a noiseDiff preview at this level's own occurrence depth, zeroing only that level's own amplitudeN", () => {
+      const rule = resolvePreview("recursiveNoise", "noise", { depth: 6 }, { occurrence: 3 });
+      expect(rule).toEqual({ kind: "noiseDiff", overrides: { depth: 3 }, zeroParam: "amplitude3" });
    });
 
    it("recursive/recursiveNoise: falls back to the base depth if occurrence is missing", () => {
@@ -24,9 +39,23 @@ describe("resolvePreview: rules table", () => {
       expect(rule.overrides.depth).toBe(4);
    });
 
+   it("recursive/recursiveNoise: baseGeometry stage is a baseShape preview (a bordered square, not a plain depth: 0 override)", () => {
+      for (const gen of ["recursive", "recursiveNoise"]) {
+         expect(resolvePreview(gen, "baseGeometry", { depth: 6 }, {})).toEqual({ kind: "baseShape" });
+      }
+   });
+
    it("recursive/recursiveNoise: no rule for any other node type", () => {
-      expect(resolvePreview("recursive", "baseGeometry", {}, {})).toBeNull();
       expect(resolvePreview("recursive", "colourMapping", {}, {})).toBeNull();
+   });
+
+   it("workspace stage is always a blank canvas, across every generator", () => {
+      for (const gen of [
+         "recursive", "recursiveNoise", "escher", "grid", "islamic",
+         "voronoi", "voronoiIslamic", "voronoiIslamicV2", "wave",
+      ]) {
+         expect(resolvePreview(gen, "workspace", {}, {})).toEqual({ kind: "blank" });
+      }
    });
 
    it("escher: baseGeometry stage forces bumpAmp to 0", () => {
@@ -60,9 +89,10 @@ describe("resolvePreview: rules table", () => {
       expect(resolvePreview("islamic", "distanceField", {}, {})).toBeNull();
    });
 
-   it("voronoi/voronoiIslamic: seedPoints stage is a dedicated preview, not a param override", () => {
+   it("voronoi/voronoiIslamic/voronoiIslamicV2: seedPoints stage is a dedicated preview, not a param override", () => {
       expect(resolvePreview("voronoi", "seedPoints", {}, {})).toEqual({ kind: "seedPoints" });
       expect(resolvePreview("voronoiIslamic", "seedPoints", {}, {})).toEqual({ kind: "seedPoints" });
+      expect(resolvePreview("voronoiIslamicV2", "seedPoints", {}, {})).toEqual({ kind: "seedPoints" });
    });
 
    it("wave: distanceField stage is a dedicated preview only in rings mode", () => {
@@ -70,8 +100,9 @@ describe("resolvePreview: rules table", () => {
       expect(resolvePreview("wave", "distanceField", { mode: "wave" }, {})).toBeNull();
    });
 
-   it("noise: no rule for any stage (falls through to final output everywhere)", () => {
-      for (const nodeType of ["workspace", "seed", "noise", "colourMapping", "render"]) {
+   it("noise: no per-generator rule beyond workspace's blank canvas (falls through to final output otherwise)", () => {
+      expect(resolvePreview("noise", "workspace", {}, {})).toEqual({ kind: "blank" });
+      for (const nodeType of ["seed", "noise", "colourMapping", "render"]) {
          expect(resolvePreview("noise", nodeType, {}, {})).toBeNull();
       }
    });
@@ -108,5 +139,23 @@ describe("seedPointsSvg / rawDistanceSvg", () => {
       expect(svg).toContain('width="400"');
       expect(svg).toContain('height="300"');
       expect(svg.startsWith("<svg")).toBe(true);
+   });
+
+   it("baseShapeSvg draws a solid-colour marker well under the full canvas size, centred on it — not a full-bleed fill", () => {
+      const svg = baseShapeSvg(400, 400, { colour1: "#ffffff", colour2: "#000000" });
+      const [, x, y, w, h] = svg.match(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" fill="#000000"/);
+      expect(Number(w)).toBeLessThan(400);
+      expect(Number(h)).toBeLessThan(400);
+      // Centred: equal space on both sides.
+      expect(Number(x)).toBeCloseTo(400 - Number(x) - Number(w), 5);
+      expect(Number(y)).toBeCloseTo(400 - Number(y) - Number(h), 5);
+   });
+});
+
+describe("baseShapeRasterValue", () => {
+   it("is the dark value at the canvas centre and the light value near the edges", () => {
+      expect(baseShapeRasterValue(200, 200, 400, 400)).toBe(-1);
+      expect(baseShapeRasterValue(2, 2, 400, 400)).toBe(1);
+      expect(baseShapeRasterValue(398, 398, 400, 400)).toBe(1);
    });
 });

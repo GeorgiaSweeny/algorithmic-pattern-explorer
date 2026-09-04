@@ -24,7 +24,7 @@ Tests whether the recursive-subdivision generator's own rule-based construction 
 
 This hybrid builds on two generators already documented separately (see `recursive.md` and `noise.md`). At every level of the Sierpinski subdivision, the point currently being tested is first nudged by a smooth random offset sampled from a Perlin noise field, and only *then* is the next level's centre-cell test applied to the nudged point rather than the original one. This means the noise doesn't just distort the final image after the fact — it changes which cells the recursion itself decides are "centre" cells at every level, so the fractal's own holes end up gently warped rather than perfectly straight-edged.
 
-A specific, checkable boundary makes this hybrid's claim falsifiable rather than just asserted: at `amplitude = 0`, the noise offset is exactly zero at every level, and the result is verified to be byte-for-byte identical to the plain Sierpinski generator's own output — not merely similar. Only once `amplitude` rises above zero does the warping actually begin, and the strength of that warp is deliberately ramped up gradually across levels (lightest at the first level, strongest at the last) rather than applied identically everywhere, so that early, coarse structure and later, fine structure both end up visibly affected rather than the warp only showing up in one part of the fractal.
+A specific, checkable boundary makes this hybrid's claim falsifiable rather than just asserted: with every level's amplitude at `0`, the noise offset is exactly zero at every level, and the result is verified to be byte-for-byte identical to the plain Sierpinski generator's own output — not merely similar. Each level's amplitude, scale and octaves are independent of every other level's own — there is no shared value and no automatic ramp between levels — so raising, say, level 3's amplitude, or coarsening level 3's own noise texture, only warps level 3's own subdivision test, leaving levels 1, 2, 4 and beyond exactly as they were. Only the seed is shared across every level. That independence is also what the workflow view's node graph shows directly: each level's Noise node carries its own amplitude, scale and octaves controls, not values shared across every repeat.
 
 ---
 
@@ -34,13 +34,13 @@ A specific, checkable boundary makes this hybrid's claim falsifiable rather than
 
 How many levels of subdivision are applied, same as the plain Recursive generator.
 
-### Amplitude
+### Amplitude (per level)
 
-How strongly each level's point is nudged by the noise field before that level's subdivision test runs. At `0`, this generator is provably identical to the plain Sierpinski generator.
+How strongly a given level's point is nudged by the noise field before that level's subdivision test runs — one independent amplitude per level (up to 6, matching the maximum Depth), each its own free control with no effect on any other level. With every level's amplitude at `0`, this generator is provably identical to the plain Sierpinski generator.
 
-### Scale / Octaves
+### Scale / Octaves (per level)
 
-The underlying noise field's own coarseness/detail controls, passed straight through from the Noise generator's own parameters.
+The underlying noise field's own coarseness/detail controls — one independent scale and octaves per level, same as Amplitude, so each level's warp can have its own texture as well as its own strength, with no effect on any other level.
 
 ---
 
@@ -52,7 +52,7 @@ Reuses the plain Recursive generator's nested-squares diagram, but with each squ
 
 ## Try Exploring...
 
-Set Amplitude to 0 and compare directly against the plain Sierpinski generator at the same Depth — the two outputs are identical. Then raise Amplitude gradually and watch the fractal's straight edges begin to warp.
+Set every level's Amplitude to 0 and compare directly against the plain Sierpinski generator at the same Depth — the two outputs are identical. Then raise one level's Amplitude at a time and watch only that level's own square edges begin to warp, while every other level stays exactly as it was.
 
 ---
 

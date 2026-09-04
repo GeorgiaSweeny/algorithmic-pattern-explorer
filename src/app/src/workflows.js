@@ -58,6 +58,13 @@ const STEP_DEFS = {
       "workspace", "seed", "seedPoints", "constructionCircle", "radialDivisions",
       "distanceField", "colourMapping", "render",
    ],
+   // Hybrid v2: same shape as voronoiIslamic above (Seed Points takes over
+   // Grid's own job), but nothing downstream of cell lookup changes at all
+   // — see voronoiIslamicV2.js's own header.
+   voronoiIslamicV2: () => [
+      "workspace", "seed", "seedPoints", "constructionCircle", "radialDivisions",
+      "distanceField", "colourMapping", "render",
+   ],
    // Hybrid: each level's Noise sample warps that level's point before
    // Subdivide runs, so shown as a Noise/Subdivide pair repeated `depth`
    // times, rather than recursive.js's bare Subdivide chain.
@@ -104,6 +111,16 @@ const PARAM_NODE_MAP = {
       if (key === "scale") return "constructionCircle";
       return "colourMapping"; // frequency, lineWidth, tones
    },
+   voronoiIslamicV2: (key) => {
+      if (key === "seed") return "seed";
+      if (key === "numCells") return "seedPoints";
+      if (key === "segments" || key === "rotation" || key === "randomRotation") return "radialDivisions";
+      // tileSize keeps islamic.js's own role here — the medallion's radius
+      // reference (tileSize * scale), not any seed-placement concern — so
+      // it belongs with scale, not with Seed Points.
+      if (key === "scale" || key === "tileSize") return "constructionCircle";
+      return "colourMapping"; // frequency, lineWidth, tones, colourN
+   },
 };
 
 /**
@@ -136,8 +153,18 @@ export function buildWorkflow(registryId, liveParams = {}) {
       const repeats = typeTotals[type];
       const isFirstOfType = typeSeen[type] === 1;
       const matchesType = (p) => mapParam(p.param, params) === type && (!p.visibleIf || p.visibleIf(params));
+      // `occurrenceOnly: n` is the opposite of `firstOccurrenceOnly`: a
+      // genuinely independent per-repeat control (e.g. recursiveNoise's
+      // amplitude1..amplitude6, one per Noise node) that belongs to exactly
+      // one occurrence and nowhere else — no explanatory note needed on the
+      // others, since editing it there simply isn't possible (it's not
+      // their param at all), unlike a firstOccurrenceOnly value shared
+      // across every repeat.
       const nodeParams = entry.params.filter(
-         (p) => matchesType(p) && (!p.firstOccurrenceOnly || isFirstOfType)
+         (p) =>
+            matchesType(p) &&
+            (!p.firstOccurrenceOnly || isFirstOfType) &&
+            (p.occurrenceOnly === undefined || p.occurrenceOnly === typeSeen[type])
       );
       // A `firstOccurrenceOnly` param that matched but got filtered out here
       // (not the first occurrence) is surfaced as an explanatory note
@@ -155,8 +182,8 @@ export function buildWorkflow(registryId, liveParams = {}) {
             params: nodeParams,
             structuralNote: suppressedParam
                ? `${suppressedParam.archetype ?? suppressedParam.param} is set on the first ` +
-                 `${NODE_LIBRARY[type].title} node — editing it here would change the whole ` +
-                 `repeat structure, not just this step.`
+                 `${NODE_LIBRARY[type].title} node — it's one shared value across every ` +
+                 `repeat, so editing it here would change every occurrence, not just this step.`
                : undefined,
             // occurrence/totalOccurrences: same typeSeen/repeats counters as
             // the "(1/2)" label, exposed as data — stagePreview.js's

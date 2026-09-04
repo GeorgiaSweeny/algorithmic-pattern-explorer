@@ -424,6 +424,13 @@ const GENERATOR_ILLUSTRATIONS = {
    },
 };
 
+// v2 is a Voronoi diagram with one Islamic star placed inside a cell too —
+// same "the two constructions, combined" idea this diagram already shows;
+// the algorithmic difference (nothing downstream of cell lookup changes,
+// versus v1's per-cell radius adaptation) isn't something this zoomed-out
+// a diagram can show anyway, so it isn't worth a second, near-identical one.
+GENERATOR_ILLUSTRATIONS.voronoiIslamicV2 = GENERATOR_ILLUSTRATIONS.voronoiIslamic;
+
 export function hasGeneratorIllustration(generatorId) {
    return generatorId in GENERATOR_ILLUSTRATIONS;
 }

@@ -58,7 +58,11 @@ export default function GalleryOverlay({ onClose, onLoad }) {
                      <div className="gallery-grid">
                         {GALLERY_PATTERNS.map((item) => (
                            <div className="gallery-card" key={item.id}>
-                              <img className="gallery-thumb" src={item.thumbnail} alt={item.title} />
+                              <img
+                                 className="gallery-thumb"
+                                 src={`${import.meta.env.BASE_URL}${item.thumbnail.replace(/^\//, "")}`}
+                                 alt={item.title}
+                              />
                               <div className="gallery-card-title">{item.title}</div>
                               {item.description && <div className="gallery-card-desc">{item.description}</div>}
                               <button className="btn gallery-load" onClick={() => onLoad(item)}>

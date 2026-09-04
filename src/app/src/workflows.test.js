@@ -63,6 +63,16 @@ const EXPECTED = {
       "colourMapping",
       "render",
    ],
+   "voronoi-islamic-v2": [
+      "workspace",
+      "seed",
+      "seedPoints",
+      "constructionCircle",
+      "radialDivisions",
+      "distanceField",
+      "colourMapping",
+      "render",
+   ],
 };
 
 describe("buildWorkflow", () => {

@@ -28,28 +28,24 @@ function ParamControl({ param, onChange }) {
 
    if (param.archetype && param.map) {
       const [min, max] = param.map;
-      // Exactly two selectable values (e.g. map: [0, 1]) reads as a switch,
-      // not a range — a slider here visually implies fine-grained control
-      // the param doesn't actually offer.
-      if (Number.isInteger(min) && Number.isInteger(max) && max - min === 1) {
-         return (
-            <label className="param-control">
-               <span className="param-label">
-                  {param.archetype} <em>({param.param})</em>
-               </span>
-               <span className="param-row">
-                  <input
-                     className="nodrag"
-                     type="checkbox"
-                     checked={Number(value) === max}
-                     onChange={(e) => onChange(param.param, e.target.checked ? max : min)}
-                  />
-                  <span className="param-value">{value}</span>
-               </span>
-            </label>
-         );
-      }
-      const step = Number.isInteger(min) && Number.isInteger(max) && max - min <= 20 ? 1 : (max - min) / 100;
+      // Note: a param genuinely meant to be a two-state switch should use
+      // control: "toggle" (below), not archetype + map — this branch always
+      // renders a continuous range. An earlier version instead guessed
+      // "boolean" from the bounds alone (integer min/max exactly 1 apart,
+      // e.g. map: [0, 1]) and rendered a checkbox — which silently broke
+      // every genuinely continuous 0-1 "how much" archetype slider (e.g.
+      // jitter, defaulting to 0.7): ticking it could only ever set exactly
+      // 0 or 1, flipping between them on every click, with no way to reach
+      // any value in between at all.
+      // Integer steps only for a genuinely small integer range (segments,
+      // octaves, ...) — a range spanning 1 or less (e.g. map: [0, 1]) is
+      // almost always a normalised fraction (jitter, variation, ...), not a
+      // 2-valued integer enum, and needs fine-grained steps to be usable at
+      // all.
+      const step =
+         Number.isInteger(min) && Number.isInteger(max) && max - min > 1 && max - min <= 20
+            ? 1
+            : (max - min) / 100;
       return (
          <label className="param-control">
             <span className="param-label">

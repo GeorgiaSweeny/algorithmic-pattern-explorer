@@ -209,18 +209,6 @@
     color: var(--ink-muted);
   }
 
-  .raw-json {
-    margin: 0;
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.55;
-    color: var(--ink-2);
-    white-space: pre;
-    overflow-x: auto;
-    max-height: 340px;
-    overflow-y: auto;
-  }
-
   /* net-effect callout */
   .net-card {
     background: var(--surface);
@@ -336,19 +324,6 @@
         </thead>
         <tbody id="table-body"></tbody>
       </table>
-    </div>
-  </section>
-
-  <section id="raw-export">
-    <h2>What a real download looks like</h2>
-    <p class="lede">
-      One participant's exported JSON — pre and post quiz passes both included, timestamps
-      intact. This is the file the study runner collected from every device rather than a
-      screenshot or a verbal score; the full set of 15 lives in
-      <code>docs/evaluation/exports/</code>.
-    </p>
-    <div class="chart-card">
-      <pre id="raw-json" class="raw-json"></pre>
     </div>
   </section>
 
@@ -4313,11 +4288,6 @@
       '<div class="bar-delta' + (gainPct >= 25 ? ' hi' : '') + '">' + Math.round(prePct) + '%→' + Math.round(postPct) + '%</div>';
     container.appendChild(row);
   });
-
-  // ---- raw export sample ----
-  var sample = participants.filter(function (p) { return p.id === "random-P6"; })[0];
-  document.getElementById("raw-json").textContent =
-    JSON.stringify([sample.preRecord, sample.postRecord], null, 2);
 })();
 </script>
 </body>

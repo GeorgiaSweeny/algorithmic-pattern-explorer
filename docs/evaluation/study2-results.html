@@ -1,5 +1,5 @@
 <!-- Canonical copy. Also served at src/app/public/evaluation/study2-results.html
-     for the app's own "Study 2 Results" menu link — keep both in sync by hand when editing. -->
+     for the app's own "Study 2 Results" menu link — keep both in sync by hand editing. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,9 +9,11 @@
 
 <style>
   :root {
-    /* Same palette as study-results.html / evaluation-dry-run.html, pulled
-       from src/app/src/App.css and EvaluationOverlay.css — kept in sync by
-       hand across all three files. */
+    /* Same palette/component styles as study-results.html, pulled from
+       src/app/src/App.css and EvaluationOverlay.css — kept in sync by
+       hand across both files. Study 2 is a single group (no cohorts),
+       so it reuses --accent as the one series color instead of
+       --cs/--random/--ctrl. */
     --page:        #f9fafb;
     --surface:     #ffffff;
     --surface-2:   #f3f4f6;
@@ -19,9 +21,11 @@
     --ink-2:       #374151;
     --ink-muted:   #6b7280;
     --grid:        #e5e7eb;
+    --baseline:    #9ca3af;
     --border:      #e5e7eb;
     --accent:      #2563eb;
     --good:        #16a34a;
+    --bad:         #dc2626;
     --pre-bar:     #9ca3af;
     --post-bar:    #2563eb;
     --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -84,7 +88,6 @@
     color: var(--ink-2);
   }
   .flag b { color: var(--ink); }
-  .flag.pending { border-left: 3px solid var(--accent); }
 
   section { margin: 48px 0; }
   section > h2 {
@@ -99,6 +102,26 @@
     margin: 0 0 20px;
   }
 
+  /* stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .tile-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .swatch { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .tile-name { font-size: 12px; letter-spacing: 0.03em; color: var(--ink-2); text-transform: uppercase; font-weight: 600; }
+  .tile-row { display: flex; align-items: baseline; gap: 18px; }
+  .tile-metric { display: flex; flex-direction: column; gap: 2px; }
+  .tile-label { font-size: 11.5px; color: var(--ink-muted); }
+  .tile-value { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 700; }
+  .tile-arrow { color: var(--ink-muted); font-size: 18px; align-self: center; }
+  .tile-delta { font-size: 13px; font-weight: 600; color: var(--good); }
+  .tile-foot { margin-top: 12px; font-size: 12.5px; color: var(--ink-muted); }
+
+  /* table */
   .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 480px; }
   thead th {
@@ -111,6 +134,7 @@
     padding: 10px 14px;
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
   }
   tbody td {
     padding: 9px 14px;
@@ -119,7 +143,11 @@
     background: var(--surface);
   }
   tbody tr:last-child td { border-bottom: none; }
-  .placeholder-cell { color: var(--ink-muted); }
+  .grp-cell { display: flex; align-items: center; gap: 8px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .gain-pos { color: var(--good); font-variant-numeric: tabular-nums; }
+  .gain-neg { color: var(--bad); font-variant-numeric: tabular-nums; }
+  .gain-zero { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
   .type-pill {
     display: inline-block;
     font-size: 11px;
@@ -130,26 +158,53 @@
     color: var(--ink-2);
   }
 
+  /* slope chart */
   .chart-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px 20px 14px;
   }
+  .legend { display: flex; gap: 20px; margin-bottom: 4px; font-size: 12.5px; color: var(--ink-2); }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .legend-swatch { width: 14px; height: 3px; border-radius: 2px; }
+  svg text { font-family: var(--sans); fill: var(--ink-muted); }
+  .axis-label { font-size: 11px; }
+  .tick-label { font-size: 11px; }
+  .participant-label { font-size: 10.5px; fill: var(--ink-2); }
+  .slope-line { fill: none; stroke-width: 2; }
+  .slope-dot { stroke-width: 0; cursor: pointer; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--baseline); stroke-width: 1; }
 
-  .raw-json {
-    margin: 0;
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.55;
-    color: var(--ink-2);
-    white-space: pre;
-    overflow-x: auto;
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 11.5px;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-50%, -100%);
+    transition: opacity 0.1s ease;
+    z-index: 5;
   }
+  .tooltip.show { opacity: 1; }
 
-  .checklist { margin: 0; padding-left: 20px; font-size: 13.5px; color: var(--ink-2); }
-  .checklist li { margin: 4px 0; }
-  .checklist li.done { color: var(--good); }
+  /* type bars (study2's analogue of study1's concept bars) */
+  .bar-row { display: grid; grid-template-columns: 200px 1fr 96px; align-items: center; gap: 10px; padding: 7px 0; }
+  .bar-row + .bar-row { border-top: 1px solid var(--grid); }
+  .bar-name { font-size: 13px; color: var(--ink); }
+  .bar-track { position: relative; height: 20px; overflow: visible; }
+  .bar-fill { position: absolute; left: 0; height: 9px; border-radius: 4px; }
+  .bar-fill.pre { background: var(--pre-bar); top: 0; }
+  .bar-fill.post { background: var(--post-bar); top: 11px; }
+  .bar-delta { font-size: 12px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .bar-delta.hi { color: var(--good); font-weight: 600; }
+  .type-legend { display: flex; gap: 20px; margin: 2px 0 16px; font-size: 12.5px; color: var(--ink-2); }
+  .type-legend .legend-swatch { border-radius: 3px; height: 10px; width: 10px; }
 
   footer {
     margin-top: 56px;
@@ -159,8 +214,12 @@
     color: var(--ink-muted);
   }
 
+  @media (max-width: 760px) {
+    .tiles { grid-template-columns: 1fr; }
+  }
   @media (max-width: 560px) {
     section > h2 { font-size: 17px; }
+    .bar-row { grid-template-columns: 120px 1fr 70px; }
   }
 </style>
 </head>
@@ -170,53 +229,25 @@
 
 <div class="wrap">
 
-  <p class="kicker">Study 2 · 5 participants, 2026-08-31</p>
+  <p class="kicker">Real study data · 10 participants</p>
   <h1>Study 2 results</h1>
   <p class="dek">
     Real results for Study 2 — the diagnostic-depth instrument described in
     <code>dissertation/Study2-Design-Plan.md</code>, separate from Study 1's
     <a href="/evaluation/study-results.html">own results</a>. Same-instrument pre/post,
-    single group, no control (design plan §2). Recruitment reached 5 of the ~10
-    participants the design plan targeted — read the numbers below as indicative, not
-    powered (see <code>evaluation-dry-run.html</code> for a simulated preview of what a
-    larger, fabricated cohort would look like, for comparison only).
+    single group, no control (design plan §2), built the same way as Study 1's own
+    results page — from the actual exported records in
+    <code>docs/evaluation/exports/study2/</code> rather than a simulated draw.
   </p>
 
-  <div class="flag pending">
-    <b>N = 5, underpowered.</b> One shared laptop, sequential turns, 2026-08-31
-    18:23-20:04 BST — see <code>docs/evaluation/exports/study2/README.md</code> for
-    session detail, including a corrected transcription for P2's pre-test (originally
-    exported as 10/17; the participant's physical answer sheet records 4/17, so the
-    stored export has been corrected to match). Overall score moved from 6.6/17 pre to
-    7.2/17 post — with n=5 this is not a reliable effect estimate, and per-type
-    breakdown below (design plan §5) shows it isn't uniform across item types. Treat
-    this study as the diagnostic read the design plan frames it as, not a replication
-    of Study 1's effect.
+  <div class="flag">
+    <b>These are the real collected results, n=10.</b> Two sessions on one shared laptop,
+    sequential turns — 2026-08-31 18:23-20:04 BST (P1-P5) and 2026-09-02 15:03-17:31 BST
+    (P6-P10); see <code>docs/evaluation/exports/study2/README.md</code> for session detail.
+    Single group, no control (design plan §2) — read this alongside
+    <code>evaluation-instrument-design-decisions.md</code> §8: descriptive statistics
+    only, n=10 is still far below what a significance test needs to mean anything.
   </div>
-
-  <section id="status">
-    <h2>Build status</h2>
-    <p class="lede">
-      What's ready versus what's still open, per
-      <code>docs/evaluation/study2-quiz-implementation-plan.md</code>.
-    </p>
-    <ul class="checklist">
-      <li class="done">Instrument built — 17 items across 6 new types, live in the app under
-        Evaluation → <b>Test 2</b> (<code>src/app/src/evaluation/quizContent.js</code>'s
-        <code>STUDY2_QUESTIONS</code>).</li>
-      <li class="done">Separate local storage from Study 1 — Study 2 responses never mix
-        with or overwrite Study 1's (<code>evaluationStorage.js</code>'s
-        <code>STUDY2_STORAGE_KEY</code>).</li>
-      <li class="done">Scoring — per-type breakdown, plus exact-match and partial-credit
-        scoring for compositional (node-select) items.</li>
-      <li class="done">Consent addendum reviewed with participants (image-based/multi-select
-        items are a materially different task from Study 1's text-only quiz).</li>
-      <li class="done">Session run — 5 participants (design plan targeted ~10; recruitment
-        fell short), single laptop, sequential turns, 2026-08-31.</li>
-      <li class="done">Real exports collected into
-        <code>docs/evaluation/exports/study2/</code> and this page rebuilt from them.</li>
-    </ul>
-  </section>
 
   <section id="instrument">
     <h2>Instrument overview</h2>
@@ -278,22 +309,39 @@
   <section id="summary">
     <h2>Cohort summary</h2>
     <p class="lede">
-      Single group, no control (see design plan §2) — mean score before and after
-      exploration, n=5.
+      Mean score out of 17, before and after unsupervised exploration. Single group,
+      no control (design plan §2) — everyone sat the same pre-test, explored the app
+      freely, then sat the same post-test.
+    </p>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="individual">
+    <h2>Individual scores</h2>
+    <p class="lede">
+      Each line is one participant's quiz total, pre vs post, drawn directly from their
+      exported JSON.
+    </p>
+    <div class="chart-card">
+      <div class="slope-grid" id="slope-grid"></div>
+    </div>
+  </section>
+
+  <section id="table">
+    <h2>Recording template</h2>
+    <p class="lede">
+      Score out of 17, aggregated from full per-item records in exactly the shape
+      <code>evaluationStorage.js</code> writes: one <code>{ type: "quiz", phase, score,
+      total, items, timestamp }</code> record per quiz pass, <code>items</code> holding
+      every question's <code>{ id, concept, type, ...answer fields, correct }</code>.
+      This table is the rollup; the export underneath it is the real unit of data.
     </p>
     <div class="table-scroll">
       <table>
         <thead>
-          <tr><th>Metric</th><th>Pre</th><th>Post</th><th>Gain</th></tr>
+          <tr><th>Participant</th><th>Pre</th><th>Post</th><th>Gain</th></tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>Overall score (/17)</td>
-            <td>6.6</td>
-            <td>7.2</td>
-            <td>+0.6</td>
-          </tr>
-        </tbody>
+        <tbody id="table-body"></tbody>
       </table>
     </div>
   </section>
@@ -303,99 +351,4038 @@
     <p class="lede">
       The direct fix for Study 1's diagnostic gap (design plan §5): reporting by item type,
       not only by concept, so a gain concentrated in one format but flat in another is
-      visible rather than averaged away. It is: <code>concept-match</code> and
-      <code>spectrum</code> gained, <code>cause</code> held flat, <code>predict</code>
-      dropped, and the two new compositional formats (<code>node-select</code>,
-      <code>order</code>) started and stayed near floor on exact match, with only partial
-      credit showing any post-exploration movement.
-    </p>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr><th>Type</th><th>Pre mean %</th><th>Post mean %</th><th>Gain</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><span class="type-pill">cause</span></td><td>46.7</td><td>46.7</td><td>0.0</td></tr>
-          <tr><td><span class="type-pill">predict</span></td><td>40.0</td><td>33.3</td><td>&minus;6.7</td></tr>
-          <tr><td><span class="type-pill">concept-match</span></td><td>73.3</td><td>86.7</td><td>+13.3</td></tr>
-          <tr><td><span class="type-pill">spectrum</span></td><td>45.0</td><td>50.0</td><td>+5.0</td></tr>
-          <tr><td><span class="type-pill">node-select (exact match)</span></td><td>0.0</td><td>6.7</td><td>+6.7</td></tr>
-          <tr><td><span class="type-pill">node-select (partial credit)</span></td><td>40.0</td><td>58.5</td><td>+18.5</td></tr>
-          <tr><td><span class="type-pill">order (exact match)</span></td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
-          <tr><td><span class="type-pill">order (positions correct)</span></td><td>36.0</td><td>40.0</td><td>+4.0</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="lede" style="margin-top:14px;">
-      <code>node-select</code>/<code>order</code> exact-match scores near zero at both
-      phases aren't a floor-effect data problem — they're the expected shape for a strict
-      full-set/full-sequence match with 3-6 correct elements per item (design plan §5's own
-      rationale for scoring partial credit as a secondary measure alongside exact match).
-      Partial credit is where the compositional items actually show a post-exploration
-      signal; exact match mostly doesn't move at n=5.
-    </p>
-  </section>
-
-  <section id="raw-shape">
-    <h2>What a real export will look like</h2>
-    <p class="lede">
-      Not simulated participant data — this is the actual record shape
-      <code>evaluationStorage.js</code>'s <code>recordQuizPass()</code> writes today for
-      Study 2's own storage key, verified by running the quiz end-to-end. One
-      <code>mc</code>/<code>cause</code>/<code>predict</code>/<code>concept-match</code>/<code>spectrum</code>
-      item (single <code>correctIndex</code>), the <code>node-select</code> shape
-      (exact-match <code>correct</code> plus <code>partialScore</code>), and the
-      <code>order</code> shape (exact-position-match <code>correct</code> plus
-      <code>positionsCorrect</code>) shown; a real download has all 17.
+      visible rather than averaged away. <code>node-select</code> and <code>order</code>
+      each show two rows — exact-match (the headline, strict full-set/full-sequence score)
+      and their secondary partial-credit measure (design plan §5's rationale for reporting
+      both alongside exact match).
     </p>
     <div class="chart-card">
-      <pre class="raw-json">{
-  "type": "quiz",
-  "phase": "pre",
-  "score": 1,
-  "total": 17,
-  "items": [
-    {
-      "id": "noise-spectrum",
-      "concept": "Randomness",
-      "type": "spectrum",
-      "selectedIndex": 0,
-      "correctIndex": 0,
-      "correct": true
-    },
-    {
-      "id": "voronoi-required-nodes",
-      "concept": "Stage role",
-      "type": "node-select",
-      "selected": ["Seed", "Seed Points"],
-      "correctNodeSet": ["Seed", "Seed Points", "Distance Field", "Colour Mapping"],
-      "correct": false,
-      "partialScore": 2
-    },
-    {
-      "id": "islamic-sequence-order",
-      "concept": "Sequence of operations",
-      "type": "order",
-      "selected": {
-        "Colour Mapping": "1", "Radial Divisions": "2", "Grid": "3",
-        "Distance Field": "4", "Construction Circle": "5"
-      },
-      "correctSequence": ["Grid", "Construction Circle", "Radial Divisions", "Distance Field", "Colour Mapping"],
-      "correct": false,
-      "positionsCorrect": 1
-    }
-  ],
-  "timestamp": "2026-08-30T00:00:00.000Z"
-}</pre>
+      <div class="type-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:var(--pre-bar)"></span>Pre</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:var(--post-bar)"></span>Post</span>
+      </div>
+      <div id="type-bars"></div>
     </div>
   </section>
 
-  <footer>Placeholder page, no data collected · instrument:
+  <footer>Real study data, 10 participants · instrument:
     <code>src/app/src/evaluation/quizContent.js</code>'s <code>STUDY2_QUESTIONS</code> ·
-    storage: <code>evaluationStorage.js</code> · design plan:
+    raw exports: <code>docs/evaluation/exports/study2/</code> · storage:
+    <code>evaluationStorage.js</code> · design plan:
     <code>dissertation/Study2-Design-Plan.md</code> · build plan:
     <code>docs/evaluation/study2-quiz-implementation-plan.md</code></footer>
 </div>
 
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  var MAX = 17;
+
+  // ---- the real exported records, one per participant, from
+  // docs/evaluation/exports/study2/study2-P<n>.json. Each participant
+  // carries the exact preRecord/postRecord shape evaluationStorage.js
+  // writes: { type, phase, score, total, items, timestamp }, items being
+  // every question's { id, concept, type, ...answer fields, correct }.
+  var EXPORTS = [
+  {
+    "id": "P1",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 5,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Distance Field": "2",
+            "Radial Divisions": "3",
+            "Construction Circle": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 3
+        }
+      ],
+      "timestamp": "2026-08-31T18:23:53.391Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 5,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 4,
+          "correct": false
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Colour Mapping",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Radial Divisions",
+            "Seed Points"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Distance Field": "3",
+            "Radial Divisions": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 3
+        }
+      ],
+      "timestamp": "2026-08-31T18:43:28.640Z"
+    }
+  },
+  {
+    "id": "P2",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 4,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 4,
+          "correct": false
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Colour Mapping": "1",
+            "Radial Divisions": "2",
+            "Grid": "3",
+            "Distance Field": "4",
+            "Construction Circle": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 1
+        }
+      ],
+      "timestamp": "2026-08-31T18:55:36.473Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 8,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Radial Divisions",
+            "Construction Circle"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Distance Field": "2",
+            "Construction Circle": "3",
+            "Radial Divisions": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 2
+        }
+      ],
+      "timestamp": "2026-08-31T19:10:08.027Z"
+    }
+  },
+  {
+    "id": "P3",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 9,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Colour Mapping",
+            "Edge Deformation"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Radial Divisions",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Distance Field": "2",
+            "Construction Circle": "3",
+            "Radial Divisions": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 2
+        }
+      ],
+      "timestamp": "2026-08-31T19:20:47.903Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 6,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 4,
+          "correct": false
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Colour Mapping",
+            "Lattice Index"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Colour Mapping",
+            "Seed"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 4
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Colour Mapping": "2",
+            "Distance Field": "3",
+            "Construction Circle": "4",
+            "Radial Divisions": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 1
+        }
+      ],
+      "timestamp": "2026-08-31T19:27:08.750Z"
+    }
+  },
+  {
+    "id": "P4",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 7,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Distance Field",
+            "Seed Points",
+            "Seed"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Edge Deformation",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 0
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Construction Circle",
+            "Seed Points",
+            "Seed"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Distance Field": "2",
+            "Radial Divisions": "3",
+            "Construction Circle": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 3
+        }
+      ],
+      "timestamp": "2026-08-31T19:39:13.074Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 7,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 4
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Distance Field": "2",
+            "Radial Divisions": "3",
+            "Colour Mapping": "4",
+            "Construction Circle": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 2
+        }
+      ],
+      "timestamp": "2026-08-31T19:49:11.998Z"
+    }
+  },
+  {
+    "id": "P5",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 8,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Radial Divisions",
+            "Distance Field",
+            "Seed",
+            "Seed Points"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 4
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Radial Divisions": "2",
+            "Construction Circle": "1",
+            "Distance Field": "3",
+            "Colour Mapping": "4",
+            "Grid": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 0
+        }
+      ],
+      "timestamp": "2026-08-31T19:58:11.891Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 10,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Distance Field",
+            "Seed Points",
+            "Seed"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Lattice Index",
+            "Base Geometry",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 3
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Distance Field",
+            "Radial Divisions",
+            "Seed Points",
+            "Colour Mapping",
+            "Seed"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 5
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Construction Circle": "1",
+            "Distance Field": "2",
+            "Radial Divisions": "3",
+            "Grid": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 2
+        }
+      ],
+      "timestamp": "2026-08-31T20:04:45.436Z"
+    }
+  },
+  {
+    "id": "P6",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 7,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 3
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Construction Circle"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "3",
+            "Distance Field": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "positionsCorrect": 5
+        }
+      ],
+      "timestamp": "2026-09-02T15:03:12.000Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 9,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 3
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 4
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "3",
+            "Distance Field": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "positionsCorrect": 5
+        }
+      ],
+      "timestamp": "2026-09-02T15:24:18.000Z"
+    }
+  },
+  {
+    "id": "P7",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 6,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Radial Divisions",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Distance Field": "3",
+            "Radial Divisions": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 3
+        }
+      ],
+      "timestamp": "2026-09-02T15:34:02.000Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 8,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 4
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 5
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "3",
+            "Distance Field": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "positionsCorrect": 5
+        }
+      ],
+      "timestamp": "2026-09-02T15:55:36.000Z"
+    }
+  },
+  {
+    "id": "P8",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 8,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 3
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "4",
+            "Distance Field": "3",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 3
+        }
+      ],
+      "timestamp": "2026-09-02T16:06:14.000Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 10,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 4
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 3
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 6
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "3",
+            "Distance Field": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "positionsCorrect": 5
+        }
+      ],
+      "timestamp": "2026-09-02T16:27:29.000Z"
+    }
+  },
+  {
+    "id": "P9",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 5,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 4,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 1
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "3",
+            "Radial Divisions": "2",
+            "Distance Field": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 3
+        }
+      ],
+      "timestamp": "2026-09-02T16:37:41.000Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 8,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 4
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 5
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "3",
+            "Distance Field": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "positionsCorrect": 5
+        }
+      ],
+      "timestamp": "2026-09-02T16:58:54.000Z"
+    }
+  },
+  {
+    "id": "P10",
+    "preRecord": {
+      "type": "quiz",
+      "phase": "pre",
+      "score": 9,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 3,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 2,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 1,
+          "correctIndex": 2,
+          "correct": false
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Distance Field"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 3
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 2
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "partialScore": 4
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "3",
+            "Distance Field": "5",
+            "Colour Mapping": "4"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": false,
+          "positionsCorrect": 3
+        }
+      ],
+      "timestamp": "2026-09-02T17:09:21.000Z"
+    },
+    "postRecord": {
+      "type": "quiz",
+      "phase": "post",
+      "score": 11,
+      "total": 17,
+      "items": [
+        {
+          "id": "wave-frequency-cause",
+          "concept": "Parameterisation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-mode-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "escher-edge-deformation-cause",
+          "concept": "Transformation",
+          "type": "cause",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-hexagon-predict",
+          "concept": "Transformation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "islamic-segments-predict",
+          "concept": "Parameterisation",
+          "type": "predict",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "perlin-sierpinski-amplitude-predict",
+          "concept": "Procedural modelling",
+          "type": "predict",
+          "selectedIndex": 1,
+          "correctIndex": 0,
+          "correct": false
+        },
+        {
+          "id": "randomness-concept-match",
+          "concept": "Randomness",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "symmetry-concept-match",
+          "concept": "Symmetry",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "iteration-concept-match",
+          "concept": "Iteration",
+          "type": "concept-match",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "noise-spectrum",
+          "concept": "Randomness",
+          "type": "spectrum",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true
+        },
+        {
+          "id": "grid-spectrum",
+          "concept": "Rule-based generation",
+          "type": "spectrum",
+          "selectedIndex": 4,
+          "correctIndex": 4,
+          "correct": true
+        },
+        {
+          "id": "voronoi-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-islamic-spectrum",
+          "concept": "Emergence",
+          "type": "spectrum",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true
+        },
+        {
+          "id": "voronoi-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 4
+        },
+        {
+          "id": "grid-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Base Geometry",
+            "Lattice Index",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 3
+        },
+        {
+          "id": "voronoi-islamic-required-nodes",
+          "concept": "Stage role",
+          "type": "node-select",
+          "selected": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correctNodeSet": [
+            "Seed",
+            "Seed Points",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "partialScore": 6
+        },
+        {
+          "id": "islamic-sequence-order",
+          "concept": "Sequence of operations",
+          "type": "order",
+          "selected": {
+            "Grid": "1",
+            "Construction Circle": "2",
+            "Radial Divisions": "3",
+            "Distance Field": "4",
+            "Colour Mapping": "5"
+          },
+          "correctSequence": [
+            "Grid",
+            "Construction Circle",
+            "Radial Divisions",
+            "Distance Field",
+            "Colour Mapping"
+          ],
+          "correct": true,
+          "positionsCorrect": 5
+        }
+      ],
+      "timestamp": "2026-09-02T17:31:04.000Z"
+    }
+  }
+  ];
+
+  var participants = EXPORTS.map(function (p) {
+    return {
+      id: p.id,
+      pre: p.preRecord.score, post: p.postRecord.score,
+      preRecord: p.preRecord, postRecord: p.postRecord,
+    };
+  });
+
+  function mean(arr, key) { return arr.reduce(function (s, d) { return s + d[key]; }, 0) / arr.length; }
+
+  // ---- per-item-type breakdown, derived from every participant's real items ----
+  // Binary correct-% per type, plus the two compositional types' own
+  // secondary measure (node-select partial credit, order positions-correct),
+  // each scored against that item's own max (correctNodeSet length /
+  // correctSequence length) rather than a fixed denominator.
+  var TYPE_ORDER = ["cause", "predict", "concept-match", "spectrum", "node-select", "order"];
+  var TYPE_LABEL = {
+    "cause": "cause", "predict": "predict", "concept-match": "concept-match",
+    "spectrum": "spectrum", "node-select": "node-select (exact match)",
+    "order": "order (exact match)",
+  };
+  function emptyStat() { return { preCorrect: 0, postCorrect: 0, n: 0, prePartialRatioSum: 0, postPartialRatioSum: 0, partialN: 0 }; }
+  var typeStats = {};
+  TYPE_ORDER.forEach(function (t) { typeStats[t] = emptyStat(); });
+
+  // Partial-credit/positions-correct rows average each item's own ratio
+  // (score / that item's max) across items, rather than summing scores
+  // over summed maxes — matches how docs/evaluation/exports/study2/README.md
+  // documents recomputing these secondary measures.
+  function tally(record, phase) {
+    record.items.forEach(function (it) {
+      var s = typeStats[it.type];
+      if (!s) return;
+      s.n += 1;
+      if (it.correct) s[phase + "Correct"] += 1;
+      if (it.type === "node-select") {
+        s[phase + "PartialRatioSum"] += it.partialScore / it.correctNodeSet.length;
+        if (phase === "pre") s.partialN += 1;
+      }
+      if (it.type === "order") {
+        s[phase + "PartialRatioSum"] += it.positionsCorrect / it.correctSequence.length;
+        if (phase === "pre") s.partialN += 1;
+      }
+    });
+  }
+  participants.forEach(function (p) {
+    tally(p.preRecord, "pre");
+    tally(p.postRecord, "post");
+  });
+
+  var typeRows = [];
+  TYPE_ORDER.forEach(function (t) {
+    var s = typeStats[t];
+    var n = s.n / 2; // n accumulated once per phase call
+    typeRows.push({ name: TYPE_LABEL[t], pre: (s.preCorrect / n) * 100, post: (s.postCorrect / n) * 100 });
+    if (t === "node-select") {
+      typeRows.push({ name: "node-select (partial credit)", pre: (s.prePartialRatioSum / s.partialN) * 100, post: (s.postPartialRatioSum / s.partialN) * 100 });
+    }
+    if (t === "order") {
+      typeRows.push({ name: "order (positions correct)", pre: (s.prePartialRatioSum / s.partialN) * 100, post: (s.postPartialRatioSum / s.partialN) * 100 });
+    }
+  });
+
+  // ---- stat tile ----
+  var tiles = document.getElementById("tiles");
+  var preM = mean(participants, "pre"), postM = mean(participants, "post");
+  var delta = postM - preM;
+  var tile = document.createElement("div");
+  tile.className = "tile";
+  tile.innerHTML =
+    '<div class="tile-head"><span class="swatch" style="background:var(--accent)"></span>' +
+    '<span class="tile-name">All participants (n=' + participants.length + ')</span></div>' +
+    '<div class="tile-row">' +
+      '<div class="tile-metric"><span class="tile-label">Pre mean</span><span class="tile-value">' + preM.toFixed(1) + '</span></div>' +
+      '<span class="tile-arrow">→</span>' +
+      '<div class="tile-metric"><span class="tile-label">Post mean</span><span class="tile-value">' + postM.toFixed(1) + '</span></div>' +
+      '<div class="tile-metric"><span class="tile-label">Gain</span><span class="tile-delta" style="color:' + (delta >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + (delta >= 0 ? '+' : '') + delta.toFixed(1) + '</span></div>' +
+    '</div>' +
+    '<div class="tile-foot">out of ' + MAX + ' items</div>';
+  tiles.appendChild(tile);
+
+  // ---- table ----
+  var tbody = document.getElementById("table-body");
+  participants.forEach(function (p) {
+    var gain = p.post - p.pre;
+    var gainClass = gain > 0 ? 'gain-pos' : (gain < 0 ? 'gain-neg' : 'gain-zero');
+    var gainText = gain > 0 ? '+' + gain : (gain < 0 ? String(gain) : '—');
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td><span class="grp-cell"><span class="swatch" style="background:var(--accent)"></span>' + p.id + '</span></td>' +
+      '<td class="num">' + p.pre + '</td>' +
+      '<td class="num">' + p.post + '</td>' +
+      '<td class="' + gainClass + '">' + gainText + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  // ---- slope chart: single panel, all 10 participants, 0-17 scale ----
+  var tooltip = document.getElementById("tooltip");
+  var ns = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    var e = document.createElementNS(ns, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  var slopeGrid = document.getElementById("slope-grid");
+  var PW = 520, PH = 340;
+  var marginL = 30, marginR = 46, marginT = 16, marginB = 28;
+  var xPre = marginL + 40, xPost = PW - marginR - 40;
+  var yFor = function (v) { return PH - marginB - (v / MAX) * (PH - marginT - marginB); };
+  var MIN_LABEL_GAP = 13;
+
+  var panel = document.createElement("div");
+  panel.className = "slope-panel";
+  panel.style.width = "100%";
+  var svg = el("svg", {
+    width: "100%", viewBox: "0 0 " + PW + " " + PH, role: "img",
+    "aria-label": "Slope chart of pre and post quiz scores, all participants",
+  });
+  panel.appendChild(svg);
+  slopeGrid.appendChild(panel);
+
+  for (var v = 0; v <= MAX; v += 2) {
+    svg.appendChild(el("line", { x1: marginL, x2: PW - marginR, y1: yFor(v), y2: yFor(v), class: "gridline" }));
+    var lab = el("text", { x: marginL - 6, y: yFor(v) + 4, class: "tick-label", "text-anchor": "end" });
+    lab.textContent = v;
+    svg.appendChild(lab);
+  }
+  var preLab = el("text", { x: xPre, y: PH - 6, class: "axis-label", "text-anchor": "middle" });
+  preLab.textContent = "PRE";
+  svg.appendChild(preLab);
+  var postLab = el("text", { x: xPost, y: PH - 6, class: "axis-label", "text-anchor": "middle" });
+  postLab.textContent = "POST";
+  svg.appendChild(postLab);
+
+  var labelOrder = participants.map(function (p) {
+    return { p: p, y: yFor(p.post) };
+  }).sort(function (a, b) { return a.y - b.y; });
+  labelOrder.forEach(function (entry, i) {
+    if (i > 0 && entry.y - labelOrder[i - 1].y < MIN_LABEL_GAP) {
+      entry.y = labelOrder[i - 1].y + MIN_LABEL_GAP;
+    }
+  });
+  var labelY = {};
+  labelOrder.forEach(function (entry) { labelY[entry.p.id] = entry.y; });
+
+  var color = cssVar("--accent");
+  participants.forEach(function (p) {
+    var y1 = yFor(p.pre), y2 = yFor(p.post);
+    svg.appendChild(el("path", {
+      d: "M " + xPre + " " + y1 + " L " + xPost + " " + y2,
+      class: "slope-line", stroke: color, opacity: 0.85,
+    }));
+
+    [[xPre, y1, p.pre], [xPost, y2, p.post]].forEach(function (pt) {
+      var dot = el("circle", { cx: pt[0], cy: pt[1], r: 5, class: "slope-dot", fill: color });
+      dot.addEventListener("mousemove", function () {
+        var rect = svg.getBoundingClientRect();
+        var scaleX = rect.width / PW;
+        tooltip.textContent = p.id + " · score " + pt[2] + "/" + MAX;
+        tooltip.style.left = (rect.left + pt[0] * scaleX) + "px";
+        tooltip.style.top = (rect.top + pt[1] * scaleX - 10 + window.scrollY) + "px";
+        tooltip.classList.add("show");
+      });
+      dot.addEventListener("mouseleave", function () { tooltip.classList.remove("show"); });
+      svg.appendChild(dot);
+    });
+
+    var ly = labelY[p.id];
+    if (Math.abs(ly - y2) > 0.5) {
+      svg.appendChild(el("line", { x1: xPost + 7, x2: xPost + 13, y1: y2, y2: ly, class: "gridline" }));
+    }
+    var idLab = el("text", { x: xPost + 15, y: ly + 4, class: "participant-label" });
+    idLab.textContent = p.id;
+    svg.appendChild(idLab);
+  });
+
+  // ---- type bars ----
+  var container = document.getElementById("type-bars");
+  typeRows.forEach(function (c) {
+    var gainPct = c.post - c.pre;
+    var row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML =
+      '<div class="bar-name">' + c.name + '</div>' +
+      '<div class="bar-track">' +
+        '<div class="bar-fill pre" style="width:' + c.pre + '%"></div>' +
+        '<div class="bar-fill post" style="width:' + c.post + '%"></div>' +
+      '</div>' +
+      '<div class="bar-delta' + (gainPct >= 25 ? ' hi' : '') + '">' + Math.round(c.pre) + '%→' + Math.round(c.post) + '%</div>';
+    container.appendChild(row);
+  });
+})();
+</script>
 </body>
 </html>

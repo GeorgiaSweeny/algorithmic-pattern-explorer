@@ -385,13 +385,20 @@ auto-clipping to its own declared tile size — produced a moiré tangle
 where far-reaching bands from unclipped tile copies overlapped). The
 renderer that replaced both: true perpendicular polygon offsetting
 (shift each edge along its own normal, rebuild vertices via line-line
-intersection, `lib/starPolygon.js`'s `lineIntersect`) capped to a small
-fixed band count with a real geometric stopping rule (inward: stop once a
-vertex's radius would invert past its collapse point; outward: a fixed
-`MITER_LIMIT` bevels sharp tip corners instead of letting them miter out
-arbitrarily far), plus an explicit `<clipPath>` matching the tile's own
-`tileSize` box so unclipped content can't bleed into neighbouring tile
-repeats. See `islamic-svg.js`'s header comment for the full reasoning and
+intersection using `lib/starPolygon.js`'s `lineIntersect`) capped to a
+small fixed band count with a real geometric stopping rule (inward: stop
+once a vertex's radius would invert past its collapse point; outward: a
+fixed `MITER_LIMIT` bevels sharp tip corners instead of letting them
+miter out arbitrarily far), plus an explicit `<clipPath>` matching the
+tile's own `tileSize` box so unclipped content can't bleed into
+neighbouring tile repeats. This offsetting logic (`offsetPolygon`,
+`buildOffsetBands`, `maxBandsFor`, `MITER_LIMIT`) now lives in its own
+shared module, `src/generators/lib/polygonOffset.js`, rather than inline
+in `islamic-svg.js` — extracted so `voronoiIslamicV2.js` (§10 below)
+could evaluate the exact same ring geometry per pixel instead of stroking
+it as SVG, letting that hybrid's raster output be compared fairly against
+what Islamic Geometric Patterns itself actually renders. See
+`islamic-svg.js`'s header comment for the full reasoning and
 `docs/ISLAMIC_PATTERN_CONSTRUCTION.md` for the visual debugging history.
 Verified visually against the raster renderer across `segments` 5-10.
 
@@ -585,60 +592,110 @@ falsifiable deterministic baseline the hybrid's own composition claim
 rests on: at `amplitude = 0` there's no Fork to speak of, only at `> 0`
 does the warp actually apply.
 
-**Follow-up**: the flat `amplitude` applied identically at
-every level (reported as making the whole carpet look merely shifted, not
-depth itself having character) is now a linear ramp,
-`_levelAmplitude(amplitude, i, depth)` — originally `0` at the first level
-(`i = 0`), the full declared `amplitude` at the last. `repeat.js`'s own
-`step(value, i)` signature already passed each iteration's index `i` for
-free; this generator previously discarded it. Still zero new primitives,
-but a richer *shape* than before: each repeated Noise/Subdivide pair in
-the diagram above now applies a different warp strength, not the same one
-every time — every other `lib/repeat.js` caller in the codebase
-(`recursive.js`, and this generator's own unwarped Subdivide scaffold)
-still applies an identical step at every iteration, so this is a
-genuinely new variant of Repeat, not just a parameter tweak. `amplitude =
-0` stays an exact identity with `recursive.js`'s own output regardless,
-since the ramp itself scales to zero at that boundary.
+**Follow-up (superseded by the next entry): a shared `amplitude` ramped
+across levels.** An earlier revision replaced one flat `amplitude` shared
+by every level with a single ramp, `_levelAmplitude(amplitude, i, depth)`
+— `0` at the first level rising to the full declared `amplitude` at the
+last, later widened to ramp from a `LEVEL_AMPLITUDE_FLOOR` (30%) instead
+of an exact `0` so the first Noise node stayed visibly active in the
+ReactFlow view. Both were still a *single* `amplitude` value, only its
+per-level share of that one value varied.
 
-**Follow-up, 2026-08-24**: the exact-`0` floor above meant the *first*
-Noise node in this diagram never visibly did anything in the ReactFlow
-workflow view, regardless of `amplitude` — correct as designed, but read
-as broken rather than intentionally subtle when actually using the app
-(`docs/plan-checklist.md`'s Aug-24 entry). `_levelAmplitude` now ramps
-from `LEVEL_AMPLITUDE_FLOOR` (30% of `amplitude`) up to the full value,
-so every Noise node has some visible effect while later ones still warp
-more. `amplitude = 0` is unaffected (the ramp still scales to exactly `0`
-there regardless of the floor fraction) — only the shape of the ramp at
-nonzero `amplitude` changed. `docs/structure-metrics-results.md`'s
-`amplitude` sweep was re-run against the new ramp for the same reason.
+**Current design: every level's amplitude, scale and octaves are fully
+independent params, not a ramp over one shared value.** `amplitude1..6`,
+`scale1..6` and `octaves1..6` (`patternRegistry.js`'s `depth` maxes out at
+6 levels) each control exactly one level's own warp strength and noise
+texture, with zero automatic relationship to any other level's own values
+— raising level 3's amplitude, or coarsening level 3's own texture, warps
+only level 3's subdivision test, leaving every other level exactly as it
+was (`docs/generators/recursive-noise.md`'s own "Try Exploring..."
+section verifies this directly). Only `seed` stays shared across every
+level, since a per-level seed wouldn't add anything once each level
+already has its own independent `scale`/`octaves`. This is also what
+makes every repeated Noise node in the diagram above a genuinely free
+control in the workflow graph, not a slider that also moves every other
+level's own value — the `stagePreview.js` isolation technique for these
+nodes (§ below the diagram in `stagePreview.js` itself) depends on that
+independence: diffing one level's own `amplitudeN` against `0` only makes
+sense because no other level's amplitude is touched by doing so.
+`amplitude1..6 = 0` (every level) is still an exact identity with
+`recursive.js`'s own output, the same falsifiable boundary as above.
 
-**Same follow-up, separately**: the `depth` param was previously routed
-(`src/app/src/workflows.js`'s `PARAM_NODE_MAP`) to *every* Subdivide node
-in the repeated chain above, not just one — editing it from any of them
-changed the whole node count, which read as a broken control rather than
-a real per-node one. `depth` (here and in `recursive.js`'s own Subdivide
-chain, §7) now declares `firstOccurrenceOnly: true`
-(`src/patternRegistry.js`) and only renders as an editable slider on the
-*first* Subdivide node; every subsequent one shows a short explanatory
-note instead (`WorkflowNode.jsx`). Not a new node or primitive — a
-routing/presentation fix in the workflow-graph layer, not the generator
-math.
-
-**`scale`/`octaves`** are `noise.js`'s own `scale`/
-`octaves` params, passed straight through to the same `noise()` calls
-this generator already imports — not a re-derived pair with different
-units. Previously hardcoded module constants, explicitly "fixed" to keep
-`structureMetrics.js`'s entropy sweep (which never passes them) a clean
-single-variable story against `amplitude` alone; exposing them doesn't
-disturb that sweep, since it keeps using the same values that used to be
-hardcoded. Gives a second axis (the warp field's own coarseness/detail)
-independent of `amplitude` (how strongly it's applied) — see
-`docs/plan-checklist.md`'s for the visual confirmation.
+**`depth`'s routing fix still applies**: the `depth` param was previously
+routed (`src/app/src/workflows.js`'s `PARAM_NODE_MAP`) to *every*
+Subdivide node in the repeated chain above, not just one — editing it
+from any of them changed the whole node count, which read as a broken
+control rather than a real per-node one. `depth` (here and in
+`recursive.js`'s own Subdivide chain, §7) declares
+`firstOccurrenceOnly: true` (`src/patternRegistry.js`) and only renders
+as an editable slider on the *first* Subdivide node; every subsequent one
+shows a short explanatory note instead (`WorkflowNode.jsx`). Not a new
+node or primitive — a routing/presentation fix in the workflow-graph
+layer, not the generator math.
 
 `nativeFormat: "raster"` (like `voronoiIslamic.js`, the other hybrid) —
 `recursive-svg.js`'s enumeration approach doesn't have an equivalent for a
 per-pixel domain warp, so this pattern has no vector renderer.
+
+---
+
+## 10. Voronoi-Seeded Islamic Tiling (Improved) (`voronoiIslamicV2.js`) — hybrid
+
+```
+Workspace → Seed → Seed Points → Construction Circle → Radial Divisions → Distance Field → Colour Mapping → Render
+```
+
+Same opening two nodes and same downstream sequence as §8's hybrid — this
+is a second, deliberately narrower answer to the same research question
+("does Islamic Geometric Patterns' cell → rosette pipeline generalise from
+Grid's regular lattice to Seed Points' stochastic source"), not a
+different workflow shape. §8 asks what *new* geometry is needed to make
+the combination look coherent (and answers it: scale each medallion to
+its own cell's local spacing). This version asks the more literal
+question instead — what does it look like if *nothing* downstream of cell
+placement is adapted at all, full stop — so every medallion uses the
+exact same fixed radius (`tileSize * scale`, `islamic.js`'s own formula,
+untouched). Overlap in dense regions and gaps in sparse ones follow
+directly from that choice, an honest consequence of a Poisson-process
+seed scatter meeting a fixed medallion size, not a bug held back from §8.
+
+**Registry defaults are `islamic.js`'s own, unchanged** (`tileSize: 100`,
+`scale: 0.42`, `segments: 8`, `frequency: 3`, `lineWidth: 0.06`) — unlike
+§8, which lowers `frequency`/`scale` specifically to keep its
+locally-scaled medallions legible. Nothing here needed retuning, which is
+itself part of the point: this version changes nothing about the
+downstream construction, so nothing about its own defaults needed to
+change either.
+
+**Ring construction reuses `islamic-svg.js`'s own rings, not
+`islamic.js`'s raster banding.** Islamic Geometric Patterns is
+`nativeFormat: "vector"` and always renders via `islamic-svg.js` in the
+app, whose rings are true perpendicular offset polygons (`lib/polygonOffset.js`'s
+`buildOffsetBands`/`offsetPolygon` — a new primitive this hybrid needed,
+now shared with `islamic-svg.js`), each with its own independently
+mitred vertices that start crossing each other two or more bands out —
+genuinely different from the plain rounded signed-distance contours
+`islamic.js`'s own raster function draws. Evaluating that same offset-
+polygon geometry per pixel here, rather than stroking it as SVG, is what
+makes this hybrid's raster output comparable against what the "normal"
+vector-rendered pattern actually looks like on screen, matching §9's own
+`nativeFormat: "raster"` reasoning for the same underlying question.
+
+**`randomRotation` (opt-in, default 0)** plays the same per-cell-jitter
+role §8's `variation` does, via the same technique (an `xorshift32`
+stream mixed with the cell's own point index, so adding or removing
+cells never perturbs an existing cell's angle) — but composes by simple
+addition with `rotation`'s own `Flipped` toggle rather than the two being
+exclusive: off+off is the plain construction, off+Flipped is one shared
+180/segments rotation (as in `islamic.js` itself), on+off gives each
+cell its own random rotation, and on+Flipped adds that same flip on top
+of every cell's already-random angle. Routed to the same Radial
+Divisions node as `segments`/`rotation` above, the same "how many
+points, at what angle" concern.
+
+`nativeFormat: "raster"` (like both other hybrids, §8-9) — a Voronoi
+mosaic has no repeating unit an SVG `<pattern>` could exploit, the same
+reason §8 has no vector renderer either.
 
 ---
 
@@ -662,9 +719,9 @@ Two new node types were needed in total across all seven generators —
 stage across all seven generators maps onto a `docs/nodes/` entry that
 already existed before this document was written.
 
-The two hybrids added later (§8-9) needed **zero** further new node
-types — both reuse the existing node sequence of the generator(s) they
-compose (Seed Points onward for §8, Noise/Subdivide pairs for §9),
-consistent with `docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`'s own finding
-that composing already-decomposed generators is cheaper than building new
-geometry from scratch.
+The three hybrids added later (§8-10) needed **zero** further new node
+types — all three reuse the existing node sequence of the generator(s)
+they compose (Seed Points onward for §8 and §10, Noise/Subdivide pairs
+for §9), consistent with `docs/ALGORITHMIC_COMPOSITION_RESEARCH.md`'s own
+finding that composing already-decomposed generators is cheaper than
+building new geometry from scratch.

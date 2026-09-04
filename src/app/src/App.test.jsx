@@ -43,6 +43,25 @@ describe("App: pattern selection", () => {
    });
 });
 
+describe("App: every registry pattern loads without crashing", () => {
+   // A registry param shape bug (e.g. a toggle's onValue declared as a
+   // plain literal instead of a (paramValues) => value function, which
+   // App.jsx's workflow-node builder calls unconditionally) only surfaces
+   // once that specific pattern is actually selected — the default-pattern
+   // tests above never exercise it. One test per entry catches this class
+   // of crash for every pattern, not just whichever one a developer
+   // happens to click while testing manually.
+   for (const entry of REGISTRY) {
+      it(`${entry.name} (${entry.id}) selects and renders its workflow graph`, () => {
+         const { container } = render(<App />);
+         selectPatternByName(container, entry.name);
+         const row = container.querySelector(".generator-selection-collapsed-row");
+         expect(within(row).getByText(entry.name)).toBeInTheDocument();
+         expect(container.querySelector(".react-flow")).toBeInTheDocument();
+      });
+   }
+});
+
 describe("App: node selection and the Documentation Panel", () => {
    it("selecting a workflow node updates the Documentation Panel's Operation field", () => {
       const { container } = render(<App />);

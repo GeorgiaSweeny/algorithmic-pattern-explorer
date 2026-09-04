@@ -98,7 +98,14 @@ const VARIATIONS = [0, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 
 const SWEEPS = [
    {
       name: "recursiveNoise",
-      label: "amplitude",
+      // recursiveNoise.js now gives every level its own independent
+      // amplitude (amplitude1..amplitude6) rather than one shared, ramped
+      // value — sweeping amplitude1 alone exercises level 1's warp exactly
+      // like the old single `amplitude` param used to (this script's
+      // existing results.json/docs predate that change and are no longer
+      // reproducible from it; rerun via `npm run structure-metrics` to
+      // refresh them against the new API).
+      label: "amplitude1",
       fixedParams: { depth: 4, seed: SEED },
       values: AMPLITUDES,
       fn: recursiveNoise,

@@ -12,7 +12,16 @@ import { GENERATORS } from "../../generators/index.js";
 import { SVG_GENERATORS } from "../../generators/svg/index.js";
 import { mapColour } from "../../render.js";
 import { CANVAS } from "../../config.js";
-import { resolvePreview, seedPointsRasterValue, seedPointsSvg, rawDistanceSvg } from "./stagePreview.js";
+import {
+   resolvePreview,
+   seedPointsRasterValue,
+   seedPointsSvg,
+   rawDistanceSvg,
+   blankSvg,
+   baseShapeSvg,
+   baseShapeRasterValue,
+   NOISE_DIFF_HIGHLIGHT,
+} from "./stagePreview.js";
 
 // SVG generators hardcode their own <defs> ids (e.g. "wp", "islamic-tile").
 // Since multiple PatternCanvas instances can mount at once (the evaluation
@@ -41,15 +50,28 @@ export default function PatternCanvas({ entry, params, node }) {
       const image = ctx.createImageData(WIDTH, HEIGHT);
       const fn = GENERATORS[entry.generator];
 
-      const previewParams = preview?.kind === "override" ? { ...params, ...preview.overrides } : params;
+      const previewParams =
+         preview?.kind === "override" || preview?.kind === "noiseDiff"
+            ? { ...params, ...preview.overrides }
+            : params;
 
       for (let y = 0; y < HEIGHT; y++) {
          for (let x = 0; x < WIDTH; x++) {
-            const value =
-               preview?.kind === "seedPoints"
-                  ? seedPointsRasterValue(x, y, params)
-                  : fn(x, y, previewParams);
-            const { r, g, b, a } = mapColour(value, params);
+            let r, g, b, a;
+            if (preview?.kind === "blank") {
+               ({ r, g, b, a } = mapColour(1, params));
+            } else if (preview?.kind === "baseShape") {
+               ({ r, g, b, a } = mapColour(baseShapeRasterValue(x, y, WIDTH, HEIGHT), params));
+            } else if (preview?.kind === "seedPoints") {
+               ({ r, g, b, a } = mapColour(seedPointsRasterValue(x, y, params), params));
+            } else if (preview?.kind === "noiseDiff") {
+               const withNoise = fn(x, y, previewParams);
+               const withoutThisLevel = fn(x, y, { ...previewParams, [preview.zeroParam]: 0 });
+               ({ r, g, b, a } =
+                  withNoise !== withoutThisLevel ? NOISE_DIFF_HIGHLIGHT : mapColour(withNoise, params));
+            } else {
+               ({ r, g, b, a } = mapColour(fn(x, y, previewParams), params));
+            }
             const idx = 4 * (x + y * WIDTH);
             image.data[idx] = r;
             image.data[idx + 1] = g;
@@ -67,7 +89,9 @@ export default function PatternCanvas({ entry, params, node }) {
 
       const { WIDTH, HEIGHT } = CANVAS;
       let svg;
-      if (preview?.kind === "seedPoints") svg = seedPointsSvg(WIDTH, HEIGHT, params);
+      if (preview?.kind === "blank") svg = blankSvg(WIDTH, HEIGHT, params);
+      else if (preview?.kind === "baseShape") svg = baseShapeSvg(WIDTH, HEIGHT, params);
+      else if (preview?.kind === "seedPoints") svg = seedPointsSvg(WIDTH, HEIGHT, params);
       else if (preview?.kind === "rawDistance") svg = rawDistanceSvg(WIDTH, HEIGHT);
       else if (preview?.kind === "override") svg = fn(WIDTH, HEIGHT, { ...params, ...preview.overrides });
       else svg = fn(WIDTH, HEIGHT, params);
